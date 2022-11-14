@@ -70,8 +70,9 @@ def evaluate_classifier(classifier, X_test, y_test, X_train, y_train, pos_label=
     Parameters:
     - pos_label (str or int): Class label for positive class. Default is 1.
     - model_name (string, optional): Name of model printing purposes.
+    - confusion_matrix (bool): If True (default), print the confusion matrix. 
 
-    Returns evaluation metrics for test data set as a dictionary
+    Returns evaluation metrics for test data and train data set as one dictionary each.
     """
     
     best_model = classifier
@@ -94,11 +95,16 @@ def evaluate_classifier(classifier, X_test, y_test, X_train, y_train, pos_label=
     metrics['accuracy'] = accuracy
 
     # Metrics for training data
+    metrics_train = dict()
     if len(set(y_test)) == 2:
         recall_train = recall_score(y_train, y_pred_train, pos_label=pos_label)
         precision_train = precision_score(y_train, y_pred_train, pos_label=pos_label)
         f1score_train = f1_score(y_train, y_pred_train, pos_label=pos_label)
+        metrics_train['recall'] = recall_train
+        metrics_train['precision'] = precision_train
+        metrics_train['f1'] = f1score_train
     accuracy_train = accuracy_score(y_train, y_pred_train)
+    metrics_train['accuracy'] = accuracy_train
 
     print(f'\n{model_name} evaluation metrics: \n\tTest data\tTraining data\t\tDifference')
     print(f'Accuracy: \t{100*accuracy:.2f}%\t\t{100*accuracy_train:.2f}%\t\t{100*(accuracy-accuracy_train):.2f}%')
@@ -112,6 +118,6 @@ def evaluate_classifier(classifier, X_test, y_test, X_train, y_train, pos_label=
             print(f'AUC: \t\t{100*auc:.2f}%\t\t{100*auc_train:.2f}%\t\t{100*(auc-auc_train):.2f}%')
             RocCurveDisplay.from_estimator(best_model, X_train, y_train)
             metrics['auc'] = auc
-    
-    ConfusionMatrixDisplay.from_estimator(best_model, X_train, y_train)
-    return metrics
+    if confusion_matrix==True:
+        ConfusionMatrixDisplay.from_estimator(best_model, X_train, y_train)
+    return metrics, metrics_train
