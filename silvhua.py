@@ -208,57 +208,7 @@ def explore(df,id=0,print_n_unique=False, printValues=False):
     print(f'')
     return missing_data
 
-# Function to plot multiple histograms using Plotly. Show different colours based on classification.
-def plot_int_hist(df, columns=None, color=None):
-    """
-    Use Plotly to plot multiple histograms using the specified columns of a dataframe.
-    Arguments:
-    - df: Dataframe.
-    - columns (optional): Columns of dataframe on which to create the histogram. If blank, all numeric data will be plotted.
-    - color (optional): Provide name of colum containing binary classification values 0 and 1. 
-        Data points classified as 1 will be in red.
-    
-    Make sure to do the following imports:
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    """
-    # import plotly.express as px
-    import plotly.graph_objects as go
-    import plotly 
-    from plotly.subplots import make_subplots
 
-    if columns == None:
-        columns = df.dtypes[df.dtypes != 'object'].index.tolist()
-    fig = make_subplots(rows=round((len(columns)+.5)/2), cols=2,subplot_titles=columns)
-    for i, feature in enumerate(columns):
-        if color:
-            bins = dict(
-                start = min(df[feature]),
-                end =  max(df[feature]),
-                # size=
-            )
-            zero = df[df[color]==0]
-            one = df[df[color] != 0]
-            fig.add_trace(go.Histogram(x=zero[feature],
-                marker_color='#330C73',
-                opacity=0.5,
-                xbins=bins), 
-                row=i//2+1, col=i % 2 + 1
-                )
-            fig.add_trace(go.Histogram(x=one[feature],
-                marker_color='red',
-                opacity=0.5,
-                xbins=bins),
-                row=i//2+1, col=i % 2 + 1)
-        else:
-            fig.add_trace(go.Histogram(x=df[feature]), 
-            row=i//2+1, col=i % 2 + 1)
-    fig.update_layout(height=300*round((len(columns)+.5)/2), 
-        showlegend=False,barmode='overlay')
-    fig.show()
-
-
-    
 def correlation(df):
     """
     Plot the correlation matrix.
@@ -271,23 +221,6 @@ def correlation(df):
     # Create the heatmap with the mask and with annotation
     sns.heatmap(data=df.corr(numeric_only=True),mask=mask,annot=True)
     return df.corr()
-
-# Function to plot multiple histograms
-def plot_hist(df, columns=None):
-    """
-    Plot multiple histograms using the specified columns of a dataframe.
-    Arguments:
-    df: Dataframe.
-    columns (optional): Columns of dataframe on which to create the histogram. If blank, all numeric data will be plotted.
-    
-    Make sure to `import seaborn as sns`.
-    """
-    if columns == None:
-        columns = df.dtypes[df.dtypes != 'object'].index.tolist()
-    fig, ax = plt.subplots(nrows=round((len(columns)+.5)/2), ncols=2, figsize=(10,18))
-    for i, feature in enumerate(columns):
-        sns.histplot(data=df,x=feature,ax=ax[i//2, i % 2])
-    plt.tight_layout()
 
 def drop_features(df,threshold=100, show_update=True):
     """
