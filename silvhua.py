@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
 from datetime import datetime
-import joblib
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
 def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None):
@@ -47,12 +46,13 @@ def save_csv(df,filename,path=None,append_version=False):
     print('File saved: ',path+filename)
 
 
-def savepickle(model,filename,path=None,append_version=False):
+def savepickle(model,filename, ext='sav', path=None,append_version=False):
     """
     Export object as a pickle.
     Parameters:
     - model: Model variable name.
     - filename: Root of the filename.
+    - extension: Extension to append (do not include dot as it will be added)
     - filepath (raw string): Use the format r'<path>'. If None, file is saved in same director.
     - append_version (bool): If true, append date and time to end of filename.
     """
@@ -62,7 +62,7 @@ def savepickle(model,filename,path=None,append_version=False):
         filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
     with open (path+filename, 'wb') as fh:
         pickle.dump(model, fh)
-    print('File saved: ',path+filename)
+    print('File saved: ',path+filename+'.'+ext)
 
 def loadpickle(filename,filepath):
     """
