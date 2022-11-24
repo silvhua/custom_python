@@ -67,6 +67,7 @@ def plot_int_hist(df, columns=None, color=None, label=1):
         title_y = 0,
         title_yanchor = 'bottom')
     fig.show()
+    return fig
 
 # Function to plot multiple bar charts using Plotly. Show different colours based on classification.
 def plot_int_bar(df, columns=None, color=None, label=1, barmode='stack'):
@@ -235,3 +236,149 @@ def plot_proportion(df, columns=None, classication='Loan_Status', label='Y', bar
         # title_y = .96,
         title_yanchor = 'bottom')
     fig.show()
+
+def lineplots_comparison(df, x='Year', columns=['Value', 'Value'], scale_axis=[True,False], match_yaxis=False,
+    title=None,
+    filter_by='Age', filter_value=12, hue='Percentile', show_legend=True, yaxis_label=None, xticks=None):
+    """
+    Plot data for the same rows side by side.
+    Parameters:
+    - df: Dataframe.
+    - x (string): Name of variable for x-axis.
+    - columns (list): List of column names to plot side by side. 
+    - scale_axis (list): Boolean or list of boolean values. If true, scale axes to the min and max for the entire dataframe.
+        If more than one value, must match length of columns list.
+    - filter_by and filter_value: e.g. df[df[filter_by] == filter_value]
+    * hue: Same as for seaborn parameter, i.e. categorical variable for creating different lines.
+    * yaxis_label: Label of y-axis. If none, will default to the name of the data column.
+    * xticks: Ticks of the x-axis. If none, will be set to default.
+    * title: Subplot title. If none, will be blank.
+    """
+    subplot_label = 'abcdefghijklmnopq'
+    if (type(scale_axis) != list):
+        scale_axis = [scale_axis for column in columns]
+    if type(title) != list:
+        title = [title for column in columns]
+    if type(yaxis_label) != list:
+        yaxis_label = [yaxis_label for column in columns]
+    if type(match_yaxis) != list:
+        match_yaxis = [match_yaxis for column in columns]
+    ncols = len(columns)
+    fig, ax = plt.subplots(nrows=1 ,ncols=ncols, figsize=(10,3))
+    # colors = sns.color_palette("vlag", n_colors=len(df[hue].unique()))
+    colors = sns.color_palette("coolwarm", n_colors=len(df[hue].unique()))
+    # colors = sns.mpl_palette('PRGn', n_colors=len(df[hue].unique()))
+    
+    ax = ax.flatten()
+    ax_index = 0
+
+    for index, column in enumerate(columns):
+        if (show_legend==True) & (index==0):
+            legend = 'full'
+        else:
+            legend = False
+
+        sns.lineplot(data=df[df[filter_by] == filter_value], y=column, 
+            hue=hue, x=x, marker='o', alpha=0.9, palette=colors,
+            legend=legend, 
+                ax = ax[ax_index])
+        
+        # ax[ax_index].set_title(f'{filter_by} {filter_value}')
+        if title[index]:
+            ax[ax_index].set_title(f'{subplot_label[ax_index]}) {title[index]}', loc='left')
+
+        if (scale_axis[index]==True) & (match_yaxis==True):
+            ymin = df[columns].min().min()
+            ymax = df[columns].max().max()
+            ax[ax_index].set_ylim([ymin,ymax]) 
+        elif scale_axis[index]:
+            ymin = df[column].min()
+            ymax = df[column].max()
+            ax[ax_index].set_ylim([ymin,ymax]) 
+        elif match_yaxis[index]: 
+            ymin = df[df[filter_by] == filter_value][columns].min().min()
+            ymax = df[df[filter_by] == filter_value][columns].max().max()
+            ax[ax_index].set_ylim([ymin,ymax]) 
+
+        if yaxis_label:
+            ax[ax_index].set_ylabel(yaxis_label[ax_index])
+        if xticks:
+            ax[ax_index].xaxis.set_ticks(xticks)
+        if (legend == 'full'):
+            # Reverse order of legend entries, then position the legend
+            handles, labels = ax[ax_index].get_legend_handles_labels()
+            ax[ax_index].legend(handles[::-1], labels[::-1])
+            sns.move_legend(ax[ax_index],'center left',bbox_to_anchor=(1, 0.5), title=hue)
+        ax_index += 1
+        
+    plt.tight_layout()
+    return fig
+
+def lineplots(df, y='Value', x='Year', column='Sex', row='Age', hue='Percentile',
+    show_legend=True, yaxis_label=None, xticks=None, title=None):
+
+    """
+    Make a figure containing subplots with lineplots. Subplots titles are labelled from a-z.
+
+    Parameters:
+    * df: Dataframe.
+    * y: Column name with y-axis data.
+    * x: Column name with x-axis data.
+    * column: Column name of categorical data for creating the different columns in the subplot. 
+        Default is Female/Male.
+    * row: Column name of categorical data for creating the different rows in the subplot.
+    * hue: Same as for seaborn parameter, i.e. categorical variable for creating different lines.
+    * yaxis_label: Label of y-axis. If none, will default to the name of the data column.
+    * xticks: Ticks of the x-axis. If none, will be set to default.
+    * title: Subplot title. If none, will be blank.
+    """
+
+    subplot_label = 'abcdefghijklmnopqrstuvwxyz'
+    column_values = sorted(df[column].unique())
+    row_values = sorted(df[row].unique())
+    nrows = len(row_values)
+    ncols = max([len(column_values),2])
+    title_variable = df[row].name
+    fig, ax = plt.subplots(nrows=nrows ,ncols=ncols, figsize=(10,nrows*3))
+    fig.suptitle(title, fontsize=20)
+    ymin = df[y].min()
+    ymax = df[y].max()
+    ax = ax.flatten()
+    # colors = sns.color_palette("rocket", as_cmap = True)
+    # colors = sns.diverging_palette(250, 30, l=65, center="dark", as_cmap = True)
+    colors = sns.color_palette("coolwarm", n_colors=len(df[hue].unique()))
+    # colors = sns.color_palette("Spectral", n_colors=len(df[hue].unique()))
+
+    ax_index = 0
+    for row_number in range(nrows):
+        for col_number in range(len(column_values)):
+            # print(ax_index)
+            if (show_legend==True) & (col_number==0):
+                legend = 'full'
+            else:
+                legend = False
+            filter = (df[row] == row_values[row_number]) & (df[column] == column_values[col_number])
+
+            sns.lineplot(data=df[filter], y=y, 
+                hue=hue, x=x, marker='o', alpha=0.9,
+                legend=legend, palette=colors,
+                    ax = ax[ax_index])
+            if nrows > 1:
+                ax[ax_index].set_title(f'{subplot_label[ax_index]}) {title_variable} {row_values[row_number]}, {column_values[col_number]}', fontsize=12, loc='left')
+            else:
+                ax[ax_index].set_title(f'{subplot_label[ax_index]}) {column_values[col_number]}', fontsize=12, loc='left')
+            ax[ax_index].set_ylim([ymin,ymax]) # Make the y axes all the same
+            if yaxis_label:
+                ax[ax_index].set_ylabel(yaxis_label)
+            if xticks:
+                ax[ax_index].xaxis.set_ticks(xticks)
+            if (legend == 'full'):
+                # Reverse order of legend entries, then position the legend
+                handles, labels = ax[ax_index].get_legend_handles_labels()
+                ax[ax_index].legend(handles[::-1], labels[::-1])
+                sns.move_legend(ax[ax_index],'center left',bbox_to_anchor=(1, 0.5), title=hue)
+
+            ax_index += 1
+        
+    plt.tight_layout()
+    return fig
