@@ -1,4 +1,5 @@
 import matplotlib as plt
+import seaborn as sns
 
 import plotly.graph_objects as go
 import plotly 
@@ -6,7 +7,6 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 import pandas as pd
 import numpy as np
-import seaborn as sns
 
 # Function to plot multiple histograms using Plotly. Show different colours based on classification.
 def plot_int_hist(df, columns=None, color=None, label=1):
