@@ -6,7 +6,7 @@ import pickle
 from datetime import datetime
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
-def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None):
+def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
     """
     Load a csv file as a dataframe using specified file path copied from windows file explorer.
     Back slashes in file path will be converted to forward slashes.
@@ -19,10 +19,11 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
     Returns: dataframe object.
     """
     filename = f'{filepath}/'.replace('\\','/')+filename
-    df = pd.read_csv(filename, usecols=usecols)
+    df = pd.read_csv(filename, usecols=usecols, sep=sep)
     if column1_as_index==True:
         df.set_index(df.columns[0], inplace=True)
         df.index.name = None
+    print('Dataframe shape: ',df.shape)
 
     if truncate:
         return df.sample(n=truncate,random_state=0)
@@ -43,7 +44,7 @@ def save_csv(df,filename,path=None,append_version=False):
     if append_version == True:
         filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
     df.to_csv(path+filename+'.csv')
-    print('File saved: ',path+filename)
+    print('File saved: ',path+filename+'.csv')
 
 
 def savepickle(model,filename, ext='sav', path=None,append_version=False):
@@ -60,7 +61,7 @@ def savepickle(model,filename, ext='sav', path=None,append_version=False):
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
         filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
-    with open (path+filename, 'wb') as fh:
+    with open (path+filename+'.'+ext, 'wb') as fh:
         pickle.dump(model, fh)
     print('File saved: ',path+filename+'.'+ext)
 
