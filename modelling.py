@@ -1,5 +1,6 @@
 from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay, accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 def evaluate_grid_classifier(search_result, X_test, y_test, X_train, y_train, pos_label='1',model_name='Grid search', confusion_matrix=True):
     """
@@ -262,5 +263,3 @@ def evaluate_regression(y_test, y_pred, y_train, y_pred_train, model_name='regre
     if plot:
         fig = sns.scatterplot(x=y_test, y=y_pred)
         fig.set_xlabel('Predicted')
-
-evaluate_regressor(data_p_monthly_sum_test['y'], forecast_m['yhat'][-12:], data_p_monthly_sum['y'], forecast_m['yhat'][:-12], model_name='regressor',plot=True)
