@@ -256,7 +256,37 @@ def drop_features(df,threshold=100, show_update=True):
     if show_update == True:
         return explore(df,id=0,print_n_unique=False, printValues=False)
 
-
+def save_output(df, filename=None, description=None, append_version=True, iteration_id=None,
+    csv_path=r'C:\Users\silvh\OneDrive\lighthouse\Ginkgo coding\content-summarization\output\CSV',
+    pickle_path=r'C:\Users\silvh\OneDrive\lighthouse\Ginkgo coding\content-summarization\output\pickles'
+    ):
+    """
+    Save an Python object as both pickle and CSV. Automatically create filename using date and time 
+    if not provided.
+    
+    """
+    if description:
+        filename = f'{description}_{datetime.now().strftime("%Y-%m-%d_%H%M")}'
+        append_version = False
+    elif filename == None:
+        filename = f'{datetime.now().strftime("%Y-%m-%d_%H%M")}_outputs'
+        append_version = False
+    if iteration_id:
+        filename += f'_{"{:02d}".format(iteration_id)}'
+    try:
+        savepickle(df, filename=filename, path=pickle_path, append_version=append_version)
+        print('\tObject saved as pickle')
+    except:
+        print('Unable to save pickle')
+    if type(df) == pd.core.frame.DataFrame
+        save_csv(df, filename=filename, path=csv_path, append_version=append_version)
+        print('\tDataFrame saved as CSV')
+    elif type(df) == dict:
+        try:
+            save_csv(pd.DataFrame(df), filename=filename, path=csv_path, append_version=append_version)
+            print('\tDictionary converted to CSV')
+        except:
+            print('\tUnable to save CSV')
 
 # def time_columns(df,time_column,format='%H%M'):
 #     """ 
