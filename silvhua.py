@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
 from datetime import datetime
+import json
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
 def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
@@ -278,16 +279,42 @@ def save_output(df, filename=None, description=None, append_version=True, iterat
         print('\tObject saved as pickle')
     except:
         print('Unable to save pickle')
-    if type(df) == pd.core.frame.DataFrame
+    if type(df) == pd.core.frame.DataFrame:
         save_csv(df, filename=filename, path=csv_path, append_version=append_version)
         print('\tDataFrame saved as CSV')
-    elif type(df) == dict:
+    elif (type(df) == dict) & (csv_path != None):
         try:
             save_csv(pd.DataFrame(df), filename=filename, path=csv_path, append_version=append_version)
             print('\tDictionary converted to CSV')
         except:
             print('\tUnable to save CSV')
 
+
+def save_to_json(obj, filename=None, description='output_dictionary', append_version=False,
+    path=r'C:\Users\silvh\OneDrive\lighthouse\Ginkgo coding\content-summarization\output\json'
+    ):
+    """
+    Save Python object as a JSON file.
+    Parameters:
+    - obj: Python object to be saved.
+    - filename: Root of the filename.
+    - path (raw string): Use the format r'<path>'. If None, file is saved in same directory as script.
+    - append_version (bool): If true, append date and time to end of filename.
+    """
+    if description:
+        filename = f'{description}_{datetime.now().strftime("%Y-%m-%d_%H%M")}'
+        append_version = False
+    elif filename == None:
+        filename = f'{datetime.now().strftime("%Y-%m-%d_%H%M")}_outputs'
+        append_version = False
+    if path:
+        path = f'{path}/'.replace('\\','/')
+    if append_version:
+        filename += f'_{datetime.now().strftime("%Y-%m-%d_%H%M%S")}'
+    filename += '.json'
+    with open(path+filename, 'w') as f:
+        json.dump(obj, f)
+    print(f'Object saved as JSON: {filename}')
 # def time_columns(df,time_column,format='%H%M'):
 #     """ 
 #     Take the time in a dateframes to create new columns with datetime objects.
