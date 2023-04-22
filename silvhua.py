@@ -25,6 +25,7 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
         df.set_index(df.columns[0], inplace=True)
         df.index.name = None
     print('Dataframe shape: ',df.shape)
+    print('DataFrame columns:', [col for col in df.columns])
     print('Time completed:', datetime.now())
 
     if truncate:
@@ -80,9 +81,12 @@ def loadpickle(filename,filepath):
     Returns saved object.
     """
     filename = f'{filepath}/'.replace('\\','/')+filename
-    loaded_model = pickle.load(open(filename, 'rb'))
+    object = pickle.load(open(filename, 'rb'))
     print('Time completed:', datetime.now())
-    return loaded_model
+    if type(object) == pd.core.frame.DataFrame:
+        print('Dataframe shape: ',object.shape)
+        print('DataFrame columns:', [col for col in object.columns])
+    return object
 
 def joblib_save(model,filename,path=None,append_version=False):
     """
