@@ -32,7 +32,7 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
     else:
         return df
 
-def save_csv(df,filename,path=None,append_version=False):
+def save_csv(df,filename,path=None,append_version=False, index=True):
     """
     Export dataframe to CSV.
     Parameters:
@@ -45,7 +45,7 @@ def save_csv(df,filename,path=None,append_version=False):
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
         filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
-    df.to_csv(path+filename+'.csv')
+    df.to_csv(path+filename+'.csv', index=index)
     print('File saved: ',path+filename+'.csv')
     print('Time completed:', datetime.now())
 
