@@ -70,50 +70,62 @@ def plot_int_hist(df, columns=None, color=None, label=1):
     return fig
 
 # Function to plot multiple bar charts using Plotly. Show different colours based on classification.
-def plot_int_bar(df, columns=None, color=None, label=1, barmode='stack'):
+def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack', n_columns=1):
     """
     Use Plotly to plot multiple histograms using the specified columns of a dataframe.
     Arguments:
     - df: Dataframe.
     - columns (optional): Columns of dataframe on which to create the histogram. If blank, all numeric data will be plotted.
-    - color (optional): Provide name of colum containing binary classification values 0 and 1. 
+    - classification (optional): Provide name of colum containing binary classification values 0 and 1. 
         Data points classified as 1 will be in red.
     - label (optional): Label of classification column. Default is 1.
     - barmode ('stack', 'group', or 'overlay'; optional): How the different will be shown. Default is 'stack'.
+    - n_columns (optional): Number of columns in the figure. Default is 2.
 
     """
     if columns == None:
         columns = df.dtypes[df.dtypes != 'object'].index.tolist()
-    fig = make_subplots(rows=round((len(columns)+.5)/2), cols=2,subplot_titles=columns)
+    n_rows = (len(columns)-1) // n_columns + 1
+    fig = make_subplots(rows=n_rows, cols=n_columns, subplot_titles=columns)
     for i, feature in enumerate(columns):
-        if color:
-            zero = df[df[color] != label]
-            one = df[df[color] == label]
-            fig.add_trace(go.Histogram(x=zero[feature],
+        if classification:
+            zero = df.sort_values(feature)[df.sort_values(feature)[classification] != label]
+            one = df.sort_values(feature)[df.sort_values(feature)[classification] == label]
+            fig.add_trace(go.Histogram(y=zero[feature],
                 marker_color='blue',
+                orientation='h',
                 opacity=0.5), 
-                row=i//2+1, col=i % 2 + 1
+                row=i//n_columns+1, col=i % n_columns + 1
                 )
-            fig.add_trace(go.Histogram(x=one[feature],
+            fig.add_trace(go.Histogram(y=one[feature],
                 marker_color='red',
+                orientation='h',
                 opacity=0.5),
-                row=i//2+1, col=i % 2 + 1)
+                row=i//n_columns+1, col=i % n_columns + 1)
         else:
             fig.add_trace(go.Histogram(x=df[feature]), 
-            row=i//2+1, col=i % 2 + 1)
+            row=i//n_columns+1, col=i % n_columns + 1)
     
-    if color:
-        title = f'Observations with {color} of value {label} are indicated in red'
+    if classification:
+        title = f'Observations with {classification} of value {label} are indicated in red'
     else:
         title = 'Value counts'
-    fig.update_layout(height=300*round((len(columns)+.5)/2), 
-        showlegend=False,barmode=barmode,
+    fig.update_layout(
+        showlegend=False,
+        barmode=barmode,
         bargap=0.1,
-        title = title,
+        title=title,
         title_x=0.5,
         title_xanchor='center',
-        title_y = 0,
-        title_yanchor = 'bottom')
+        # title_y=0.1,
+        title_yanchor='top'
+    )
+    fig.update_xaxes(title=dict(
+        standoff=0,
+        ),
+        title_text='number of observations',
+        row=n_rows
+    )
     fig.show()
 
 # Function to plot multiple histograms
