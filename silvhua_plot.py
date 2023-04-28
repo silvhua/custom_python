@@ -190,7 +190,8 @@ def hist_box(df, column=None, marginal='box', color=None):
     fig.show()
 
 # Function to plot bar charts where data are normalized for each group. Show different colours based on classification.
-def plot_proportion(df, columns=None, classication='Loan_Status', label='Y', barmode='stack'):
+def plot_proportion(df, columns=None, classication='Loan_Status', label=1, 
+    barmode='stack', n_columns=1, height=200):
     """
     Use Plotly to plot bar charts where data are normalized for each group. 
     Show different colours based on classification.
@@ -202,39 +203,58 @@ def plot_proportion(df, columns=None, classication='Loan_Status', label='Y', bar
         Data points classified as 1 will be in red.
     - label (optional): Label of classification column. Default is 1.
     - barmode ('stack', 'group', or 'overlay'; optional): How the different will be shown. Default is 'stack'.
+    - n_columns (optional): Number of columns in the figure. Default is 2.
 
     """
     if columns == None:
         columns = df.dtypes[df.dtypes == 'object'].index.tolist()
-    fig = make_subplots(rows=round((len(columns)+.5)/2), cols=2,subplot_titles=columns)
+    n_rows=round((len(columns)+.5)/n_columns) - 1
+    fig = make_subplots(
+        rows=n_rows+1, 
+        cols=n_columns,subplot_titles=columns)
     for i, feature in enumerate(columns):
-        pivot = df.pivot_table(df.columns[-1], index=[classication], columns=[feature],aggfunc='count')
-        zero_label = list(set(pivot.index)-set(label))[0]
+        pivot = df.sort_values(feature).fillna(0).replace('',0).pivot_table(
+            df.sort_values(feature).columns[-1], index=[classication], columns=[feature],aggfunc='count')
+        try:
+            zero_label = list(set(pivot.index)-set(label))[0] 
+        except:
+            zero_label = list(set(pivot.index)-set([label]))[0] 
+        pivot.index = pivot.index.fillna(zero_label)
         zero = pivot.loc[zero_label,:]/pivot.sum()*100
         yes = pivot.loc[label,:]/pivot.sum()*100
-        # print(pivot)
-        fig.add_trace(go.Bar(x=pivot.columns,
-            y=zero,
+        fig.add_trace(go.Bar(y=pivot.columns,  # Change x to y
+            x=zero,  # Change y to x
+            orientation='h',  # Add orientation
             marker_color='blue',
             opacity=0.5), 
-            row=i//2+1, col=i % 2 + 1
+            row=i//n_columns+1, col=i % n_columns + 1
             )
-        fig.add_trace(go.Bar(x=pivot.columns,
-            y=yes,
+        fig.add_trace(go.Bar(y=pivot.columns,  # Change x to y
+            x=yes,  # Change y to x
+            orientation='h',  # Add orientation
             marker_color='red',
             opacity=0.5),
-            row=i//2+1, col=i % 2 + 1)
+            row=i//n_columns+1, col=i % n_columns + 1)
     
     title = f'Percentage with {classication} of value {label} by category (indicated in red).'
-
-    fig.update_layout(height=300*round((len(columns)+.5)/2), 
-        showlegend=False,barmode=barmode,
-        bargap=0.1,
+    fig.update_layout(
+        barmode=barmode,
+        height=n_rows*height,
+        showlegend=False,
         title = title,
         title_x=0.5,
         title_xanchor='center',
         # title_y = .96,
-        title_yanchor = 'bottom')
+        title_yanchor = 'bottom',
+        # xaxis_title='% of Total',  # Add x-axis title
+        yaxis_title='',  # Remove y-axis title
+        )
+    fig.update_xaxes(title=dict(
+        standoff=0,
+        ),
+        title_text='% of Total',
+        row=n_rows
+    )
     fig.show()
 
 def lineplots_comparison(df, x='Year', columns=['Value', 'Value'], scale_axis=[True,False], match_yaxis=False,
