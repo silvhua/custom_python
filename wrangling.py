@@ -230,24 +230,25 @@ def filter_chain(df, any_filters, all_filters, final_filter, view_columns=None):
 
 def filter_any_and_all_chain(
         df, filters_dict_list, final_filter, view_columns=None,
-        rank_sort=True, trainer_column='Your Name', date_column='date added 0',
+        rank_sort=True, capture_column='To capture', trainer_column='Your Name', date_column='date added 0',
         captured_column='Captured',
-        max_rows=400, final_sort=['Equipment 3', 'main movement', 'secondary movement']):
+        max_rows=400, final_sort=['Equipment 3', 'main movement', 'secondary movement'],
+        sort_na_position='first'):
     """
     Filter a DataFrame by chaining multiple filters, each consisting of "any" and "all" conditions.
 
     Args:
-        df (pandas.DataFrame): The DataFrame to filter.
-        filters_dict_list (list[dict]): A list of dictionaries, each containing the "any" and "all" conditions for a filter.
-        final_filter (dict or list): The final filter to apply after all other filters, using the same syntax as the "all" condition.
-        view_columns (list[str], optional): The columns to include in the filtered DataFrame. If None, all columns are included. Defaults to None.
-        rank_sort (bool or list[str], optional): Whether to sort the filtered DataFrame by the "trainer" and "date" columns. If True, the default columns are used. If a list of column names, those columns are used instead. Defaults to True.
-        trainer_column (str, optional): The name of the column containing the trainer's name. Used for sorting. Defaults to 'Your Name'.
-        date_column (str, optional): The name of the column containing the date of the exercise. Used for sorting. Defaults to 'date added 0'.
-        captured_column (str, optional): The name of the column containing the "captured" flag. Used for printing value counts. Defaults to 'Captured'.
-        max_rows (int or None, optional): The maximum number of rows to include in the filtered DataFrame. If None, all rows are included. Defaults to 400.
-        final_sort (list[str], optional): The columns to sort the final filtered DataFrame by. Defaults to ['Equipment 3', 'main movement', 'secondary movement'].
-
+        - df (pandas.DataFrame): The DataFrame to filter.
+        - filters_dict_list (list[dict]): A list of dictionaries, each containing the "any" and "all" conditions for a filter.
+        - final_filter (dict or list): The final filter to apply after all other filters, using the same syntax as the "all" condition.
+        - view_columns (list[str], optional): The columns to include in the filtered DataFrame. If None, all columns are included. Defaults to None.
+        - rank_sort (bool or list[str], optional): Whether to sort the filtered DataFrame by the "trainer" and "date" columns. If True, the default columns are used. If a list of column names, those columns are used instead. Defaults to True.
+        - trainer_column (str, optional): The name of the column containing the trainer's name. Used for sorting. Defaults to 'Your Name'.
+        - date_column (str, optional): The name of the column containing the date of the exercise. Used for sorting. Defaults to 'date added 0'.
+        - captured_column (str, optional): The name of the column containing the "captured" flag. Used for printing value counts. Defaults to 'Captured'.
+        - max_rows (int or None, optional): The maximum number of rows to include in the filtered DataFrame. If None, all rows are included. Defaults to 400.
+        - final_sort (list[str], optional): The columns to sort the final filtered DataFrame by. Defaults to ['Equipment 3', 'main movement', 'secondary movement'].
+        - sort_na_position ('first', 'last'): Where to place NaN values when sorting. Defaults to 'first'.
     Returns:
         pandas.DataFrame: The filtered DataFrame.
 
@@ -298,7 +299,7 @@ def filter_any_and_all_chain(
     print(f'\nFilter chain: Filtered DataFrame shape: {filtered_df.shape}')
 
     if rank_sort & (type(rank_sort) != list):
-        rank_sort = [trainer_column, date_column]
+        rank_sort = [capture_column, trainer_column, date_column]
     if trainer_column in rank_sort:
         print(f'\tSorting by {rank_sort}...')
         trainer_rank = {'rob': 1, 'silvia': 2}
@@ -315,7 +316,7 @@ def filter_any_and_all_chain(
 
     if final_sort:
         print(f'\tFinal sorting by {final_sort}...')
-        filtered_df = filtered_df.sort_values(final_sort)
+        filtered_df = filtered_df.sort_values(final_sort, na_position=sort_na_position)
 
     print(f'Value counts for {trainer_column}: \n{filtered_df[trainer_column].value_counts()}')
     print(f'Value counts for {captured_column}: \n{filtered_df[captured_column].value_counts()}')
