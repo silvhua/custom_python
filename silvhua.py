@@ -283,7 +283,7 @@ def save_output(df, filename=None, description=None, append_version=True, iterat
         print('\tObject saved as pickle')
     except:
         print('Unable to save pickle')
-    if type(df) == pd.core.frame.DataFrame:
+    if (type(df) == pd.core.frame.DataFrame) & (csv_path != None):
         save_csv(df, filename=filename, path=csv_path, append_version=append_version)
         print('\tDataFrame saved as CSV')
     elif (type(df) == dict) & (csv_path != None):
