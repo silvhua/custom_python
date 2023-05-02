@@ -86,6 +86,8 @@ def loadpickle(filename,filepath):
     if type(object) == pd.core.frame.DataFrame:
         print('Dataframe shape: ',object.shape)
         print('DataFrame columns:', [col for col in object.columns])
+    if type(object) == dict:
+        print('Dictionary keys:', [key for key in object.keys()])
     return object
 
 def joblib_save(model,filename,path=None,append_version=False):
