@@ -355,3 +355,68 @@ def remove_duplicates_by_lettercase(df, column='Reference'):
     print(f'Number of rows after removing duplicates: {len(df)}')
     
     return df
+
+def convert_dtypes(
+        df, date_columns=1, format='%Y-%m-%d',
+        int_columns=['index', 'total_cases', 'days_since_last_case', 'cases_when_cluster_confirmed', 'total_cases', 'doc_page_number'], 
+        float_columns=None,
+        description='pdfs_parsed_2023-04-02', save=False, 
+        csv_path=None,
+        pickle_path=r'C:\Users\silvh\OneDrive\lighthouse\portfolio-projects\BC-Covid-workplace-closures\data\interim'
+        ):
+    """
+    Converts specified columns in a pandas DataFrame to datetime format and optionally saves the modified DataFrame.
+    Originally created for BC Covid workplace closures project.
+
+    Args:
+        - df (pandas DataFrame): DataFrame to be modified
+        - date_columns (dict or list, optional): Either a dictionary of {column_name: datetime_format} 
+            or a list of column names to be converted to datetime format. Defaults to 1.
+        - format (str, optional): The format string for the date_columns. Defaults to '%Y-%m-%d'.
+        - description (str, optional): The description to be used in the saved output file name. Defaults to 'pdfs_parsed_2023-04-30'.
+        - save (bool, optional): Whether or not to save the modified DataFrame. Defaults to False.
+        - csv_path (str, optional): The file path for the saved csv file. If None, csv file will not be saved. Defaults to None.
+        - pickle_path (str, optional): 
+
+    Returns:
+    pandas DataFrame: Modified DataFrame with specified columns converted to datetime format.
+    """
+    if (type(date_columns) != list) & (type(date_columns) != str):
+        date_columns = [
+            'date_cluster_confirmed_public_health', 'date_cluster_no_longer_active',
+            'earliest_reported_cases', 'latest_reported_cases', 
+            'closure_date'
+        ]
+    print(f'Converting columns to datetime: {[col for col in date_columns]}')
+    df[date_columns] = df[date_columns].apply(pd.to_datetime, format=format)
+    if (float_columns is None) & (int_columns is None):
+        float_columns = list(df.columns)
+    if float_columns is not None:
+        print(f'Converting columns to float: {[col for col in float_columns]}')
+        for column in float_columns:
+            print(f'\t{column}')
+            df[column] = df[column].apply(pd.to_numeric, errors='coerce')
+    if int_columns is not None:
+        print(f'Converting columns to integers: {[col for col in int_columns]}')
+        for column in int_columns:
+            print(f'\t{column}')
+            df[column] = df[column].apply(pd.to_numeric, errors='coerce', downcast='integer')
+    print(f'dtypes: {df.dtypes}')
+    if save:
+        try:
+            save_output(
+                df, description=description+'_dtypes_converted', pickle_path=pickle_path, csv_path=csv_path)
+        except:
+            print('Unable to save outputs')
+    return df
+
+def eda(df):
+    """
+    Exploratory data analysis for a pandas DataFrame.
+    """
+    print(f'DataFrame shape: {df.shape}')
+    print(f'Dataframe data types:\n{df.dtypes}')
+    categorical_columns = df.select_dtypes(include=['object']).columns
+    for column in categorical_columns:
+        print(f'Unique values in {column} (n={df[column].nunique()}):')
+        print(f'\t{[value for value in df[column].sort_values().unique()]}')
