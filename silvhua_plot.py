@@ -70,7 +70,7 @@ def plot_int_hist(df, columns=None, color=None, label=1):
     return fig
 
 # Function to plot multiple bar charts using Plotly. Show different colours based on classification.
-def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack', n_columns=1):
+def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack', n_columns=1, height=150):
     """
     Use Plotly to plot multiple histograms using the specified columns of a dataframe.
     Arguments:
@@ -112,8 +112,9 @@ def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack'
         title = 'Value counts'
     fig.update_layout(
         showlegend=False,
+        height=(n_rows+1)*height,
         barmode=barmode,
-        bargap=0.1,
+        # bargap=0.1,
         title=title,
         title_x=0.5,
         title_xanchor='center',
@@ -203,7 +204,7 @@ def hist_box(df, column=None, marginal='box', color=None):
 
 # Function to plot bar charts where data are normalized for each group. Show different colours based on classification.
 def plot_proportion(df, columns=None, classication='Loan_Status', label=1, 
-    barmode='stack', n_columns=1, height=200):
+    barmode='stack', n_columns=1, height=150):
     """
     Use Plotly to plot bar charts where data are normalized for each group. 
     Show different colours based on classification.
@@ -225,8 +226,12 @@ def plot_proportion(df, columns=None, classication='Loan_Status', label=1,
         rows=n_rows+1, 
         cols=n_columns,subplot_titles=columns)
     for i, feature in enumerate(columns):
-        pivot = df.sort_values(feature).fillna(0).replace('',0).pivot_table(
-            df.sort_values(feature).columns[-1], index=[classication], columns=[feature],aggfunc='count')
+        try:
+            pivot = df.sort_values(feature).fillna(0).replace('',0).pivot_table(
+                df.sort_values(feature).columns[-1], index=[classication], columns=[feature],aggfunc='count')
+        except:
+            pivot = df.sort_values(feature).fillna(0).replace('',0).pivot_table(
+                df.sort_values(feature).columns[0], index=[classication], columns=[feature],aggfunc='count')
         try:
             zero_label = list(set(pivot.index)-set(label))[0] 
         except:
@@ -251,7 +256,7 @@ def plot_proportion(df, columns=None, classication='Loan_Status', label=1,
     title = f'Percentage with {classication} of value {label} by category (indicated in red).'
     fig.update_layout(
         barmode=barmode,
-        height=n_rows*height,
+        height=(n_rows+1)*height,
         showlegend=False,
         title = title,
         title_x=0.5,
