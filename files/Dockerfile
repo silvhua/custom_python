@@ -7,4 +7,4 @@ WORKDIR /app/content-summarization
 RUN pip install --no-cache-dir -r src/requirements.txt
 WORKDIR /app/content-summarization/src
 ENV api_openai="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"
-CMD python test.py 
+ENTRYPOINT  ["python","test.py"]
