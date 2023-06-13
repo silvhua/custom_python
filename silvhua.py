@@ -320,6 +320,20 @@ def save_to_json(obj, filename=None, description='output_dictionary', append_ver
     with open(path+filename, 'w') as f:
         json.dump(obj, f)
     print(f'Object saved as JSON: {filename}')
+
+def load_json(filename, filepath):
+    """
+    Load a JSON file using specified file path copied from windows file explorer.
+    Back slashes in file path will be converted to forward slashes.
+
+    Arguments:
+    - filepath (raw string): Use the format r'<path>'.
+    - filename (string).
+    """
+    filename = f'{filepath}/'.replace('\\','/')+filename
+    with open(filename) as file:
+        return json.load(file)
+    
 # def time_columns(df,time_column,format='%H%M'):
 #     """ 
 #     Take the time in a dateframes to create new columns with datetime objects.
