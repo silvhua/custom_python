@@ -262,7 +262,7 @@ def drop_features(df,threshold=100, show_update=True):
     if show_update == True:
         return explore(df,id=0,print_n_unique=False, printValues=False)
 
-def save_output(df, filename=None, description=None, append_version=True, iteration_id=None,
+def save_output(df, filename=None, description=None, append_version=True, iteration_id=None, index=False,
     csv_path=r'C:\Users\silvh\OneDrive\lighthouse\Ginkgo coding\content-summarization\output\CSV',
     pickle_path=r'C:\Users\silvh\OneDrive\lighthouse\Ginkgo coding\content-summarization\output\pickles'
     ):
@@ -285,7 +285,7 @@ def save_output(df, filename=None, description=None, append_version=True, iterat
     except:
         print('Unable to save pickle')
     if (type(df) == pd.core.frame.DataFrame) & (csv_path != None):
-        save_csv(df, filename=filename, path=csv_path, append_version=append_version)
+        save_csv(df, filename=filename, path=csv_path, append_version=append_version, index=index)
         print('\tDataFrame saved as CSV')
     elif (type(df) == dict) & (csv_path != None):
         try:
