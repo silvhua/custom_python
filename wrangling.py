@@ -432,3 +432,43 @@ def eda(df):
     for column in categorical_columns:
         print(f'Unique values in {column} (n={df[column].nunique()}):')
         print(f'\t{[value for value in df[column].sort_values().unique()]}')
+
+def rename_duplicate_columns(df):
+    """
+    Identifies duplicate columns in a pandas dataframe and appends a number to the end of the column name
+    if a duplicate is found.
+
+    Parameters:
+    - df: pandas dataframe
+
+    Returns:
+    - df: pandas dataframe with unique column names
+    """
+    # Create a copy of the dataframe to avoid modifying the original
+    # print(f'Original columns: {[column for column in df.columns]}')
+    df = df.copy()
+
+    # Create a dictionary to store column names and their respective counts
+    column_counts = {}
+    new_column_names = []
+
+    # Iterate over the columns of the dataframe
+    for index, column in enumerate(df.columns):
+        # Check if the column name is already present in the dictionary
+        if column in column_counts:
+            # Increment the count of the column name
+            column_counts[column] += 1
+
+            # Append the count to the column name
+            new_column = f"{column}{column_counts[column] + 1:1d}"
+
+            new_column_names.append(new_column)
+            print(f'Column "{df.iloc[:, index].name}" renamed to "{new_column}"')
+        else:
+            # Add the column name to the dictionary with a count of 0
+            column_counts[column] = 0
+            new_column_names.append(column)
+    df.columns = new_column_names
+    print(f'\nUpdated columns: {[column for column in df.columns]}')
+
+    return df
