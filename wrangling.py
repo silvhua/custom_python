@@ -5,7 +5,7 @@ sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\portfolio-projects\online-P
 from silvhua import *
 from datetime import datetime
 
-def filter_df_any_condition(df, filters, view_columns=None):
+def filter_df_any_condition(df, filters, view_columns=None, verbose=False):
     """
     Filters a DataFrame based on any of the given conditions in a dictionary.
 
@@ -25,6 +25,7 @@ def filter_df_any_condition(df, filters, view_columns=None):
             'Cardio Friendly': ['y'],
             'test friendly': ['y']
         }
+        verbose (bool): If true, prints indices of filtered rows.
     Returns:
         pandas.DataFrame: A filtered DataFrame where at least one condition is met.
     """
@@ -37,25 +38,30 @@ def filter_df_any_condition(df, filters, view_columns=None):
                 filtered_dfs.append(filtered_df[filtered_df[col].str.lower().isin(condition)])
             else:
                 filtered_dfs.append(filtered_df[filtered_df[col].isin(condition)])
-            print(f'Filtered on {col} in {[item for item in condition]}: {[index for index in filtered_df.index]}')
+            if verbose:
+                print(f'Filtered on {col} in {[item for item in condition]}: {[index for index in filtered_df.index]}')
         elif isinstance(condition, bool):
             filtered_dfs.append(filtered_df[filtered_df[col] == condition])
-            print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
+            if verbose:
+                print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
         elif condition == "notnull":
             if filtered_df[col].dtype == 'datetime64[ns]':
                 filtered_dfs.append(filtered_df[filtered_df[col] > datetime(1900, 1, 1)])
             else:
                 filtered_dfs.append(filtered_df[filtered_df[col].notnull()])
-            print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
+            if verbose:
+                print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
         elif condition == "null":
             if filtered_df[col].dtype == 'datetime64[ns]':
                 filtered_dfs.append(filtered_df[filtered_df[col] == datetime(1900, 1, 1)])
             else:
                 filtered_dfs.append(filtered_df[filtered_df[col].isnull()])
-            print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
+            if verbose:
+                print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
         else:
             filtered_dfs.append(filtered_df.query(f'{col}{condition}'))
-            print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
+            if verbose:
+                print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
     combined_df = pd.concat(filtered_dfs).sort_index()
     deduped_df = combined_df.drop_duplicates(ignore_index=False)
     deduped_df = deduped_df[view_columns] if view_columns != None else deduped_df
@@ -65,7 +71,7 @@ def filter_df_any_condition(df, filters, view_columns=None):
     return deduped_df
 
 
-def filter_df_all_conditions(df, filters, view_columns=None):
+def filter_df_all_conditions(df, filters, view_columns=None, verbose=False):
     """
     Filters a DataFrame based on all of the given conditions in a dictionary.
 
@@ -86,6 +92,7 @@ def filter_df_all_conditions(df, filters, view_columns=None):
             'Cardio Friendly': ['y'],
             'test friendly': ['y']
         }
+        verbose (bool): If true, prints indices of filtered rows.
 
     Returns:
         pandas.DataFrame: A filtered DataFrame where all conditions are met.
@@ -99,14 +106,16 @@ def filter_df_all_conditions(df, filters, view_columns=None):
                 filters_list.append(filtered_df[filtered_df[col].str.lower().isin(condition)].index.tolist())
             else:
                 filters_list.append(filtered_df[filtered_df[col].isin(condition)].index.tolist())
-            print(f'Filtered on {col} in {[item for item in condition]}')
+            if verbose:
+                print(f'Filtered on {col} in {[item for item in condition]}')
         elif isinstance(condition, bool):
             filters_list.append(filtered_df[filtered_df[col] == condition].index.tolist())
         elif condition == "notnull":
             print(f'Date column dtype: {filtered_df[col].dtype}')
             if filtered_df[col].dtype == 'datetime64[ns]':
                 filters_list.append(filtered_df[filtered_df[col] > datetime(1900, 1, 1)].index.tolist())
-                print('Removed rows with null dates')
+                if verbose:
+                    print('Removed rows with null dates')
             else:
                 filters_list.append(filtered_df[filtered_df[col].notnull()].index.tolist())
         elif condition == "null":
@@ -123,7 +132,7 @@ def filter_df_all_conditions(df, filters, view_columns=None):
     print(f'\tDataFrame shape: {filtered_df.shape}')
     return filtered_df
 
-def filter_any_and_all(df, any_filters, all_filters, view_columns=None):
+def filter_any_and_all(df, any_filters, all_filters, view_columns=None, verbose=False):
     """
     Filters a pandas DataFrame by applying two types of filters: 'any' and 'all'.
     
@@ -141,6 +150,7 @@ def filter_any_and_all(df, any_filters, all_filters, view_columns=None):
         If None, no 'all' filters are applied.
     view_columns : list of str or None, optional
         The columns to include in the final filtered DataFrame. If None, all columns are included.
+    verbose (bool): If true, prints indices of filtered rows.
         
         Example filters dictionary:
         all_filters1 = {
@@ -160,13 +170,13 @@ def filter_any_and_all(df, any_filters, all_filters, view_columns=None):
     print(f'Original DataFrame shape: {df.shape}')
     if any_filters:
         print(f'** Applying filter_df_any_condition')
-        any_filtered_df = filter_df_any_condition(df, any_filters, view_columns)
+        any_filtered_df = filter_df_any_condition(df, any_filters, view_columns, verbose=verbose)
         print()
     else:
         any_filtered_df = pd.DataFrame()
     if all_filters:
         print(f'** Applying filter_df_all_conditions')
-        all_filtered_df = filter_df_all_conditions(df, all_filters, view_columns)
+        all_filtered_df = filter_df_all_conditions(df, all_filters, view_columns, verbose=verbose)
         print()
     else:
         all_filtered_df = pd.DataFrame()
@@ -177,7 +187,7 @@ def filter_any_and_all(df, any_filters, all_filters, view_columns=None):
     print(f'Final DataFrame shape: {combined_df.shape}')
     return combined_df
 
-def filter_chain(df, any_filters, all_filters, final_filter, view_columns=None):
+def filter_chain(df, any_filters, all_filters, final_filter, view_columns=None, verbose=False):
     """
     Chains together multiple filtering functions to filter a pandas DataFrame.
     
@@ -199,6 +209,7 @@ def filter_chain(df, any_filters, all_filters, final_filter, view_columns=None):
         If a list of filters is provided, they will be applied sequentially.
     view_columns : list of str or None, optional
         The columns to include in the final filtered DataFrame. If None, all columns are included.
+    verbose (bool): If true, prints indices of filtered rows.
         
         Example filters dictionary:
         all_filters1 = {
@@ -219,11 +230,11 @@ def filter_chain(df, any_filters, all_filters, final_filter, view_columns=None):
         if type(final_filter) == list:
             for index, filter in enumerate(final_filter):
                 print(f'** Applying filter_df_all_conditions: Iteration {index + 1}')
-                filtered_df1 = filter_df_all_conditions(filtered_df1, filter, view_columns)
+                filtered_df1 = filter_df_all_conditions(filtered_df1, filter, view_columns, verbose=verbose)
                 print()
         else:
             print(f'** Applying filter_df_all_conditions')
-            filtered_df1 = filter_df_all_conditions(filtered_df1, final_filter, view_columns)
+            filtered_df1 = filter_df_all_conditions(filtered_df1, final_filter, view_columns, verbose=verbose)
 
     print(f'\nFilter chain: Final DataFrame shape: {filtered_df1.shape}')
     return filtered_df1
@@ -233,7 +244,7 @@ def filter_any_and_all_chain(
         rank_sort=True, capture_column='To capture', trainer_column='Your Name', date_column='date added 0',
         captured_column='Captured',
         max_rows=400, final_sort=['Equipment 3', 'main movement', 'secondary movement'],
-        sort_na_position='first'):
+        sort_na_position='first', verbose=False):
     """
     Filter a DataFrame by chaining multiple filters, each consisting of "any" and "all" conditions.
 
@@ -249,6 +260,7 @@ def filter_any_and_all_chain(
         - max_rows (int or None, optional): The maximum number of rows to include in the filtered DataFrame. If None, all rows are included. Defaults to 400.
         - final_sort (list[str], optional): The columns to sort the final filtered DataFrame by. Defaults to ['Equipment 3', 'main movement', 'secondary movement'].
         - sort_na_position ('first', 'last'): Where to place NaN values when sorting. Defaults to 'first'.
+        - verbose (bool): If true, prints indices of filtered rows.
     Returns:
         pandas.DataFrame: The filtered DataFrame.
 
@@ -290,11 +302,11 @@ def filter_any_and_all_chain(
         if type(final_filter) == list:
             for index, filter in enumerate(final_filter):
                 print(f'** Applying filter_df_all_conditions: Iteration {index + 1}')
-                filtered_df = filter_df_all_conditions(filtered_df, filter, view_columns)
+                filtered_df = filter_df_all_conditions(filtered_df, filter, view_columns, verbose=verbose)
                 print()
         else:
             print(f'** Applying filter_df_all_conditions')
-            filtered_df = filter_df_all_conditions(filtered_df, final_filter, view_columns)
+            filtered_df = filter_df_all_conditions(filtered_df, final_filter, view_columns, verbose=verbose)
 
     print(f'\nFilter chain: Filtered DataFrame shape: {filtered_df.shape}')
 
