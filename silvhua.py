@@ -25,7 +25,7 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
         df.index.name = None
     print('Dataframe shape: ',df.shape)
     print('DataFrame columns:', [col for col in df.columns])
-    print('Time completed:', datetime.now())
+    print('\tTime completed:', datetime.now())
 
     if truncate:
         return df.sample(n=truncate,random_state=0)
@@ -47,7 +47,7 @@ def save_csv(df,filename,path=None,append_version=False, index=True):
         filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
     df.to_csv(path+filename+'.csv', index=index)
     print('File saved: ',path+filename+'.csv')
-    print('Time completed:', datetime.now())
+    print('\tTime completed:', datetime.now())
 
 
 def savepickle(model,filename, ext='sav', path=None,append_version=False):
@@ -67,7 +67,7 @@ def savepickle(model,filename, ext='sav', path=None,append_version=False):
     with open (path+filename+'.'+ext, 'wb') as fh:
         pickle.dump(model, fh)
     print('File saved: ',path+filename+'.'+ext)
-    print('Time completed:', datetime.now())
+    print('\tTime completed:', datetime.now())
 
 def loadpickle(filename,filepath):
     """
@@ -81,7 +81,7 @@ def loadpickle(filename,filepath):
     """
     filename = f'{filepath}/'.replace('\\','/')+filename
     object = pickle.load(open(filename, 'rb'))
-    print('Time completed:', datetime.now())
+    print('\tTime completed:', datetime.now())
     if type(object) == pd.core.frame.DataFrame:
         print('Dataframe shape: ',object.shape)
         print('DataFrame columns:', [col for col in object.columns])
@@ -105,7 +105,7 @@ def joblib_save(model,filename,path=None,append_version=False):
     with open (path+filename, 'wb') as fh:
         joblib.dump(model, fh)
     print('File saved: ',path+filename)
-    print('Time completed:', datetime.now())
+    print('\tTime completed:', datetime.now())
 
 
 def joblib_load(filename,filepath):
@@ -150,7 +150,7 @@ def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
     df[str(date_column+'_standard')] = date
     df[str(date_column+'_year')] = date.dt.year
     df[str(date_column+'_month')] = date.dt.month
-    print('Time completed:', datetime.now())
+    print('\tTime completed:', datetime.now())
     return df
 
 def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_difference=True):
