@@ -69,9 +69,6 @@ Extract text from that and subsequent generations | `'//text()'` | `' ::text'` (
 [learn-javascript-introduction/cheatsheet](https://www.codecademy.com/learn/introduction-to-javascript/modules/learn-javascript-introduction/cheatsheet)
 [learn-javascript-control-flow/cheatsheet](https://www.codecademy.com/learn/introduction-to-javascript/modules/learn-javascript-control-flow/cheatsheet)
 
-Function/Method | Description
---- | ---
-
 
 <br>
 
@@ -107,6 +104,70 @@ if (favoritePhrase === 'Love That!') {
 } else {
   console.log("I don't love that!");
 }
+```
+
+### Conditional statements
+Logical operators | Description
+--- | ---
+`&&` or `and` | checks if both provided expressions are truthy.
+`or` or 2 pipe symbols | checks if either provided expression is truthy.
+The bang operator, `!` | switches the truthiness and falsiness of a value.
+
+```JavaScript
+let groceryItem = 'papaya';
+ 
+if (groceryItem === 'tomato') {
+  console.log('Tomatoes are $0.49');
+} else if (groceryItem === 'papaya'){
+  console.log('Papayas are $1.29');
+} else {
+  console.log('Invalid item');
+}
+```
+
+### Switch statement 
+This is an alternative statement that is easier to read and write.
+```JavaScript
+// Can also be written as:
+let groceryItem = 'papaya';
+ 
+switch (groceryItem) {
+  case 'tomato':
+    console.log('Tomatoes are $0.49');
+    break;
+  case 'lime':
+    console.log('Limes are $1.49');
+    break;
+  case 'papaya':
+    console.log('Papayas are $1.29');
+    break;
+  default:
+    console.log('Invalid item');
+    break;
+}
+ 
+// Prints 'Papayas are $1.29'
+```
+## Functions
+
+```JavaScript
+function greet(name='stranger') {
+  console.log(`Hello, ${name}`!);
+}
+```
+Use a return statement like in Python if needed.
+* The default result of a function is `undefined` if there is no `return` statement.
+
+### Function expressions
+
+```JavaScript
+// Declare the function expression
+const calculateArea = function(width, height) {
+  return wedith * height;
+}
+
+// Invoke the function expression
+variableName(argument1, argument2)
 ```
 
 # Docker ETL in Python
