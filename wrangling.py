@@ -243,7 +243,7 @@ def filter_any_and_all_chain(
         df, filters_dict_list, final_filter, view_columns=None,
         rank_sort=True, capture_column='To capture', trainer_column='Your Name', date_column='date added 0',
         captured_column='Captured',
-        max_rows=400, final_sort=['Equipment 3', 'main movement', 'secondary movement'],
+        max_rows=400, final_sort=['Equipment 3', 'Exercise', 'main movement', 'secondary movement'],
         sort_na_position='first', verbose=False):
     """
     Filter a DataFrame by chaining multiple filters, each consisting of "any" and "all" conditions.
