@@ -170,6 +170,24 @@ const calculateArea = function(width, height) {
 variableName(argument1, argument2)
 ```
 
+### Arrow functions
+Alternative to standard function syntax.
+```JavaScript
+const rectangleArea = (width, height) => {
+  let area = width * height;
+  return area;
+};
+```
+
+### Concise Body Arrow Functions
+Functions that take only 1 parameter do not be enclosed in `()`. 
+
+`const functionName = paramOne => {};`
+
+A function body composed of a single line block does not need curly braces nor the `return` keyword (an implicity return).
+
+`const sumNumbers = number => number + number;`
+
 # DataCamp ETL in Python
 
 ```python
@@ -523,3 +541,55 @@ stmt = delete(PprCleanAll).filter(PprCleanAll.description=="")
 session.execute(stmt)
 session.commit()
 ``` 
+
+# Datacamp Introduction to PySpark
+Function/Method | Description | Imports
+--- | ---- | ---
+`spark = SparkSession.builder.getOrCreate()` | returns an existing SparkSession if there's already one in the environment, or creates a new one if necessary | from pyspark.sql import SparkSession
+`.catalog.listTables()` | List tables in the catalogue
+`.sql(query_string)` | Send an SQL query to the data
+`.sql(query_string).show()` | Show the results of the SQL query
+`.sql(query_string).toPandas()` | Convert the results to a pandas DataFrame
+
+
+```python
+# Import SparkSession from pyspark.sql
+from pyspark.sql import SparkSession
+
+# Create my_spark
+# This returns an existing SparkSession if there's already one in the environment, or creates a new one if necessary!
+spark = SparkSession.builder.getOrCreate()
+
+# Print my_spark
+print(spark)
+
+# Print the tables in the catalog
+print(spark.catalog.listTables())
+```
+### Use SQL queries in PySpark
+```python
+query = "FROM flights SELECT * LIMIT 10"
+
+# Get the first 10 rows of flights
+flights10 = spark.sql(query)
+
+# Show the results
+flights10.show()
+
+```
+### Pandafy a Spark DataFrame
+```python
+flight_counts = spark.sql(query)
+
+# Convert the results to a pandas DataFrame
+pd_counts = flight_counts.toPandas()
+
+# Print the head of pd_counts
+print(pd_counts.head())
+```
+### Pandas to Spark
+Function/Method | Description
+--- | ---
+`spark_temp = spark.createDataFrame(pandas_df)` | Put a pandas DataFrame into a Spark clsuter that is stored locally.
+`spark_temp.createTempView("tempoary_table_name")` | registers the DataFrame as a table in the catalog, but as this table is temporary, it can only be accessed from the specific SparkSession used to create the Spark DataFrame.
+`spark_temp.createOrReplaceTempView("tempoary_table_name")` | creates a new temporary table if nothing was there before, or updates an existing table if one was already defined
