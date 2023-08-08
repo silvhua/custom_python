@@ -188,6 +188,53 @@ A function body composed of a single line block does not need curly braces nor t
 
 `const sumNumbers = number => number + number;`
 
+## Arrays
+[DataCamp Docs: Arrays and Array Methods](https://www.codecademy.com/resources/docs/javascript/arrays)
+
+## Loops
+A `do...while` statement says to do a task once and then keep doing it until a specified condition is no longer met. The syntax for a `do...while` statement looks like this:
+```JavaScript
+let countString = '';
+let i = 0;
+ 
+do {
+  countString = countString + i;
+  i++;
+} while (i < 5);
+ 
+console.log(countString);
+```
+
+## Iterators
+
+Function/Method | Description
+--- | ---
+`.forEach()` | Performs a callback function on each element and returns `undefined`
+`.map()` | Same as `.forEach()` but returns a new array.
+`.filter()` | returns an array of elements after filtering out certain elements from the original array. 
+
+### Syntax options
+
+Function expression
+```JavaScript
+const groceries = ['brown sugar', 'salt', 'cranberries']
+groceries.forEach(function(groceryItem) {console.log(' - ' + groceryItem);});
+```
+
+Arrow function
+```JavaScript
+groceries.forEach(groceryItem => console.log(groceryItem));
+```
+
+Function declaraton
+```JavaScript
+function printGrocery(element){
+  console.log(element);
+}
+ 
+groceries.forEach(printGrocery);
+```
+
 # DataCamp ETL in Python
 
 ```python
@@ -587,9 +634,146 @@ pd_counts = flight_counts.toPandas()
 # Print the head of pd_counts
 print(pd_counts.head())
 ```
-### Pandas to Spark
+### Pandas or CSV to Spark
 Function/Method | Description
 --- | ---
 `spark_temp = spark.createDataFrame(pandas_df)` | Put a pandas DataFrame into a Spark clsuter that is stored locally.
 `spark_temp.createTempView("tempoary_table_name")` | registers the DataFrame as a table in the catalog, but as this table is temporary, it can only be accessed from the specific SparkSession used to create the Spark DataFrame.
 `spark_temp.createOrReplaceTempView("tempoary_table_name")` | creates a new temporary table if nothing was there before, or updates an existing table if one was already defined
+`spark.read.csv(file_path, header=True)` | Create a table from a CSV file
+
+#### Read CSV files
+
+```Python
+# Don't change this file path
+file_path = "/usr/local/share/datasets/airports.csv"
+
+# Read in the airports data
+airports = spark.read.csv(file_path, header=True)
+
+# Show the data
+airports.show()
+```
+
+## Manipulating data
+Function/Method | Description | SQL equivalent
+--- | --- | ---
+`df = spark.table("table_name")` | Create a Spark DataFrame from a table in the `.catalog` by instantiating the `DataFrame` class.
+`df = withColumn("new_col_name", new_column_values)` | Create a new DataFrame with a new column.
+`df = withColumnRenamed("old_col_name", "new_column_name")` | Create a new DataFrame with a new column.
+`df.filter("WHERE <SQL conditional expression>)` <br> `df.filter(<Spark column of boolean values>)` | | `WHERE`  
+`df.select("column1", "column2")` <br>`df.select(df.column1, df.column2)` | Return selected columns of the DataFrame. | `SELECT`
+`df.select("column1/60").alias("new_column_name")` <br>`df.selectExpr("column AS alias")` | Give the column a name | `AS`
+`.groupby().min("column_name")` <br>`.groupby().max("column_name")` <br>`.groupby("groupby_column").avg("column_name")` <br>`.groupby("groupby_column1", "groupby_column2").sum("column_name")` | Aggregate function. `.groupby()` does not need arguments. | `GROUP BY`
+`.agg(F.stddev("dep_delay"))` | Aggregate using the passed function. Required import: <br>`import pyspark.sql.functions as F` | `GROUP BY`
+`table1.join(table2, on="common_column", how="leftouter")` | Join tables | `LEFT JOIN`
+`df.withColumn("column_name", df.column_name.cast("integer"))`  | Create new df with the column as integer data type | `CAST`
+`df.withColumn("column_name", df.column_name.cast("double"))` | Create new df with the column as float data type | `CAST`
+ 
+### Creating columns
+```python
+# Create the DataFrame flights
+flights = spark.table("flights")
+
+# create a new column in the flights dataframe by dividing values of the `air_time` column in two.
+flights = flights.withColumn("duration_hours", flights.air_time/2) 
+```
+### Filtering data
+```python
+# Filter flights by passing a string
+long_flights1 = flights.filter("distance > 1000")
+
+# Filter flights by passing a column of boolean values
+long_flights2 = flights.filter(flights.distance > 1000)
+```
+### Selecting columns
+```python
+# Select the first set of columns
+selected1 = flights.select("tailnum", "origin", "dest")
+
+# Select the second set of columns
+temp = flights.select(flights.origin, flights.dest, flights.carrier)
+```
+### Selecting columns with calculations
+```python
+# Define avg_speed
+avg_speed = (flights.distance/(flights.air_time/60)).alias("avg_speed")
+
+# Select the correct columns
+speed1 = flights.select("origin", "dest", "tailnum", avg_speed)
+
+# Create the same table using a SQL expression
+speed2 = flights.selectExpr("origin", "dest", "tailnum", "distance/(air_time/60) as avg_speed")
+```
+### Aggregating
+```Python
+# Find the shortest flight from PDX in terms of distance
+flights.filter(flights.origin == 'PDX').groupBy().min("distance").show()
+
+# Find the longest flight from SEA in terms of air time
+flights.filter(flights.origin == 'SEA').groupBy().max("air_time").show()
+
+# Average duration of Delta flights
+flights.filter(flights.carrier == "DL").filter(flights.origin == "SEA").groupBy().avg("air_time").show()
+
+# Total hours in the air
+flights.withColumn("duration_hrs", flights.air_time/60).groupBy().sum("duration_hrs").show()
+```
+#### Using the `.agg()` method
+The `pyspark.sql.functions` submodule has several aggregate functions that can be used with `.agg()` method 
+```python
+import pyspark.sql.functions as F
+
+# Group by month and dest
+by_month_dest = flights.groupBy("month", "dest")
+
+# Average departure delay by month and destination
+by_month_dest.avg("dep_delay").show()
+
+# Standard deviation of departure delay
+by_month_dest.agg(F.stddev("dep_delay")).show()
+```
+### Joining
+```python
+table1.join(
+  table2, on="common_column",
+  how="leftouter"
+)
+```
+
+```python
+
+# Rename the faa column
+airports = airports.withColumnRenamed("faa", "dest")
+
+# Join the DataFrames
+flights_with_airports = flights.join(
+    airports, on="dest",
+    how='leftouter'
+    )
+```
+### Cast to another data type
+```python
+model_data = model_data.withColumn("arr_delay", model_data.arr_delay.cast("integer"))
+```
+## Machine Learning
+
+Function/Method | Description
+--- | ---
+`StringIndexer(inputCol='categorical_col', outputCol='index_col')` <br>`OneHotEncoder(inputCol='index_col', outputCol='result_col')` | `StringIndexer` and `OneHotEncoder` are each required to convert string to numeric data
+`VectorAssembler(input_cols=['col1', 'col2'], outputCol='feature_col')` | Spark modeliling requires data to be assembled into a single column
+
+
+### Transforming categorical to numeric data
+```python
+# Create a StringIndexer
+carr_indexer = StringIndexer(inputCol="carrier", outputCol="carrier_index")
+
+# Create a OneHotEncoder
+carr_encoder = OneHotEncoder(inputCol="carrier_index", outputCol="carrier_fact")
+```
+### Assemble a vector
+
+```python
+vec_assembler = VectorAssembler(inputCols=["month", "air_time", "carrier_fact", "dest_fact", "plane_age"], outputCol="features")
+```
