@@ -663,6 +663,7 @@ Function/Method | Description | SQL equivalent
 `df = withColumnRenamed("old_col_name", "new_column_name")` | Create a new DataFrame with a new column.
 `df.filter("WHERE <SQL conditional expression>)` <br> `df.filter(<Spark column of boolean values>)` | | `WHERE`  
 `df.select("column1", "column2")` <br>`df.select(df.column1, df.column2)` | Return selected columns of the DataFrame. | `SELECT`
+`df.select("User").distinct()` | | `SELECT DISTINCT`
 `df.select("column1/60").alias("new_column_name")` <br>`df.selectExpr("column AS alias")` | Give the column a name | `AS`
 `.groupby().min("column_name")` <br>`.groupby().max("column_name")` <br>`.groupby("groupby_column").avg("column_name")` <br>`.groupby("groupby_column1", "groupby_column2").sum("column_name")` | Aggregate function. `.groupby()` does not need arguments. | `GROUP BY`
 `.agg(F.stddev("dep_delay"))` | Aggregate using the passed function. Required import: <br>`import pyspark.sql.functions as F` | `GROUP BY`
@@ -760,9 +761,11 @@ model_data = model_data.withColumn("arr_delay", model_data.arr_delay.cast("integ
 
 Function/Method | Description
 --- | ---
-`StringIndexer(inputCol='categorical_col', outputCol='index_col')` <br>`OneHotEncoder(inputCol='index_col', outputCol='result_col')` | `StringIndexer` and `OneHotEncoder` are each required to convert string to numeric data
-`VectorAssembler(input_cols=['col1', 'col2'], outputCol='feature_col')` | Spark modeliling requires data to be assembled into a single column
-
+`index_step = StringIndexer(inputCol='categorical_col', outputCol='index_col')` <br>`one_hot_step = OneHotEncoder(inputCol='index_col', outputCol='result_col')` | `StringIndexer` and `OneHotEncoder` are each required to convert string to numeric data
+`vector_step = VectorAssembler(input_cols=['col1', 'col2'], outputCol='feature_col')` | Spark modeliling requires data to be assembled into a single column
+`model_pipe = Pipeline(stages=[step1,step2, step3])` | Create an object that calls several methods on the dataframe in sequence.
+`piped_data = model_pipe.fit(model_data).transform(model_data)` | Transform the model data. This should be done before splitting into train-test sets.
+`train_data, test_data = piped_data.randomSplit([0.6, 0.4])` | Split the transformed data into train set and test set. The first number represents the % of data for the train set.
 
 ### Transforming categorical to numeric data
 ```python
@@ -776,4 +779,181 @@ carr_encoder = OneHotEncoder(inputCol="carrier_index", outputCol="carrier_fact")
 
 ```python
 vec_assembler = VectorAssembler(inputCols=["month", "air_time", "carrier_fact", "dest_fact", "plane_age"], outputCol="features")
+```
+### Pipeline
+```python
+# Import Pipeline
+from pyspark.ml import Pipeline
+
+# Make the pipeline
+flights_pipe = Pipeline(stages=[dest_indexer, dest_encoder, carr_indexer, carr_encoder, vec_assembler])
+
+# Fit and transform the data
+piped_data = flights_pipe.fit(model_data).transform(model_data)
+
+# Split the data into training and test sets
+training, test = piped_data.randomSplit([.6, .4])
+```
+### Train-test split
+```python
+training, test = piped_data.randomSplit([0.6, 0.4])
+```
+
+### Logistic regression
+
+```python
+# Import LogisticRegression
+from pyspark.ml.classification import LogisticRegression
+
+# Create a LogisticRegression Estimator
+lr = LogisticRegression()
+```
+
+### Model evaluation
+```python
+# Import the evaluation submodule
+import pyspark.ml.evaluation as evals
+
+# Create a BinaryClassificationEvaluator
+evaluator = evals.BinaryClassificationEvaluator("areaUnderROC")
+```
+### Grid search for hyperparameter tuning
+```python
+# Import the tuning submodule
+import pyspark.ml.tuning as tune
+
+# Create the parameter grid
+grid = tune.ParamGridBuilder()
+
+# Add the hyperparameter
+grid = grid.addGrid(lr.regParam, np.arange(0, .1, .01)) # This second call is a function from the numpy module (imported as np) that creates a list of numbers from 0 to .1, incrementing by .01.
+grid = grid.addGrid(lr.elasticNetParam, [0, 1])
+
+# Build the grid
+grid = grid.build()
+```
+
+The submodule pyspark.ml.tuning also has a class called `CrossValidator` for performing cross validation. This `Estimator` takes the modeler you want to fit, the grid of hyperparameters you created, and the evaluator you want to use to compare your models.
+
+```python
+# Create the CrossValidator
+cv = tune.CrossValidator(estimator=lr,
+               estimatorParamMaps=grid,
+               evaluator=evaluator
+               )
+
+# Fit cross validation models
+models = cv.fit(training)
+
+# Extract the best model
+best_lr = models.bestModel
+```
+Cross validation selected the parameter values regParam=0 and elasticNetParam=0 as being the best. These are the default values, so you don't need to do anything else with lr before fitting the model.
+```python
+# Call lr.fit()
+best_lr = lr.fit(training)
+
+# Use the model to predict the test set
+test_results = best_lr.transform(test)
+
+# Evaluate the predictions
+print(evaluator.evaluate(test_results))
+```
+# DataCamp: Building Recommender Systems in Python
+## Chapter 2
+
+Reshape the ratings matrix
+```python
+# Import monotonically_increasing_id and show R
+from pyspark.sql.functions import monotonically_increasing_id
+# Use the to_long() user-defined function to convert the dataframe to the "long" format.
+ratings = to_long(R)
+ratings.show()
+
+# Get unique users and repartition to 1 partition
+users = ratings.select("User").distinct().coalesce(1)
+
+# # Create a new column of unique integers called "userId" in the users dataframe.
+users = users.withColumn("userId", monotonically_increasing_id()).persist()
+users.show()
+
+# Import monotonically_increasing_id and show R
+from pyspark.sql.functions import monotonically_increasing_id
+R.show()
+
+# Use the to_long() function to convert the dataframe to the "long" format.
+ratings = to_long(R)
+ratings.show()
+
+# Get unique users and repartition to 1 partition
+users = ratings.select("User").distinct().coalesce(1)
+```
+Convert strings to integers 
+```python
+# # Create a new column of unique integers called "userId" in the users dataframe.
+users = users.withColumn("userId", monotonically_increasing_id()).persist()
+users.show()
+
+# Extract the distinct movie id's
+movies = ratings.select("Movie").distinct() 
+
+# Repartition the data to have only one partition.
+movies = movies.coalesce(1) 
+
+# Create a new column of movieId integers. 
+movies = movies.withColumn("Movie", monotonically_increasing_id()).persist() 
+
+# Join the ratings, users and movies dataframes
+movie_ratings = ratings.join(users, "User", "left").join(movies, "Movie", "left")
+movie_ratings.show()
+```
+Train the model and make predictions
+```python
+# Split the ratings dataframe into training and test data
+(training_data, test_data) = ratings.randomSplit([0.8, 0.2], seed=42)
+
+# Set the ALS hyperparameters
+from pyspark.ml.recommendation import ALS
+als = ALS(userCol="userId", itemCol="movieId", ratingCol="rating", rank =10, maxIter =15, regParam =0.1,
+          coldStartStrategy="drop", nonnegative =True, implicitPrefs = False)
+
+# Fit the mdoel to the training_data
+model = als.fit(training_data)
+
+# Generate predictions on the test_data
+test_predictions = model.transform(test_data)
+test_predictions.show()
+```
+Evaluate the model with RMSE
+```python
+# Import RegressionEvaluator
+from pyspark.ml.evaluation import RegressionEvaluator
+
+# Complete the evaluator code
+evaluator = RegressionEvaluator(metricName="rmse", labelCol="ratings", predictionCol="prediction")
+
+# Extract the 3 parameters
+print(evaluator.getMetricName())
+print(evaluator.getLabelCol())
+print(evaluator.getPredictionCol())
+
+# Evaluate the "test_predictions" dataframe
+RMSE = evaluator.evaluate(test_predictions)
+```
+## MovieLens dataset
+Calculate sparsity
+```python
+# Count the total number of ratings in the dataset
+numerator = ratings.select("Rating").count()
+
+# Count the number of distinct userIds and distinct movieIds
+num_users = ratings.select("userId").distinct().count()
+num_movies = ratings.select("movieId").distinct().count()
+
+# Set the denominator equal to the number of users multiplied by the number of movies
+denominator = num_users * num_movies
+
+# Divide the numerator by the denominator
+sparsity = (1.0 - (numerator *1.0)/denominator)*100
+print("The ratings dataframe is ", "%.2f" % sparsity + "% empty.")
 ```
