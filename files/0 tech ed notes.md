@@ -957,3 +957,164 @@ denominator = num_users * num_movies
 sparsity = (1.0 - (numerator *1.0)/denominator)*100
 print("The ratings dataframe is ", "%.2f" % sparsity + "% empty.")
 ```
+
+## Implicit Ratings
+```python
+# Min num implicit ratings for a song
+print("Minimum implicit ratings for a song: ")
+msd.filter(col("num_plays") > 0).groupBy("songId").count().select(min("count")).show()
+
+# Avg num implicit ratings per songs
+print("Average implicit ratings per song: ")
+msd.filter(col("num_plays") > 0).groupBy("songId").count().select(avg("count")).show()
+
+# Min num implicit ratings from a user
+print("Minimum implicit ratings from a user: ")
+msd.filter(col("num_plays") > 0).groupBy("userId").count().select(min("count")).show()
+
+# Avg num implicit ratings for users
+print("Average implicit ratings per user: ")
+msd.filter(col("num_plays") > 0).groupBy("userId").count().select(avg("count")).show()
+```
+Get implicit ratings from number of purchases per product for each customer.
+```python
+# View the data
+Z.show()
+
+# Extract distinct userIds and productIds
+users = Z.select("userId").distinct()
+products = Z.select("productId").distinct()
+
+# Cross join users and products
+cj = users.crossJoin(products)
+
+# Join cj and Z
+Z_expanded = cj.join(Z, ["userId", "productId"], "left").fillna(0)
+
+# View Z_expanded
+Z_expanded.show()
+```
+This is what Z_expanded dataframe looks like
+```python
+    +------+---------+-------------+
+    |userId|productId|num_purchases|
+    +------+---------+-------------+
+    |    22|       44|            0|
+    |    22|      777|            0|
+    |    22|     1811|           96|
+    |    22|      227|            0|
+    |    22|     1662|            0|
+    |    22|     1492|            0|
+    |    22|     2390|            0|
+    |    22|     1981|            0|
+    |   686|       44|            0|
+    |   686|      777|            0|
+    |   686|     1811|            0|
+    |   686|      227|            0|
+    |   686|     1662|            0|
+    |   686|     1492|            0|
+    |   686|     2390|            0|
+    |   686|     1981|            2|
+    |    13|       44|            0|
+    |    13|      777|            0|
+    |    13|     1811|            0|
+    |    13|      227|            0|
+    +------+---------+-------------+
+```
+
+
+Build a model
+```python
+ranks = [10, 20, 30, 40]
+maxIters = [10, 20, 30, 40]
+regParams = [.05, .1, .15]
+alphas = [20, 40, 60, 80]
+
+# For loop will automatically create and store ALS models
+for r in ranks:
+    for mi in maxIters:
+        for rp in regParams:
+            for a in alphas:
+                model_list.append(ALS(userCol= "userId", itemCol= "songId", ratingCol= "num_plays", rank = r, maxIter = mi, regParam = rp, alpha = a, coldStartStrategy="drop", nonnegative = True, implicitPrefs = True))
+
+# Print the model list, and the length of model_list
+print (model_list, "Length of model_list: ", len(model_list))
+```
+### Cross-validating implicit ratings
+PySpark does not have built-in cross-validation methods for evaluating implicit ALS models.
+Rank ordering error metric (ROEM) can be used to evaluate the model for implicity ratings. The higher the ROEM, the poorer the predictions.
+`np*rank` = `num_plays` * `rank`
+
+```python
+numerator = bp.groupBy().sum("np*rank").collect()[0][0]
+denominator = bp.groupBy().sum("num_plays").collect()[0][0]
+print ("ROEM: "), numerator * 1.0/ denominator
+```
+
+```python
+# Split the data into training and test sets
+(training, test) = msd.randomSplit([0.8, 0.2])
+
+#Building 5 folds within the training set.
+train1, train2, train3, train4, train5 = training.randomSplit([0.2, 0.2, 0.2, 0.2, 0.2], seed = 1)
+fold1 = train2.union(train3).union(train4).union(train5)
+fold2 = train3.union(train4).union(train5).union(train1)
+fold3 = train4.union(train5).union(train1).union(train2)
+fold4 = train5.union(train1).union(train2).union(train3)
+fold5 = train1.union(train2).union(train3).union(train4)
+
+foldlist = [(fold1, train1), (fold2, train2), (fold3, train3), (fold4, train4), (fold5, train5)]
+
+# Empty list to fill with ROEMs from each model
+ROEMS = []
+
+# Loops through all models and all folds
+for model in model_list:
+    for ft_pair in foldlist:
+
+        # Fits model to fold within training data
+        fitted_model = model.fit(ft_pair[0])
+
+        # Generates predictions using fitted_model on respective CV test data
+        predictions = fitted_model.transform(ft_pair[1])
+
+        # Generates and prints a ROEM metric CV test data
+        r = ROEM(predictions)
+        print ("ROEM: ", r)
+
+    # Fits model to all of training data and generates preds for test data
+    v_fitted_model = model.fit(training)
+    v_predictions = v_fitted_model.transform(test)
+    v_ROEM = ROEM(v_predictions) # `ROEM()` is a user-defined function provided by the DataCamp course
+
+    # Adds validation ROEM to ROEM list
+    ROEMS.append(v_ROEM)
+    print ("Validation ROEM: ", v_ROEM)
+
+import numpy
+
+# Find the index of the smallest ROEM
+i = numpy.argmin(ROEMS)
+print("Index of smallest ROEM:", i)
+
+# Find ith element of ROEMS
+print("Smallest ROEM: ", ROEMS[i])
+```
+Extract best model hyperparameters
+* Assume model 38 of index 38 is the best model
+```python
+# Extract the best_model
+best_model = model_list[38]
+
+# Extract the Rank
+print ("Rank: ", best_model.getRank())
+
+# Extract the MaxIter value
+print ("MaxIter: ", best_model.getMaxIter())
+
+# Extract the RegParam value
+print ("RegParam: ", best_model.getRegParam())
+
+# Extract the Alpha value
+print ("Alpha: ", best_model.getAlpha())
+```
