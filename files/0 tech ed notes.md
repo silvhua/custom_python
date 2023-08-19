@@ -1118,3 +1118,9 @@ print ("RegParam: ", best_model.getRegParam())
 # Extract the Alpha value
 print ("Alpha: ", best_model.getAlpha())
 ```
+# CloudWolf AWS
+## EC2
+Task | Command | Note
+--- | ---- | ---
+`aws s3 ls` | List s3 buckets
+`aws s3 ls s3://s3_bucket_name | List contents of the named s3 bucket
