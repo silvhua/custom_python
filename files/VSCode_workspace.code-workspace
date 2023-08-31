@@ -8,7 +8,19 @@
 		},
 		{
 			"path": ".."
+		},
+		{
+			"path": "\\\\wsl.localhost\\Ubuntu\\home\\silvhua\\summarization_lambda"
+		},
+		{
+			"name": "GHL-chat",
+			"path": "../../portfolio-projects/GHL-chat"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"python.analysis.extraPaths": [
+			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
+			"C:/Users/silvh/OneDrive/lighthouse/Ginkgo coding/content-summarization/src"
+		],
+	}
 }
