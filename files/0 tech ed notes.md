@@ -668,8 +668,10 @@ Function/Method | Description | SQL equivalent
 `.groupby().min("column_name")` <br>`.groupby().max("column_name")` <br>`.groupby("groupby_column").avg("column_name")` <br>`.groupby("groupby_column1", "groupby_column2").sum("column_name")` | Aggregate function. `.groupby()` does not need arguments. | `GROUP BY`
 `.agg(F.stddev("dep_delay"))` | Aggregate using the passed function. Required import: <br>`import pyspark.sql.functions as F` | `GROUP BY`
 `table1.join(table2, on="common_column", how="leftouter")` | Join tables | `LEFT JOIN`
+`df.printSchema()` | Show the data types
 `df.withColumn("column_name", df.column_name.cast("integer"))`  | Create new df with the column as integer data type | `CAST`
 `df.withColumn("column_name", df.column_name.cast("double"))` | Create new df with the column as float data type | `CAST`
+`df.sort("column_name", ascending = False)` | `ORDER BY column_name DESC`
  
 ### Creating columns
 ```python
@@ -686,6 +688,16 @@ long_flights1 = flights.filter("distance > 1000")
 
 # Filter flights by passing a column of boolean values
 long_flights2 = flights.filter(flights.distance > 1000)
+```
+```python
+# Import the requisite packages
+from pyspark.sql.functions import col
+
+# Filter to show only userIds less than 100
+ratings.filter(col("userId") < 100).show()
+
+# Equivalent
+ratings.filter(ratings.userId < 100).show()
 ```
 ### Selecting columns
 ```python
@@ -957,3 +969,99 @@ denominator = num_users * num_movies
 sparsity = (1.0 - (numerator *1.0)/denominator)*100
 print("The ratings dataframe is ", "%.2f" % sparsity + "% empty.")
 ```
+Filter and aggregate
+```python
+# Import the requisite packages
+from pyspark.sql.functions import col
+
+# Filter to show only userIds less than 100
+ratings.filter(col("userId") < 100).show()
+
+# Group data by userId, count ratings
+ratings.groupBy("userId").count().show()
+
+# Min num ratings for movies
+print("Movie with the fewest ratings: ")
+ratings.groupBy("movieId").count().select(min("count")).show()
+
+# Avg num ratings per movie
+print("Avg num ratings per movie: ")
+ratings.groupBy("movieId").count().select(avg("count")).show()
+
+# Min num ratings for user
+print("User with the fewest ratings: ")
+ratings.groupBy("userId").count().select(min("count")).show()
+
+# Avg num ratings per users
+print("Avg num ratings per user: ")
+ratings.groupBy("userId").count().select(avg("count")).show()
+```
+Convert the data types
+```python
+# Use .printSchema() to see the datatypes of the ratings dataset
+ratings.printSchema()
+
+# Tell Spark to convert the columns to the proper data types
+ratings = ratings.select(ratings.userId.cast("integer"), ratings.movieId.cast("integer"), ratings.rating.cast("double"))
+
+# Call .printSchema() again to confirm the columns are now in the correct format
+ratings.printSchema()
+```
+### Build the model and evaluate it
+```python
+from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.recommendation import ALS
+from pyspark.ml.tuning import ParamGridBuilder, CrossValidator
+
+# Create test and train set
+(train, test) = ratings.randomSplit([0.8, 0.2], seed = 1234)
+
+# Create ALS model
+als = ALS(userCol="userId", itemCol="movieId", ratingCol="rating", nonnegative = True, implicitPrefs = False)
+# Add hyperparameters and their respective values to param_grid
+param_grid = ParamGridBuilder() \
+            .addGrid(als.rank, [10, 50, 100, 150]) \
+            .addGrid(als.maxIter, [5, 50, 100, 200]) \
+            .addGrid(als.regParam, [.01, .05, .1, .15]) \
+            .build()
+           
+# Define evaluator as RMSE and print length of evaluator
+evaluator = RegressionEvaluator(metricName="rmse", labelCol="rating", predictionCol="prediction") 
+print ("Num models to be tested: ", len(param_grid))
+
+# Build cross validation using CrossValidator
+cv = CrossValidator(estimator=als, estimatorParamMaps=param_grid, evaluator=evaluator, numFolds=5)
+
+#Fit cross validator to the 'train' dataset
+model = cv.fit(train)
+
+#Extract best model from the cv model above
+best_model = model.bestModel
+
+# Print "Rank"
+print("  Rank:", best_model.getRank())
+
+# Print "MaxIter"
+print("  MaxIter:", best_model.getMaxIter())
+
+# Print "RegParam"
+print("  RegParam:", best_model.getRegParam())
+```
+Make predictions and evaluate results
+```python
+test_predictions = best_model.transform(test)
+
+# Calculate and print the RMSE of test_predictions
+RMSE = evaluator.evaluate(test_predictions)
+```
+### Getting recommendations
+```python
+# Look at user 60's ratings
+print("User 60's Ratings:")
+original_ratings.filter(col("userId") == 60).sort("rating", ascending = False).show()
+
+# Look at the movies recommended to user 60
+print("User 60s Recommendations:")
+recommendations.filter(col("userId") == 60).show()
+```
+[See chapter 3 slides: "Cleaning up recommendation output"](../../z%20resources/DataCamp%20Building%20Recommendation%20Engines%20in%20Pyspark/chapter3%20Intro%20to%20the%20MovieLens%20dataset.pdf)
