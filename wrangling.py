@@ -472,3 +472,10 @@ def rename_duplicate_columns(df):
     print(f'\nUpdated columns: {[column for column in df.columns]}')
 
     return df
+
+def text_to_list(string):
+    """
+    Separate each new line by a comma.
+    """
+    string = string.strip().replace('\n', "', '")
+    return string
