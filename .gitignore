@@ -1,1 +1,4 @@
 notebooks/OIF client notes formatting.ipynb
+*.pem
+*.pyc
+__pycache__/
