@@ -9,12 +9,24 @@
 		{
 			"path": ".."
 		},
-		{
+{
 			"path": "\\\\wsl.localhost\\Ubuntu\\home\\silvhua\\summarization_lambda"
 		},
 		{
 			"name": "GHL-chat",
 			"path": "../../portfolio-projects/GHL-chat"
+		},
+		{
+			"name": "summarization_lambda",
+			"path": "../../Ginkgo coding/summarization_lambda"
+		},
+		{
+			"name": "AI-content",
+			"path": "../../portfolio-projects/AI-content"
+		},
+		{
+			"name": "automate-elt-github",
+			"path": "../../tech-ed/automate-elt-github"
 		}
 	],
 	"settings": {
