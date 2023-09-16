@@ -4,6 +4,12 @@ from nbconvert.preprocessors import ExtractOutputPreprocessor
 from datetime import datetime
 import re
 
+"""
+Next steps:
+- Add table of contents.
+- Add <br> before standard headings, e.g. Objective, Methods, etc.
+"""
+
 def make_codeblocks_collapsible(body, remove_style=True):
     """
     Convert codeblocks to collapsible codeblocks. 
