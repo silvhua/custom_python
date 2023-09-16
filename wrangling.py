@@ -479,3 +479,10 @@ def text_to_list(string):
     """
     string = string.strip().replace('\n', "', '")
     return string
+
+def print_dict_values_for_key(results_dict, key):
+    """
+    Prints the values of a dictionary for a given key.
+    """
+    for index, item in enumerate(results_dict):
+        print(f"{index}: {results_dict[item].get(key, 'None').strip()}", end='\n\n')
