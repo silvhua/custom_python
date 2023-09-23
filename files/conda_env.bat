@@ -1,3 +1,5 @@
+conda create -n env_name && ^
+conda activate env_name && ^
 conda install -y pandas && ^
 conda install -y openai && ^
 conda install -y sqlalchemy && ^
