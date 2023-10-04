@@ -7,7 +7,7 @@ Function/Method | Description
 `STDDEV()` | Standard deviation.
 `TRUNC(number, integer)` | Truncate values to the precision indicated by the integer. Positive integer indicates number of decimal places to keep. Negative integer indicates places before decimal to replace with zero.
 `GENERATE_SERIES(start number, end number, step)` |
-
+`round(column_name::numeric, decimal_places)`
 
 The `coalesce()` function can be useful for specifying a default or backup value when a column contains NULL values.
 `Coalesce()` checks arguments in order and returns the first non-NULL value, if one exists.
@@ -22,6 +22,54 @@ What to calculate | Function/Method | Description
 Correlation | `corr(column1, column2)` |
 Value corresponding to a certain percentile - discrete | `percentile_disc(float) WITHIN GROUP (ORDER BY column)` | This value must exist in the data set.
 Value corresponding to a certain percentile - continuous | `percentile_cont(float) WITHIN GROUP (ORDER BY column)` | This value is interpolated using the data set and may not necessarily exist in the data set.
+
+## Tempororary Tables
+
+Function/Method | Description
+--- | ----
+`DROP TABLE IF EXISTS` | Clear a temporary table if it exists.
+`CREATE TEMP TABLE table_name AS SELECT ...` | Create a new temporary table
+`SELECT 'custom_string_as_row_value'::varchar AS column_name` | Create a row with a custom string
+
+### Correlation table
+
+```sql
+DROP TABLE IF EXISTS correlations;
+
+CREATE TEMP TABLE correlations AS
+SELECT 'profits'::varchar AS measure,
+       corr(profits, profits) AS profits,
+       corr(profits, profits_change) AS profits_change,
+       corr(profits, revenues_change) AS revenues_change
+  FROM fortune500;
+
+INSERT INTO correlations
+SELECT 'profits_change'::varchar AS measure,
+       corr(profits_change, profits) AS profits,
+       corr(profits_change, profits_change) AS profits_change,
+       corr(profits_change, revenues_change) AS revenues_change
+  FROM fortune500;
+
+INSERT INTO correlations
+SELECT 'revenues_change'::varchar AS measure,
+       corr(revenues_change, profits) AS profits,
+       corr(revenues_change, profits_change) AS profits_change,
+       corr(revenues_change, revenues_change) AS revenues_change
+  FROM fortune500;
+
+-- Select each column, rounding the correlations
+SELECT measure, 
+       round(profits::numeric, 2) AS profits,
+       round(profits_change::numeric, 2) AS profits_change,
+       round(revenues_change::numeric, 2) AS revenues_change
+  FROM correlations;
+```
+#### Result
+| measure | profits | profits_change | revenues_change |
+| --- | --- | --- | --- |
+| profits | 1.00 | 0.02 | 0.02 |
+| profits_change | 0.02 | 1.00 | -0.09 |
+| revenues_change | 0.02 | -0.09 | 1.00 |
 
 # DataCamp Intro to Docker
 Action | Script
