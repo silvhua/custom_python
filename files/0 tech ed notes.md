@@ -71,6 +71,27 @@ SELECT measure,
 | profits_change | 0.02 | 1.00 | -0.09 |
 | revenues_change | 0.02 | -0.09 | 1.00 |
 
+## Exploring categorical data and unstructured text
+
+Function/Method | Description 
+--- | ---
+`lower('String')` | Convert to lower case
+`upper('String')` | Convert to upper case
+`trim(' string ')` | Remove spaces at start and end
+`trim('string!', '<characters_to_trim>')` | Trim the specified characters. This can include multiple characters and any of those characters will be trimmed.
+`rtrim('string ')` | Remove spaces at right end
+`ltrim(' string')` | Remove spaces at left end
+
+## Splitting and concatenating text
+
+Function/Method | Description | Example
+--- | --- | ---
+`left('string', n_characters)` <br>`right('string', n_characters)` | Get the specified number of characters on the very left/right of the string. | `SELECT left('abcde', 2)` <br>--> Gets the first 2 characters to return `ab`
+`substring('string' FROM start_position FOR character_length)` <br>OR<br> `substr('string', start_position, character_length)` | Get a substring. Position index starts at 1. | `SELECT substring('abcdef' FROM 2 FOR 3)` <br>OR<br> `substr('abcdef', 2, 3)` <br>--> Returns `bcd`
+`split_part(string, delimiter, part)` | Split text on a delimiter. | `SELECT split_part('a,bc,d', ',', 2)` <br>--> `bc` <br>`SELECT split_part('cats and dogs and fish', ' and ', 1)` <br> --> `cats`
+`SELECT concat('string1', joining_character, 'string2')` <br>OR <br> `SELECT 'string1' // joining_character // 'string2'` | **REPLACE `//` WITH 2 PIPE SYMBOLS**. Concatenate strings and join them with the specified joining character. | `SELECT concat('a', 2, 'cc')` <br>OR <br> `SELECT 'a' // 2 // 'cc'` <br>--> `a2cc`
+
+
 # DataCamp Intro to Docker
 Action | Script
 --- | ---
