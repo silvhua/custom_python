@@ -91,6 +91,50 @@ Function/Method | Description | Example
 `split_part(string, delimiter, part)` | Split text on a delimiter. | `SELECT split_part('a,bc,d', ',', 2)` <br>--> `bc` <br>`SELECT split_part('cats and dogs and fish', ' and ', 1)` <br> --> `cats`
 `SELECT concat('string1', joining_character, 'string2')` <br>OR <br> `SELECT 'string1' // joining_character // 'string2'` | **REPLACE `//` WITH 2 PIPE SYMBOLS**. Concatenate strings and join them with the specified joining character. | `SELECT concat('a', 2, 'cc')` <br>OR <br> `SELECT 'a' // 2 // 'cc'` <br>--> `a2cc`
 
+## Multiple transformations
+[See chapter 3 slides p. 27](../../../data%20and%20tech%20ed/DataCamp%20EDA%20in%20SQL/chapter3.pdf)
+
+Example of how get the string before 3 possible delimiters: colon, hypthen, and pipe.
+### Option 1: `CASE WHEN`
+```sql
+SELECT CASE WHEN category LIKE '%: %' THEN split_part(category, ': ' , 1)
+    WHEN category LIKE '% - %' THEN split_part(category, '-', 1)
+    ELSE split_part(category, ' | ', 1)
+  END AS major_category, -- alias the result
+  sum(businesses) -- also select number of businesses
+FROM naics
+GROUP BY major_category; -- Group by categories created above
+```
+### Option 2: Create a temp table and join it to the original table.
+**Step 1**: 
+
+Create a temp table with 1 column with the original values, a 2nd column with a placeholderfor the standardized values.
+```sql
+CREATE TEMP TABLE recode AS 
+SELECT DISTINCT fav_fruit AS original, -- original, messy values
+  fav_fruit AS standardized -- new standardized values
+FROM fruit;
+```
+**Step 2**: Update table values.
+
+Basic syntax: 
+```sql
+UPDATE table_name
+    SET column_name = new_value 
+  WHERE condition;
+```
+
+The `UPDATE` code block can be repeated multiple times based on the  number of transformation types needed.
+
+**Step 3**: JOIN original and recode tables
+```sql
+SELECT standardized,
+    count(*)
+  FROM fruit
+    LEFT JOIN recode
+    ON fav_fruit=original
+  GROUP BY standardized
+```
 
 # DataCamp Intro to Docker
 Action | Script
