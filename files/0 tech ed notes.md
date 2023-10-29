@@ -135,6 +135,36 @@ SELECT standardized,
     ON fav_fruit=original
   GROUP BY standardized
 ```
+## Chapter 4: Date/time types and formats
+Data type | Format(s) | Example
+--- | --- | ---
+date
+timestamp | ISO 860: YYYY-MM-DD HH:MM:SS<br>with timezone: YYYY-MM-DD HH:MM:SS+HH | `2018-01-05 09`<br> `2004-10-19 10:23:54+02`
+interval | | `6 days 01:48:08`<br>`00:51:03`
+
+`SELECT ...` | Description | Example
+--- | ---- | ---
+`SELECT '2018-01-01' > '2017-12-31'` | Date comparison can be done with `>`, `<`, `=`
+`now()` | Current timestamp
+`SELECT now() -'2018-01-01'` | Subtract dates to get an `interval`
+`'2023-10-15'::date` | Convert string to date
+`'2023-10-15'::date + 1` | Date plus 1 day
+`'2023-10-15'::date + '1 year'::interval` | Date plus 1 year
+`SELECT '2018-12-10'::date + '1 year 2 days 3 minutes'::interval`
+
+### Commmon date/time fields
+* `century`: 2019-01-01 = century 21
+* `decade`: 2019-01-01 = decade 201
+* `year`, `month`, `day`
+* `hour`, `minute`, `second`
+* `week`
+* `dow`: day of week
+
+Description | `SELECT ...` | Example
+--- | ---- | ---
+Extract a given date/time field | `date_part('field', timestamp)` | `SELECT date_part('month', now()), EXTRACT(MONTH FROM now());`
+. | `EXTRACT(FIELD FROM timestamp)` | 
+Truncate a date/time to a given field | `date_trunc('field', timestamp)` | `SELECT date_trunc('month', now());`
 
 # DataCamp Intro to Docker
 Action | Script
