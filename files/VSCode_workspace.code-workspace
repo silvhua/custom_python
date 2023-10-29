@@ -31,6 +31,10 @@
 		{
 			"name": "chatbot_tuning",
 			"path": "../../portfolio-projects/datajam-chatbot/chatbot_tuning"
+		},
+		{
+			"name": "langchain",
+			"path": "../../portfolio-projects/langchain"
 		}
 	],
 	"settings": {
