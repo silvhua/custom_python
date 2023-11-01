@@ -165,6 +165,57 @@ Description | `SELECT ...` | Example
 Extract a given date/time field | `date_part('field', timestamp)` | `SELECT date_part('month', now()), EXTRACT(MONTH FROM now());`
 . | `EXTRACT(FIELD FROM timestamp)` | 
 Truncate a date/time to a given field | `date_trunc('field', timestamp)` | `SELECT date_trunc('month', now());`
+Get the day of the week | `to_char(timestamp, 'day')`
+
+### Aggregating with date/time series
+Description | `SELECT ...` | Example
+--- | ---- | ---
+Generate a time series column | `SELECT generate_series(from, to, interval);` | `SELECT generate_series('2018-01-01','2018-01-15','2 days'::interval);` 
+
+
+To generate a series with the last day of each month:
+1. Generate the series with the first day of the month.
+2. Subtract 1 day.
+
+#### Aggregation with series
+Generate a series, then join with the data.
+```sql
+-- Create the series as a table called hour_series
+WITH hour_series AS (
+  SELECT generate_series('2018-04-23 09:00:00',-- 9am
+    '2018-04-23 14:00:00',-- 2pm
+    '1 hour'::interval) AS hours)
+-- Hours from series, count date (NOT *) to count non-NULL
+SELECT hours, count(date)
+  -- Join series to sales data
+  FROM hour_series
+    LEFT JOIN sales
+      ON hours=date_trunc('hour', date)
+  GROUP BY hours
+  ORDER BY hours;
+```
+#### Aggregation with bins
+Create a series for the upper boundary and a series for the lower boundary, then join with the data.
+```sql
+-- Create bins
+WITH bins AS (
+  SELECT generate_series('2018-04-23 09:00:00',
+      '2018-04-23 15:00:00',
+      '3 hours'::interval) AS lower,
+    generate_series('2018-04-23 12:00:00',
+    '2018-04-23 18:00:00',
+    '3 hours'::interval) AS upper)
+-- Count values in each bin
+SELECT lower, upper, count(date)
+-- left join keeps all bins
+  FROM bins
+    LEFT JOIN sales
+      ON date >= lower
+      AND date < upper
+-- Group by bin bounds to create the groups
+GROUP BY lower, upper
+ORDER BY lower;
+```
 
 # DataCamp Intro to Docker
 Action | Script
