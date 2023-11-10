@@ -217,6 +217,35 @@ GROUP BY lower, upper
 ORDER BY lower;
 ```
 
+#### Time between events
+Description | `SELECT ...` | Example
+--- | ---- | ---
+Shift time series 1 row down | `lag(column_to_adjust) OVER (ORDER BY ordering_column)` | `lag(date) OVER (ORDER BY date)`
+Shift time series 1 row up | `lead(column_to_adjust) OVER (ORDER BY ordering_column)`
+
+Example: Calculate time between events
+```sql
+SELECT date,
+    date - lag(date) OVER (ORDER BY date) AS gap
+  FROM sales;
+```
+
+Example: Calculate average time between events
+```sql
+SELECT avg(gap)
+    FROM (SELECT date - lag(date) OVER (ORDER BY date) AS gap
+      FROM sales) AS gaps;
+```
+
+Example: Calculate change in a time series
+```sql
+SELECT date,
+  amount,
+  lag(amount) OVER (ORDER BY date),
+  amount - lag(amount) OVER (ORDER BY date) AS change
+FROM sales;
+```
+
 # DataCamp Intro to Docker
 Action | Script
 --- | ---
