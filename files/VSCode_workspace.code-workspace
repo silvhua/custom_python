@@ -40,7 +40,8 @@
 	"settings": {
 		"python.analysis.extraPaths": [
 			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
-			"C:/Users/silvh/OneDrive/lighthouse/Ginkgo coding/content-summarization/src"
+			"C:/Users/silvh/OneDrive/lighthouse/Ginkgo coding/content-summarization/src",
+			"C:/Users/silvhua/OneDrive/lighthouse/custom_python/notebooks"
 		],
 	}
 }
