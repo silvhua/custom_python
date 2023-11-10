@@ -50,6 +50,48 @@ def save_csv(df,filename,path=None,append_version=False, index=True):
     print('\tTime completed:', datetime.now())
 
 
+def save_excel(df,filename,path=None,append_version=False, index=True):
+    """
+    Export dataframe to Excel document.
+    Parameters:
+    - df: Dataframe variable name.
+    - filename: Root of the filename.
+    - filepath (raw string): Use the format r'<path>'. If None, file is saved in same director.
+    - append_version (bool): If true, append date and time to end of filename.
+    """
+    if path:
+        path = f'{path}/'.replace('\\','/')
+    if append_version == True:
+        filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
+    df.to_excel(path+filename+'.xlsx', index=index)
+    print('File saved: ',path+filename+'.xlsx')
+    print('\tTime completed:', datetime.now())
+
+def load_excel(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
+    """
+    Load an excel file as a dataframe using specified file path copied from windows file explorer.
+    Back slashes in file path will be converted to forward slashes.
+    Arguments:
+    - filepath (raw string): Use the format r'<path>'.
+    - filename (string).
+    - colum1_as_index (bool): If true, take the first column as the index. 
+        Useful when importing CSV files from previously exported dataframes.
+
+    Returns: dataframe object.
+    """
+    filename = f'{filepath}/'.replace('\\','/')+filename
+    df = pd.read_excel(filename, usecols=usecols)
+    if column1_as_index==True:
+        df.set_index(df.columns[0], inplace=True)
+        df.index.name = None
+    print('Dataframe shape: ',df.shape)
+    print('DataFrame columns:', [col for col in df.columns])
+    print('\tTime completed:', datetime.now())
+
+    if truncate:
+        return df.sample(n=truncate,random_state=0)
+    else:
+        return df
 def savepickle(model,filename, ext='sav', path=None,append_version=False):
     """
     Export object as a pickle.
