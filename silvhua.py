@@ -67,6 +67,24 @@ def save_excel(df,filename,path=None,append_version=False, index=True):
     print('File saved: ',path+filename+'.xlsx')
     print('\tTime completed:', datetime.now())
 
+def save_text(text, filename, path=None, append_version=False):
+    """
+    Save a string to a text file.
+    Parameters:
+    - text: The string to be saved.
+    - filename: Root of the filename.
+    - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
+    - append_version (bool): If True, append date and time to the end of the filename.
+    """
+    if path:
+        path = f'{path}/'.replace('\\','/')
+    if append_version:
+        filename += datetime.now().strftime('%Y-%m-%d_%H%M')
+    with open(path+filename+'.txt', 'w') as file:
+        file.write(text)
+    print('File saved: ', path+filename+'.txt')
+    print('\tTime completed:', datetime.now())
+
 def load_excel(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
     """
     Load an excel file as a dataframe using specified file path copied from windows file explorer.
