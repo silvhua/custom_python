@@ -85,6 +85,22 @@ def save_text(text, filename, path=None, append_version=False):
     print('File saved: ', path+filename+'.txt')
     print('\tTime completed:', datetime.now())
 
+def load_txt(filename, filepath):
+    """
+    Load a text file as a string using the specified file path copied from Windows file explorer.
+    Backslashes in the file path will be converted to forward slashes.
+
+    Arguments:
+    - filepath (raw string): Use the format r'<path>'.
+    - filename (string).
+
+    Returns: string object.
+    """
+    filename = f'{filepath}/'.replace('\\','/') + filename
+    with open(filename, 'r') as file:
+        text = file.read()
+    return text
+
 def load_excel(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
     """
     Load an excel file as a dataframe using specified file path copied from windows file explorer.
