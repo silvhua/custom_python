@@ -85,7 +85,7 @@ def save_text(text, filename, path=None, append_version=False):
     print('File saved: ', path+filename+'.txt')
     print('\tTime completed:', datetime.now())
 
-def load_txt(filename, filepath):
+def load_txt(filename, filepath, encoding='utf-8'):
     """
     Load a text file as a string using the specified file path copied from Windows file explorer.
     Backslashes in the file path will be converted to forward slashes.
@@ -97,7 +97,7 @@ def load_txt(filename, filepath):
     Returns: string object.
     """
     filename = f'{filepath}/'.replace('\\','/') + filename
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding=encoding) as file:
         text = file.read()
     return text
 
