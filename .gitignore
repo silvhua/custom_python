@@ -2,3 +2,4 @@ notebooks/OIF client notes formatting.ipynb
 *.pem
 __pycache__/
 files/*_credentials.bat
+files/conda_env_var*.bat
