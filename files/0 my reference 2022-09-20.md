@@ -98,6 +98,7 @@ myfunc(a,b, c='nick', d='dog', ...)
 * `conda create -n test_env python=3.9`
 * `conda activate test_env`
 * `conda deactivate` to deactivate the virtual environment
+* `conda remove --name ENV_NAME --all` to remove a virtual environment
 
 ## Gitbash
 [Resource: Using Python environments in VS Code](https://code.visualstudio.com/docs/python/environments)
