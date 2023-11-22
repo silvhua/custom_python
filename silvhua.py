@@ -5,6 +5,13 @@ import pickle
 from datetime import datetime
 import json
 
+def append_timestamp(string):
+    """
+    Append timestamp to filename string.
+    """
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
+    return f'{string}_{timestamp}' 
+
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
 def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
     """
