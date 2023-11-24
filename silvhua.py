@@ -51,7 +51,7 @@ def save_csv(df,filename,path=None,append_version=False, index=True):
     if path:
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
-        filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
+        filename+=f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     df.to_csv(path+filename+'.csv', index=index)
     print('File saved: ',path+filename+'.csv')
     print('\tTime completed:', datetime.now())
