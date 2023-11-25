@@ -1,10 +1,25 @@
 import pandas as pd
 import sys
+import os
 sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\portfolio-projects\online-PT-social-media-NLP\src")
 from silvhua import *
 from datetime import datetime
 
+def delete_documents(filename, filepath):
+    """Function to delete files prior to their generation."""
+    if filepath:
+        filename = f'{filepath}/{filename}'
+    try:
+        os.remove(filename)
+        print(f'{filename} deleted')
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'{filename} not deleted. An error occurred on line {lineno} in {filename}: {error}.'
+        print(message)
 def filter_df_any_condition(df, filters, view_columns=None, verbose=False):
     """
     Filters a DataFrame based on any of the given conditions in a dictionary.
