@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"name": "solarathon-faq-creator",
+			"uri": "vscode-remote://wsl+ubuntu/home/silvhua/repositories/solarathon-faq-creator"
+		},
+		{
+			"uri": "vscode-remote://wsl+ubuntu/home/silvhua/documents"
+		},
+		{
+			"uri": "vscode-remote://wsl+ubuntu/home/silvhua/solarathon/lib/python3.10/site-packages/haystack"
+		}
+	],
+	"remoteAuthority": "wsl+Ubuntu"
+}
