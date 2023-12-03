@@ -1455,3 +1455,49 @@ Task | Command | Note
 --- | ---- | ---
 `aws s3 ls` | List s3 buckets
 `aws s3 ls s3://s3_bucket_name | List contents of the named s3 bucket
+
+# AWS Serverless Application Model
+
+Description | AWS SAM CLI command | Notes
+--- | --- | ---
+scaffold a new project | `sam init`
+run a Serverless app locally by running a local HTTP server that simulates API Gateway | 1. Run Docker desktop. <br>2. `cd` to project root folder. <br>3. `sam local start-api --port 8080` <br>
+Run a pytest unit test | `pip3 install pytest pytest-mock`<br>`python3 -m pytest tests/unit`
+Build a SAM project | [`cd` to root folder] <br>`sam build` | This command iterates through the functions in your application, looking for the manifest file (such as requirements.txt, package.json or pom.xml) that contain dependencies, and automatically creates deployment artifacts. 
+Deploy the project. | `sam deploy` | Append the `--guided` flag to deploy in guided mode. It is recommended to deploy with guided mode for the first time as it will capture the configuration for future deployments in a new file samconfig.toml described at the end of this section. 
+Delete an application | `sam delete`
+create a new CodeCommit repository | `aws codecommit create-repository --repository-name sam-app`
+Configure the git client with username and email | `git config --global user.name "your name"` <br>`git config --global user.email "your_email@example.com"`
+Add your CodeCommit repository URL as a remote on your local git project. | `git remote add origin codecommit://sam-app` | If you mis-typed the origin url, you can remove it by running: `git remote rm origin`.
+Push the code | `git push -u origin main`
+check repository status | `git status`
+
+
+## Inititialize Git repository
+```shell
+cd ~/environment/sam-app
+git init -b main
+echo -e "\n\n.aws-sam" >> .gitignore
+echo -e "target" >> .gitignore
+echo -e "samconfig.toml" >> .gitignore
+git add .
+git commit -m "Initial commit"
+
+```
+
+## Deploy CloudFormation pipeline template
+```shell
+cd ~/environment/sam-app
+git add .
+git commit -m "Adding SAM CI/CD Pipeline definition"
+git push
+```
+Now that the configuration is checked into source control, you can create a new CloudFormation stack which will set up our CI/CD pipeline. 
+* You will use the `sam deploy` command to launch this new stack. 
+* It's important to recognize that you're using SAM's ability to launch arbitrary CloudFormation templates. SAM isn't building or deploying your serverless application here, rather launching the codepipeline.yaml CI/CD template.
+
+```shell
+sam deploy -t codepipeline.yaml --stack-name sam-app-pipeline --capabilities=CAPABILITY_IAM
+```
+
+## Inspect the dev/prod stages
