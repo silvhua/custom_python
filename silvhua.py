@@ -39,7 +39,7 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
     else:
         return df
 
-def save_csv(df,filename,path=None,append_version=False, index=True):
+def save_csv(df,filename,path=None,append_version=False, index=False):
     """
     Export dataframe to CSV.
     Parameters:
@@ -47,6 +47,7 @@ def save_csv(df,filename,path=None,append_version=False, index=True):
     - filename: Root of the filename.
     - filepath (raw string): Use the format r'<path>'. If None, file is saved in same director.
     - append_version (bool): If true, append date and time to end of filename.
+    - index (bool): If true, save index.
     """
     if path:
         path = f'{path}/'.replace('\\','/')
@@ -416,6 +417,36 @@ def load_json(filename, filepath):
     filename = f'{filepath}/'.replace('\\','/')+filename
     with open(filename) as file:
         return json.load(file)
+    
+def dict_list_to_json(dict_list, primary_key='id'):
+    """
+    Converts a list of dictionaries to a JSON object, using a specified primary key.
+
+    Parameters:
+        dict_list (list): A list of dictionaries to be converted.
+        primary_key (str, optional): The key to be used as the primary key in the resulting JSON object. Defaults to 'id'.
+
+    Returns:
+        dict: A JSON object where each dictionary in the input list is a value, and the value of the primary key is the key.
+    """
+    new_dict_list = []
+    result = dict()
+    for dictionary in dict_list:
+        new_dict = {}
+        for key, value in dictionary.items():
+            key = key.replace(' ', '_').replace('\n','')
+            value = value.replace(' ', '_').replace('\n','') if type(value) == str else value
+            new_dict[key] = value
+        new_dict_list.append(new_dict)
+    if primary_key:
+        for dictionary in new_dict_list:
+            key_value = dictionary[primary_key]
+            # print(f'key value: {key_value}\n\n')
+            result[key_value] = dictionary
+    else:
+        for index, dictionary in enumerate(new_dict_list):
+            result[index] = dictionary
+    return result
     
 # def time_columns(df,time_column,format='%H%M'):
 #     """ 
