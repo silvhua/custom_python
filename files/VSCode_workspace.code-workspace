@@ -31,5 +31,7 @@
 			"C:/Users/silvh/OneDrive/lighthouse/Ginkgo coding/content-summarization/src",
 			"C:/Users/silvhua/OneDrive/lighthouse/custom_python/notebooks"
 		],
+		"editor.wordWrap": "off",
+		"notebook.output.textLineLimit": 50,
 	}
 }

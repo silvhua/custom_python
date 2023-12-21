@@ -1454,13 +1454,34 @@ print ("Alpha: ", best_model.getAlpha())
 Task | Command | Note
 --- | ---- | ---
 `aws s3 ls` | List s3 buckets
-`aws s3 ls s3://s3_bucket_name | List contents of the named s3 bucket
+`aws s3 ls s3://s3_bucket_name` | List contents of the named s3 bucket
+
+# [Git Workflow](https://data.compass.lighthouselabs.ca/days/w01d1/activities/149)
+
+Terminal commands (steps in bold are required each time to update a file)
+* `mkdir <folder name>` # to create a new folder
+* `git clone git@github.com:YOUR_USER_NAME/lighthouse-data-notes.git` to clone a repo
+* `git init` to initialize a new Git repo in the current directory
+* `git remote add origin <URL of repo>` to add new repo as a remote of  your local repo if not yet created
+* **`git add <item>` to add the item to the repository** 
+    * OR `git rm --cached -r <filename>` to remove item from remote repo without changing it on computer
+* **`git commit -m "<comments>`** 
+* **`git push -u origin master` to push changes to GitHub (main branch has since been updated to `main`)**
+
+Description | Function/Method | Imports
+--- | ---- | ---
+See which branch you are on | `git branch` | The branch with an asterisk (*) next to it is your current branch.
+Create a new branch | `git branch new-branch-name`
+Switch to a given branch | `git checkout branch-name`
+Create a new branch and switch to it | `git checkout -b new-branch-name` | This is a combination of `git branch` and `git checkout`
+
 
 # AWS Serverless Application Model
 
 Description | AWS SAM CLI command | Notes
 --- | --- | ---
 scaffold a new project | `sam init`
+invoke a Lambda function locally | `sam local invoke LambdaResourceName --event path/event.json`
 run a Serverless app locally by running a local HTTP server that simulates API Gateway | 1. Run Docker desktop. <br>2. `cd` to project root folder. <br>3. `sam local start-api --port 8080` <br>
 Run a pytest unit test | `pip3 install pytest pytest-mock`<br>`python3 -m pytest tests/unit`
 Build a SAM project | [`cd` to root folder] <br>`sam build` | This command iterates through the functions in your application, looking for the manifest file (such as requirements.txt, package.json or pom.xml) that contain dependencies, and automatically creates deployment artifacts. 
@@ -1468,7 +1489,7 @@ Deploy the project. | `sam deploy` | Append the `--guided` flag to deploy in gui
 Delete an application | `sam delete`
 create a new CodeCommit repository | `aws codecommit create-repository --repository-name sam-app`
 Configure the git client with username and email | `git config --global user.name "your name"` <br>`git config --global user.email "your_email@example.com"`
-Add your CodeCommit repository URL as a remote on your local git project. | `git remote add origin codecommit://sam-app` | If you mis-typed the origin url, you can remove it by running: `git remote rm origin`.
+Add your CodeCommit repository URL as a remote on your local git project. | `git remote add origin codecommit://sam-app` | If you mis-typed the origin url, you can remove it by running: `git remote rm origin`. `origin` is the name of the remote and can be renamed.
 Push the code | `git push -u origin main`
 check repository status | `git status`
 
@@ -1485,7 +1506,15 @@ git commit -m "Initial commit"
 
 ```
 
-## Deploy CloudFormation pipeline template
+## [Creating the SAM Pipeline](https://catalog.workshops.aws/complete-aws-sam/en-US/module-4-cicd/module-4-cicd-gh/50-sampipeinit)
+
+Step | Description | Imports
+--- | ---- | ---
+(1) Create the dev stage of the pipeline | `sam pipeline bootstrap --stage dev` | Make sure to be in the project directory
+(2) Create the prod stage of the pipeline | `sam pipeline bootstrap --stage prod`
+(3) Create GitHub Actions Workflow | `sam pipeline init`
+
+## Deploy Pipeline template
 ```shell
 cd ~/environment/sam-app
 git add .
@@ -1500,4 +1529,33 @@ Now that the configuration is checked into source control, you can create a new 
 sam deploy -t codepipeline.yaml --stack-name sam-app-pipeline --capabilities=CAPABILITY_IAM
 ```
 
-## Inspect the dev/prod stages
+## SAM Accelerate
+
+Step | Function/Method | Imports
+--- | ---- | ---
+start SAM Accelerate |  `sam sync --watch --stack-name sam-app` | Navigate to where the `template.yaml` file for the application is first. Respond with Y if prompted to confirm that you want to use the preview feature. 
+Test your application and check the logs | `sam logs --tail --stack-name sam-app`
+
+
+The first time that you run the `sync --watch` command, AWS SAM starts an AWS CloudFormation deployment to get your function and associated resources into your AWS environment. After the deployment, AWS SAM Accelerate watches for changes to your serverless application and determines whether to use service APIs or CloudFormation based on the resource type.
+
+* With the `sync --watch` process running, update your local Lambda function code.
+* SAM Accelerate isn't only limited to Lambda code changes, it can also automate deployment of infrastructure changes in `template.yaml` through CloudFormation.
+
+Output from `sam logs --tail --stack-name sam-app`:
+```
+
+(aws) C:\Users\silvh\OneDrive\lighthouse\portfolio-projects\sam-app>sam logs --tail --stack-name sam-app
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:35:24.685000 INIT_START Runtime Version: python:3.7.v39      Runtime Version ARN: arn:aws:lambda:us-west-2::runtime:7bc09ef0e805b878ecacb74a4b25c1f9563f44b1849c0216b7a543b7307ff1bb
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:35:24.801000 START RequestId: a7c2bcdf-7093-4763-8a2c-81617073df9b Version: $LATEST
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:35:24.802000 Change deployed with SAM Accelerate, attempt 2
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:35:24.816000 END RequestId: a7c2bcdf-7093-4763-8a2c-81617073df9b
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:35:24.816000 REPORT RequestId: a7c2bcdf-7093-4763-8a2c-81617073df9b  Duration: 14.45 ms      Billed Duration: 15 ms  Memory Size: 128 MB     Max Memory Used: 36 MB  Init Duration: 115.61 ms
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:37:06.990000 START RequestId: f89dc5ec-42dc-44d7-989b-b48cf72e309c Version: $LATEST
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:37:06.990000 Change deployed with SAM Accelerate, attempt 2
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:37:06.992000 END RequestId: f89dc5ec-42dc-44d7-989b-b48cf72e309c
+2023/12/04/[$LATEST]871416c7625c401280ad2d1cc7467d99 2023-12-04T20:37:06.992000 REPORT RequestId: f89dc5ec-42dc-44d7-989b-b48cf72e309c  Duration: 1.81 ms       Billed Duration: 2 ms   Memory Size: 128 MB     Max Memory Used: 36 MB
+
+```
+
+## [Look at module 7 on Managing Permissions](https://catalog.workshops.aws/complete-aws-sam/en-US/module-7-permissions)
