@@ -419,3 +419,16 @@ def lineplots(df, y='Value', x='Year', column='Sex', row='Age', hue='Percentile'
         
     plt.tight_layout()
     return fig
+
+def correlation(df):
+    """
+    Plot the correlation matrix.
+    Returns the dataframe with the correlation values.
+    """
+
+    # Create a mask to exclude the redundant cells that make up half of the graph.
+    mask = np.triu(np.ones_like(df.corr(), dtype=bool))
+
+    # Create the heatmap with the mask and with annotation
+    sns.heatmap(data=df.corr(numeric_only=True),mask=mask,annot=True)
+    return df.corr()

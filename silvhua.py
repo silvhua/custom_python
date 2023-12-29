@@ -1,6 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pickle
 from datetime import datetime
 import json
@@ -304,20 +302,6 @@ def explore(df,id=0,print_n_unique=False, printValues=False):
 
     print(f'')
     return missing_data
-
-
-def correlation(df):
-    """
-    Plot the correlation matrix.
-    Returns the dataframe with the correlation values.
-    """
-
-    # Create a mask to exclude the redundant cells that make up half of the graph.
-    mask = np.triu(np.ones_like(df.corr(), dtype=bool))
-
-    # Create the heatmap with the mask and with annotation
-    sns.heatmap(data=df.corr(numeric_only=True),mask=mask,annot=True)
-    return df.corr()
 
 def drop_features(df,threshold=100, show_update=True):
     """
