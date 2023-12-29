@@ -402,7 +402,7 @@ def save_to_json(obj, filename=None, description='output_dictionary', append_ver
         filename += f'_{datetime.now().strftime("%Y-%m-%d_%H%M%S")}'
     filename += '.json'
     with open(path+filename, 'w') as f:
-        json.dump(obj, f)
+        json.dump(obj, f, indent=4)
     print(f'Object saved as JSON: {filename}')
 
 def load_json(filename, filepath):
