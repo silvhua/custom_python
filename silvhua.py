@@ -387,7 +387,7 @@ def save_to_json(obj, filename=None, description='output_dictionary', append_ver
     filename += '.json'
     with open(path+filename, 'w') as f:
         json.dump(obj, f, indent=4)
-    print(f'Object saved as JSON: {filename}')
+    print(f'Object saved as JSON: {path}{filename}')
 
 def load_json(filename, filepath):
     """
