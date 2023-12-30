@@ -86,7 +86,7 @@ def filter_df_any_condition(df, filters, view_columns=None, verbose=False):
     return deduped_df
 
 
-def filter_df_all_conditions(df, filters, view_columns=None, verbose=False):
+def filter_df_all_conditions(df, filters, view_columns=None, verbose=False, show_indices=True):
     """
     Filters a DataFrame based on all of the given conditions in a dictionary.
 
@@ -141,8 +141,9 @@ def filter_df_all_conditions(df, filters, view_columns=None, verbose=False):
         else:
             filters_list.append(filtered_df.query(f'{col}{condition}').index.tolist())
     filtered_rows = sorted(list(set(filters_list[0]).intersection(*filters_list[1:])))
-    print(f'Results where ALL conditions are met:')
-    print(f'\tDataFrame indices: {filtered_rows}')
+    if show_indices:
+        print(f'Results where ALL conditions are met:')
+        print(f'\tDataFrame indices: {filtered_rows}')
     filtered_df = df.loc[filtered_rows][view_columns] if view_columns != None else df.loc[filtered_rows]
     print(f'\tDataFrame shape: {filtered_df.shape}')
     return filtered_df
