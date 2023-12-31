@@ -1,12 +1,14 @@
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 import plotly.graph_objects as go
 import plotly 
 from plotly.subplots import make_subplots
 import plotly.express as px
 import pandas as pd
 import numpy as np
+try:
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+except:
+    print('Matplotlib and Seaborn not installed.')
 
 # Function to plot multiple histograms using Plotly. Show different colours based on classification.
 def plot_int_hist(df, columns=None, color=None, label=1):
@@ -70,7 +72,7 @@ def plot_int_hist(df, columns=None, color=None, label=1):
     return fig
 
 # Function to plot multiple bar charts using Plotly. Show different colours based on classification.
-def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack', n_columns=1, height=150):
+def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack', n_columns=1, height=150, y_order=None):
     """
     Use Plotly to plot multiple histograms using the specified columns of a dataframe.
     Arguments:
@@ -81,6 +83,8 @@ def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack'
     - label (optional): Label of classification column. Default is 1.
     - barmode ('stack', 'group', or 'overlay'; optional): How the different will be shown. Default is 'stack'.
     - n_columns (optional): Number of columns in the figure. Default is 2.
+    - height (optional): Height of each subplot in pixels. Default is 150.
+    - y_order (optional): List of values to specify the order of the y axis. Default is None.
 
     """
     if columns == None:
@@ -127,6 +131,8 @@ def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack'
         title_text='number of observations',
         row=n_rows
     )
+    if y_order:
+        fig.update_yaxes(categoryorder='array', categoryarray=y_order)
     fig.show()
 
 # Function to plot multiple histograms
