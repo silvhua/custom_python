@@ -13,8 +13,8 @@ except:
 # Function to plot multiple histograms using Plotly. Show different colours based on classification.
 def plot_int_hist(
     df, groupby, columns=None, classification=None, label=1, 
-    agg='sum',
-    barmode='stack', n_columns=1, height=150, y_order=None
+    agg='sum', title=True, y_order=False,
+    barmode='stack', n_columns=1, height=150
     ):
     """
     Use Plotly to plot multiple histograms using the specified columns of a dataframe.
@@ -68,7 +68,7 @@ def plot_int_hist(
         title = 'Value counts'
     fig.update_layout(
         showlegend=False,
-        height=(n_rows+1)*height,
+        height=(n_rows+1)*height if height else None,
         barmode=barmode,
         # bargap=0.1,
         title=title,
@@ -77,15 +77,20 @@ def plot_int_hist(
         # title_y=0.1,
         title_yanchor='top'
     )
-    fig.update_xaxes(title=dict(
-        standoff=0,
-        ),
-        title_text=f'{agg}'.upper(),
-        row=n_rows
-    )
+    if title:
+        fig.update_xaxes(title=dict(
+            standoff=0,
+            ),
+            title_text=title if type(title) == str else f'{agg}'.upper(),
+            row=n_rows
+        )
     if y_order:
-        print(f'y_order: {y_order}')
-        fig.update_yaxes(categoryorder='array', categoryarray=y_order)
+        aggregate_df = df[columns + [groupby]].groupby(
+            groupby
+            ).sum().sort_values(by=[columns[0]], ascending=True)
+        index_list = aggregate_df.index.tolist()
+        print(f'y_order: {index_list}')
+        fig.update_yaxes(categoryorder='array', categoryarray=index_list)
     fig.show()
 
 # Function to plot multiple bar charts using Plotly. Show different colours based on classification.
