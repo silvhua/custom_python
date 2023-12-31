@@ -4,7 +4,7 @@ import os
 sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\portfolio-projects\online-PT-social-media-NLP\src")
 from silvhua import *
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def delete_documents(filename, filepath):
     """Function to delete files prior to their generation."""
@@ -20,6 +20,58 @@ def delete_documents(filename, filepath):
         filename = f.f_code.co_filename
         message = f'{filename} not deleted. An error occurred on line {lineno} in {filename}: {error}.'
         print(message)
+
+def filter_by_period(df, column, period=None, start_date=None, end_date=None):
+    """
+    Filter a DataFrame based on a specified column and period or provided start_date and end_date.
+    
+    Parameters:
+        df (DataFrame): The DataFrame to filter.
+        column (str): The column to filter on.
+        period (str, optional): The period to filter by. Valid options are 'week', 'past_month', 'past_quarter', 'past_week', or None. Defaults to None.
+        start_date (str, optional): The start date to filter by. Should be in the format 'YYYY-MM-DD'. Defaults to None.
+        end_date (str, optional): The end date to filter by. Should be in the format 'YYYY-MM-DD'. Defaults to None.
+    
+    Returns:
+        DataFrame: A new DataFrame containing only the rows that meet the specified filtering criteria.
+    
+    Raises:
+        ValueError: If an invalid period is provided.
+    """
+    today = datetime.today().date()
+    
+    # Set the start and end dates based on the specified period or provided start_date and end_date
+    if period == 'week':
+        start_date = today - timedelta(days=today.weekday())  # Monday of the current week
+        end_date = today + timedelta(days=6 - today.weekday())  # Sunday of the current week
+    elif period == 'past_month':
+        start_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
+        start_date = start_date.replace(day=1)  # First day of the previous month
+        end_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
+    elif period == 'past_quarter':
+        end_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
+        start_date = end_date.replace(day=1) - timedelta(days=2 * 30)  # First day of 3 months ago
+        start_date = start_date.replace(day=1)
+    elif period == 'past_week':
+        start_date = today - timedelta(days=today.weekday() + 7)  # Monday of the previous week
+        end_date = today - timedelta(days=today.weekday() + 1)  # Sunday of the previous week
+    elif period is None:
+        if end_date is not None:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+        else:
+            end_date = today
+        if start_date is not None:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+        else:
+            start_date = end_date - timedelta(days=28)
+    else:
+        raise ValueError("Invalid period. Valid options are 'week', 'past_month', 'past_quarter', 'past_week', or None.")
+    
+    df[column] = pd.to_datetime(df[column]).dt.date    
+    filtered_df = df[(df[column] >= start_date) & (df[column] <= end_date)]
+    
+    return filtered_df
+
 def filter_df_any_condition(df, filters, view_columns=None, verbose=False):
     """
     Filters a DataFrame based on any of the given conditions in a dictionary.
