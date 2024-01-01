@@ -92,6 +92,7 @@ def plot_int_hist(
         print(f'y_order: {index_list}')
         fig.update_yaxes(categoryorder='array', categoryarray=index_list)
     fig.show()
+    return fig
 
 # Function to plot multiple bar charts using Plotly. Show different colours based on classification.
 def plot_int_bar(df, columns=None, classification=None, label=1, barmode='stack', n_columns=1, height=150, y_order=None):
