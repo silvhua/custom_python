@@ -21,13 +21,13 @@ def delete_documents(filename, filepath):
         message = f'{filename} not deleted. An error occurred on line {lineno} in {filename}: {error}.'
         print(message)
 
-def filter_by_period(df, column, period=None, start_date=None, end_date=None):
+def filter_by_period(df, column='created_time', period=None, start_date=None, end_date=None):
     """
     Filter a DataFrame based on a specified column and period or provided start_date and end_date.
     
     Parameters:
         df (DataFrame): The DataFrame to filter.
-        column (str): The column to filter on.
+        column (str): The timestamp column to filter on.
         period (str, optional): The period to filter by. Valid options are 'week', 'past_month', 'past_quarter', 'past_week', or None. Defaults to None.
         start_date (str, optional): The start date to filter by. Should be in the format 'YYYY-MM-DD'. Defaults to None.
         end_date (str, optional): The end date to filter by. Should be in the format 'YYYY-MM-DD'. Defaults to None.
@@ -67,7 +67,9 @@ def filter_by_period(df, column, period=None, start_date=None, end_date=None):
     else:
         raise ValueError("Invalid period. Valid options are 'week', 'past_month', 'past_quarter', 'past_week', or None.")
     
+    df = df.copy()
     df[column] = pd.to_datetime(df[column]).dt.date    
+    print(f'Filtering based on {column} between {start_date} and {end_date}')
     filtered_df = df[(df[column] >= start_date) & (df[column] <= end_date)]
     
     return filtered_df
