@@ -564,3 +564,8 @@ def print_dict_values_for_key(results_dict, key, zero_indexed=False):
     """
     for index, item in enumerate(results_dict):
         print(f"{index+1 if zero_indexed==False else index}: {results_dict[item].get(key, 'None').strip()}", end='\n\n')
+
+def convert_to_pascal_case(text):
+    words = text.split()
+    words = [w.title() for w in words]
+    return ''.join(words)
