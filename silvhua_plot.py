@@ -96,7 +96,10 @@ def plot_int_hist(
             ).sum().sort_values(by=[columns[0]], ascending=True)
         index_list = aggregate_df.index.tolist()
         # print(f'y_order: {index_list}')
-        fig.update_yaxes(categoryorder='array', categoryarray=index_list)
+        fig.update_yaxes(
+            categoryorder='array', categoryarray=index_list,
+            tickmode='array', tickvals=index_list
+            )
     fig.show()
     return fig
 
