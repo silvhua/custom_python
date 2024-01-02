@@ -62,7 +62,9 @@ def plot_int_hist(
                 ), 
             row=i//n_columns+1, col=i % n_columns + 1)
     
-    if classification:
+    if type(title) == str:
+        title = title
+    elif classification:
         title = f'Observations with {classification} of value {label} are indicated in red'
     else:
         title = 'Value counts'
@@ -81,7 +83,7 @@ def plot_int_hist(
         fig.update_xaxes(title=dict(
             standoff=0,
             ),
-            title_text=title if type(title) == str else f'{agg}'.upper(),
+            title_text=f'{agg}'.upper(),
             row=n_rows
         )
     if y_order:
