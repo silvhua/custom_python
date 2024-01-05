@@ -85,7 +85,7 @@ def save_text(text, filename, path=None, append_version=False):
     if path:
         path = f'{path}/'.replace('\\','/')
     if append_version:
-        filename += datetime.now().strftime('%Y-%m-%d_%H%M')
+        filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     with open(path+filename+'.txt', 'w') as file:
         file.write(text)
     print('File saved: ', path+filename+'.txt')
