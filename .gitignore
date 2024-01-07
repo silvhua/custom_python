@@ -4,3 +4,4 @@ files/*_credentials.bat
 files/conda_env_var*.bat
 files/env_var*.sh
 __pycache__
+private
