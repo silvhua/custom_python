@@ -20,6 +20,10 @@
 		},
 		{
 			"path": "../../ginkgo-repos"
+		},
+		{
+			"name": "volunteer",
+			"path": "../../portfolio-projects/volunteer"
 		}
 	],
 	"settings": {
