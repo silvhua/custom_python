@@ -259,27 +259,6 @@ def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_differe
         print('Different values:',different_values)
     
 # function that prints null values
-        
-def explore_categorical(df, categorical_columns, show_numbers=True):
-    """
-    Prints the unique values and their counts for each categorical column in the given dataframe.
-
-    Parameters:
-    - df: The dataframe to explore (pandas.DataFrame)
-    - categorical_columns: A list of column names to explore (list)
-
-    Returns:
-    None
-    """
-    for column in categorical_columns:
-        print(f'\n**{column}** ({len(df[column].unique())} unique values):\n')
-        values = df.value_counts(column).sort_values(ascending=False).index
-        for value in values:
-            if show_numbers:
-                print(f'\t{value} ({df[df[column]==value].shape[0]})')
-            else:
-                print(f'{value},')
-
 def explore(df,id=0,print_n_unique=False, printValues=False):
     """
     Explore dataframe data and print missing values.

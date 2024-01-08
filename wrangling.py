@@ -5,6 +5,26 @@ sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 from silvhua import *
 from datetime import datetime, timedelta
 
+def explore_categorical(df, categorical_columns, show_numbers=True):
+    """
+    Prints the unique values and their counts for each categorical column in the given dataframe.
+
+    Parameters:
+    - df: The dataframe to explore (pandas.DataFrame)
+    - categorical_columns: A list of column names to explore (list)
+
+    Returns:
+    None
+    """
+    for column in categorical_columns:
+        print(f'\n**{column}** ({len(df[column].unique())} unique values):\n')
+        values = df.value_counts(column).sort_values(ascending=False).index
+        for value in values:
+            if show_numbers:
+                print(f'\t{value} ({df[df[column]==value].shape[0]})')
+            else:
+                print(f'{value},')
+
 def delete_documents(filename, filepath):
     """Function to delete files prior to their generation."""
     if filepath:
