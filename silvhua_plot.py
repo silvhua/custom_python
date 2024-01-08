@@ -90,10 +90,10 @@ def plot_int_hist(
             title_text=f'{agg}'.upper(),
             row=n_rows
         )
+    aggregate_df = df[columns + [groupby]].groupby(
+        groupby
+        ).sum().sort_values(by=[columns[0]], ascending=True)
     if y_order:
-        aggregate_df = df[columns + [groupby]].groupby(
-            groupby
-            ).sum().sort_values(by=[columns[0]], ascending=True)
         index_list = aggregate_df.index.tolist()
         # print(f'y_order: {index_list}')
         fig.update_yaxes(
@@ -101,7 +101,8 @@ def plot_int_hist(
             tickmode='array', tickvals=index_list
             )
     fig.show()
-    return fig
+    aggregate_df = aggregate_df.sort_values(columns[0], ascending=False)
+    return fig, aggregate_df
 
 # Function to plot multiple histograms
 def plot_hist(df, columns=None):
