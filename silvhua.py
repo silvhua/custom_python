@@ -260,7 +260,7 @@ def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_differe
     
 # function that prints null values
         
-def explore_categorical(df, categorical_columns):
+def explore_categorical(df, categorical_columns, show_numbers=True):
     """
     Prints the unique values and their counts for each categorical column in the given dataframe.
 
@@ -272,10 +272,13 @@ def explore_categorical(df, categorical_columns):
     None
     """
     for column in categorical_columns:
-        print(f'{column} ({len(df[column].unique())} unique values):')
-        values = df.groupby(column).count().iloc[:,0].sort_values(ascending=False).index
+        print(f'\n**{column}** ({len(df[column].unique())} unique values):\n')
+        values = df.value_counts(column).sort_values(ascending=False).index
         for value in values:
-            print(f'\t{value} ({df[df[column]==value].shape[0]})')
+            if show_numbers:
+                print(f'\t{value} ({df[df[column]==value].shape[0]})')
+            else:
+                print(f'{value},')
 
 def explore(df,id=0,print_n_unique=False, printValues=False):
     """
