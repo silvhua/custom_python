@@ -73,7 +73,7 @@ def save_excel(df,filename,path=None,append_version=False, index=True):
     print('File saved: ',path+filename+'.xlsx')
     print('\tTime completed:', datetime.now())
 
-def save_text(text, filename, path=None, append_version=False):
+def save_text(text, filename, path=None, append_version=False, ext='txt'):
     """
     Save a string to a text file.
     Parameters:
@@ -81,14 +81,17 @@ def save_text(text, filename, path=None, append_version=False):
     - filename: Root of the filename.
     - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
     - append_version (bool): If True, append date and time to the end of the filename.
+    - ext (string): Extension to append (no need to include dot as it will be added)
     """
     if path:
         path = f'{path}/'.replace('\\','/')
     if append_version:
         filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
-    with open(path+filename+'.txt', 'w') as file:
+    if ext[0] != '.':
+        ext = '.'+ext
+    with open(path+filename+ext, 'w') as file:
         file.write(text)
-    print('File saved: ', path+filename+'.txt')
+    print('File saved: ', path+filename+ext)
     print('\tTime completed:', datetime.now())
 
 def load_txt(filename, filepath, encoding='utf-8'):
