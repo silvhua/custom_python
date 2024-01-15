@@ -13,7 +13,7 @@ except:
 def plot_int_hist(
     df, groupby, columns=None, classification=None, label=1, 
     agg='sum', title=True, y_order=False,
-    barmode='stack', n_columns=1, height=150, showlegend=False
+    barmode='stack', n_columns=1, height=150, showlegend=False, aspect_ratio=1.3
     ):
     """
     Use Plotly to plot multiple histograms using the specified columns of a dataframe.
@@ -72,9 +72,12 @@ def plot_int_hist(
         title = f'Observations with {classification} of value {label} are indicated in red'
     else:
         title = 'Value counts'
+    figure_height = (n_rows+1)*height if height else None
+    figure_width = 300 + aspect_ratio * figure_height if figure_height else None
     fig.update_layout(
         showlegend=showlegend,
-        height=(n_rows+1)*height if height else None,
+        height=figure_height,
+        width=figure_width,
         barmode=barmode,
         # bargap=0.1,
         title=title,
