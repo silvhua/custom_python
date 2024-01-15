@@ -7,5 +7,22 @@
 			"path": "../../../../../../../../home/silvhua/custom_python"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"audioCues.chatResponsePending": "off",
+		"audioCues.diffLineDeleted": "off",
+		"audioCues.diffLineModified": "off",
+		"audioCues.diffLineInserted": "off",
+		"audioCues.lineHasBreakpoint": "off",
+		"audioCues.lineHasError": "off",
+		"audioCues.lineHasFoldedArea": "off",
+		"audioCues.lineHasInlineSuggestion": "off",
+		"audioCues.noInlayHints": "off",
+		"audioCues.notebookCellCompleted": "off",
+		"audioCues.notebookCellFailed": "off",
+		"audioCues.onDebugBreak": "off",
+		"audioCues.taskCompleted": "off",
+		"audioCues.taskFailed": "off",
+		"audioCues.terminalCommandFailed": "off",
+		"audioCues.terminalQuickFix": "off"
+	}
 }
