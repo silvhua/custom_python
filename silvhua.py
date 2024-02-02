@@ -391,6 +391,18 @@ def save_to_json(obj, filename=None, description='output_dictionary', append_ver
         json.dump(obj, f, indent=4)
     print(f'Object saved as JSON: {path}{filename}')
 
+def save_json_string(json_string, **kwargs):
+    """
+    Save a json string to a JSON file:
+    1. Replaces single quotes with double quotes in the given JSON string and converts it to a dictionary.
+    2. Using the `save_to_json` function with the `json_string` argument, saves the dictionary to a JSON file 
+    with the provided keyword arguments.
+    """
+    json_string = json_string.replace("'", '"')
+    dictionary = json.loads(json_string)
+    print('JSON string converted to dictionary.')
+    save_to_json(dictionary, **kwargs)
+
 def load_json(filename, filepath):
     """
     Load a JSON file using specified file path copied from windows file explorer.
