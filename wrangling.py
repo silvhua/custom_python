@@ -5,6 +5,7 @@ sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 from silvhua import *
 from datetime import datetime, timedelta
 
+
 def explore_categorical(df, categorical_columns, show_numbers=True):
     """
     Prints the unique values and their counts for each categorical column in the given dataframe.
