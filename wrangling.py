@@ -5,6 +5,7 @@ sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 from silvhua import *
 from datetime import datetime, timedelta
 
+
 def explore_categorical(df, categorical_columns, show_numbers=True):
     """
     Prints the unique values and their counts for each categorical column in the given dataframe.
@@ -42,7 +43,7 @@ def delete_documents(filename, filepath):
 
 def filter_by_period(
         df, column='created_time', period=None, start_date=None, end_date=None,
-        verbose=False
+        verbose=False, **kwargs
         ):
     """
     Filter a DataFrame based on a specified column and period or provided start_date and end_date.
@@ -90,7 +91,7 @@ def filter_by_period(
         raise ValueError("Invalid period. Valid options are 'week', 'past_month', 'past_quarter', 'past_week', or None.")
     
     df = df.copy()
-    df[column] = pd.to_datetime(df[column]).dt.date    
+    df[column] = pd.to_datetime(df[column], **kwargs).dt.date    
     if verbose:
         print(f'Filtering based on {column} between {start_date} and {end_date}')
     filtered_df = df[(df[column] >= start_date) & (df[column] <= end_date)]
