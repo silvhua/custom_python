@@ -2,6 +2,12 @@ import pandas as pd
 import pickle
 from datetime import datetime
 import json
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment
+except:
+    pass
+from datetime import datetime
 
 def append_timestamp(string):
     """
@@ -9,6 +15,46 @@ def append_timestamp(string):
     """
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
+
+def save_xls(df, filename, path=None, append_version=False, index=False, wrapping=True, col_width=None):
+    """
+    Export dataframe to Excel.
+    Parameters:
+    - df: Dataframe variable name.
+    - filename: Root of the filename.
+    - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
+    - append_version (bool): If true, append date and time to end of filename.
+    - index (bool): If true, save index.
+    - wrapping (bool): If true, enable text wrapping in Excel.
+    - col_width (dict): Dictionary specifying column widths. Keys are column indices, values are column widths.
+    """
+    if path:
+        path = f'{path}/'.replace('\\','/')
+    if append_version:
+        filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
+    df.to_excel(path + filename + '.xlsx', index=index)
+    
+    if wrapping or col_width:
+        # Open the workbook and the active sheet
+        workbook = pd.ExcelWriter(path + filename + '.xlsx', engine='openpyxl').book
+        worksheet = workbook.active
+        
+        if wrapping:
+            # Set wrap_text attribute to True for all cells
+            for row in worksheet.iter_rows():
+                for cell in row:
+                    cell.alignment = Alignment(wrap_text=True)
+        
+        if col_width:
+            # Set column widths
+            for col_idx, width in col_width.items():
+                worksheet.column_dimensions[chr(65 + col_idx)].width = width
+        
+        # Save the workbook
+        workbook.save(path + filename + '.xlsx')
+    
+    print('File saved:', path + filename + '.xlsx')
+    print('Time completed:', datetime.now())
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
 def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
@@ -149,9 +195,10 @@ def savepickle(model,filename, ext='sav', path=None,append_version=False):
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
         filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
-    with open (path+filename+'.'+ext, 'wb') as fh:
+    full_path = path+filename+'.'+ext if ext else path+filename
+    with open (full_path, 'wb') as fh:
         pickle.dump(model, fh)
-    print('File saved: ',path+filename+'.'+ext)
+    print('File saved: ',full_path)
     print('\tTime completed:', datetime.now())
 
 def loadpickle(filename,filepath):
