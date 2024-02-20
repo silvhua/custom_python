@@ -62,39 +62,46 @@ def filter_by_period(
         ValueError: If an invalid period is provided.
     """
     today = datetime.today().date()
-    
-    # Set the start and end dates based on the specified period or provided start_date and end_date
-    if period == 'week':
-        start_date = today - timedelta(days=today.weekday())  # Monday of the current week
-        end_date = today + timedelta(days=6 - today.weekday())  # Sunday of the current week
-    elif period == 'past_month':
-        start_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
-        start_date = start_date.replace(day=1)  # First day of the previous month
-        end_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
-    elif period == 'past_quarter':
-        end_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
-        start_date = end_date.replace(day=1) - timedelta(days=2 * 30)  # First day of 3 months ago
-        start_date = start_date.replace(day=1)
-    elif period == 'past_week':
-        start_date = today - timedelta(days=today.weekday() + 7)  # Monday of the previous week
-        end_date = today - timedelta(days=today.weekday() + 1)  # Sunday of the previous week
-    elif period is None:
-        if end_date is not None:
-            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+    try:
+        # Set the start and end dates based on the specified period or provided start_date and end_date
+        if period == 'week':
+            start_date = today - timedelta(days=today.weekday())  # Monday of the current week
+            end_date = today + timedelta(days=6 - today.weekday())  # Sunday of the current week
+        elif period == 'past_month':
+            start_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
+            start_date = start_date.replace(day=1)  # First day of the previous month
+            end_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
+        elif period == 'past_quarter':
+            end_date = today.replace(day=1) - timedelta(days=1)  # Last day of the previous month
+            start_date = end_date.replace(day=1) - timedelta(days=2 * 30)  # First day of 3 months ago
+            start_date = start_date.replace(day=1)
+        elif period == 'past_week':
+            start_date = today - timedelta(days=today.weekday() + 7)  # Monday of the previous week
+            end_date = today - timedelta(days=today.weekday() + 1)  # Sunday of the previous week
+        elif period is None:
+            if end_date is not None:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            else:
+                end_date = today
+            if start_date is not None:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            else:
+                start_date = end_date - timedelta(days=28)
         else:
-            end_date = today
-        if start_date is not None:
-            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-        else:
-            start_date = end_date - timedelta(days=28)
-    else:
-        raise ValueError("Invalid period. Valid options are 'week', 'past_month', 'past_quarter', 'past_week', or None.")
-    
-    df = df.copy()
-    df[column] = pd.to_datetime(df[column], **kwargs).dt.date    
-    if verbose:
-        print(f'Filtering based on {column} between {start_date} and {end_date}')
-    filtered_df = df[(df[column] >= start_date) & (df[column] <= end_date)]
+            raise ValueError("Invalid period. Valid options are 'week', 'past_month', 'past_quarter', 'past_week', or None.")
+        
+        df = df.copy()
+        df[column] = pd.to_datetime(df[column], **kwargs).dt.date    
+        if verbose:
+            print(f'Filtering based on {column} between {start_date} and {end_date}')
+        filtered_df = df[(df[column] >= start_date) & (df[column] <= end_date)]
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'`filter_by_period`: An error occurred on line {lineno} in {filename}: {error}. \n'
+        print(message)
     
     return filtered_df
 
