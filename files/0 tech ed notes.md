@@ -1,3 +1,22 @@
+# [Git Workflow](https://data.compass.lighthouselabs.ca/days/w01d1/activities/149)
+
+Terminal commands (steps in bold are required each time to update a file)
+* `mkdir <folder name>` # to create a new folder
+* `git clone git@github.com:YOUR_USER_NAME/lighthouse-data-notes.git` to clone a repo
+* `git init` to initialize a new Git repo in the current directory
+* `git remote add origin <URL of repo>` to add new repo as a remote of  your local repo if not yet created
+* **`git add <item>` to add the item to the repository** 
+    * OR `git rm --cached -r <filename>` to remove item from remote repo without changing it on computer
+* **`git commit -m "<comments>`** 
+* **`git push -u origin master` to push changes to GitHub (main branch has since been updated to `main`)**
+
+Description | Function/Method | Imports
+--- | ---- | ---
+See which branch you are on | `git branch` | The branch with an asterisk (*) next to it is your current branch.
+Create a new branch | `git branch new-branch-name`
+Switch to a given branch | `git checkout branch-name`
+Create a new branch and switch to it | `git checkout -b new-branch-name` | This is a combination of `git branch` and `git checkout`
+
 # DataCamp SQL for Data Analysis
 
 Function/Method | Description
@@ -1455,25 +1474,6 @@ Task | Command | Note
 --- | ---- | ---
 `aws s3 ls` | List s3 buckets
 `aws s3 ls s3://s3_bucket_name` | List contents of the named s3 bucket
-
-# [Git Workflow](https://data.compass.lighthouselabs.ca/days/w01d1/activities/149)
-
-Terminal commands (steps in bold are required each time to update a file)
-* `mkdir <folder name>` # to create a new folder
-* `git clone git@github.com:YOUR_USER_NAME/lighthouse-data-notes.git` to clone a repo
-* `git init` to initialize a new Git repo in the current directory
-* `git remote add origin <URL of repo>` to add new repo as a remote of  your local repo if not yet created
-* **`git add <item>` to add the item to the repository** 
-    * OR `git rm --cached -r <filename>` to remove item from remote repo without changing it on computer
-* **`git commit -m "<comments>`** 
-* **`git push -u origin master` to push changes to GitHub (main branch has since been updated to `main`)**
-
-Description | Function/Method | Imports
---- | ---- | ---
-See which branch you are on | `git branch` | The branch with an asterisk (*) next to it is your current branch.
-Create a new branch | `git branch new-branch-name`
-Switch to a given branch | `git checkout branch-name`
-Create a new branch and switch to it | `git checkout -b new-branch-name` | This is a combination of `git branch` and `git checkout`
 
 
 # AWS Serverless Application Model
