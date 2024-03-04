@@ -16,7 +16,7 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
-def save_xls(df, filename, path=None, append_version=False, index=False, wrapping=True, col_width=None):
+def save_excel(df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None):
     """
     Export dataframe to Excel.
     Parameters:
@@ -32,29 +32,39 @@ def save_xls(df, filename, path=None, append_version=False, index=False, wrappin
         path = f'{path}/'.replace('\\','/')
     if append_version:
         filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
-    df.to_excel(path + filename + '.xlsx', index=index)
+    sheet_name = sheet_name if sheet_name else filename
+    filepath = path + filename + '.xlsx'
+    df.to_excel(filepath, index=index, sheet_name=sheet_name, freeze_panes=(1, 1))
     
-    if wrapping or col_width:
-        # Open the workbook and the active sheet
-        workbook = pd.ExcelWriter(path + filename + '.xlsx', engine='openpyxl').book
-        worksheet = workbook.active
+    # Load the Excel file into a DataFrame
+    df = pd.read_excel(filepath, sheet_name=sheet_name)
+
+    # Create a Pandas ExcelWriter using openpyxl
+    with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name=sheet_name)
         
+        # Access the workbook and the sheet
+        workbook = writer.book
+        worksheet = writer.sheets[sheet_name]
+
+        worksheet.freeze_panes = 'B2'
         if wrapping:
-            # Set wrap_text attribute to True for all cells
-            for row in worksheet.iter_rows():
+            # Set the text wrapping for all cells in the sheet
+            for row in worksheet.iter_rows(min_row=1, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
                 for cell in row:
-                    cell.alignment = Alignment(wrap_text=True)
-        
+                    cell.alignment = openpyxl.styles.Alignment(wrapText=True, vertical='top')
+    
         if col_width:
             # Set column widths
             for col_idx, width in col_width.items():
-                worksheet.column_dimensions[chr(65 + col_idx)].width = width
-        
+                worksheet.column_dimensions[col_idx if type(col_idx) == str else chr(65 + col_idx)].width = width
+
         # Save the workbook
-        workbook.save(path + filename + '.xlsx')
-    
+        workbook.save(filepath)
+
     print('File saved:', path + filename + '.xlsx')
     print('Time completed:', datetime.now())
+    return df
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
 def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
