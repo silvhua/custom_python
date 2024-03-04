@@ -3,8 +3,7 @@ import pickle
 from datetime import datetime
 import json
 try:
-    from openpyxl import Workbook
-    from openpyxl.styles import Alignment
+    import openpyxl
 except:
     pass
 from datetime import datetime
@@ -109,24 +108,6 @@ def save_csv(df,filename,path=None,append_version=False, index=False):
         filename+=f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     df.to_csv(path+filename+'.csv', index=index)
     print('File saved: ',path+filename+'.csv')
-    print('\tTime completed:', datetime.now())
-
-
-def save_excel(df,filename,path=None,append_version=False, index=True):
-    """
-    Export dataframe to Excel document.
-    Parameters:
-    - df: Dataframe variable name.
-    - filename: Root of the filename.
-    - filepath (raw string): Use the format r'<path>'. If None, file is saved in same director.
-    - append_version (bool): If true, append date and time to end of filename.
-    """
-    if path:
-        path = f'{path}/'.replace('\\','/')
-    if append_version == True:
-        filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
-    df.to_excel(path+filename+'.xlsx', index=index)
-    print('File saved: ',path+filename+'.xlsx')
     print('\tTime completed:', datetime.now())
 
 def save_text(text, filename, path=None, append_version=False, ext='txt'):
