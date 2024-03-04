@@ -16,7 +16,7 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
-def save_excel(df, filename, path=None, append_version=False, index=False, wrapping=True, col_width=None):
+def save_excel(df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None):
     """
     Export dataframe to Excel.
     Parameters:
@@ -32,7 +32,7 @@ def save_excel(df, filename, path=None, append_version=False, index=False, wrapp
         path = f'{path}/'.replace('\\','/')
     if append_version:
         filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
-    sheet_name = filename
+    sheet_name = sheet_name if sheet_name else filename
     filepath = path + filename + '.xlsx'
     df.to_excel(filepath, index=index, sheet_name=sheet_name, freeze_panes=(1, 1))
     
@@ -52,7 +52,7 @@ def save_excel(df, filename, path=None, append_version=False, index=False, wrapp
             # Set the text wrapping for all cells in the sheet
             for row in worksheet.iter_rows(min_row=1, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
                 for cell in row:
-                    cell.alignment = openpyxl.styles.Alignment(wrapText=True)
+                    cell.alignment = openpyxl.styles.Alignment(wrapText=True, vertical='top')
     
         if col_width:
             # Set column widths
