@@ -15,7 +15,10 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
-def save_excel(df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None):
+def save_excel(
+    df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None
+    freeze_at='B2'
+    ):
     """
     Export dataframe to Excel.
     Parameters:
@@ -33,7 +36,7 @@ def save_excel(df, filename, path=None, sheet_name=None, append_version=False, i
         filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     sheet_name = sheet_name if sheet_name else filename
     filepath = path + filename + '.xlsx'
-    df.to_excel(filepath, index=index, sheet_name=sheet_name, freeze_panes=(1, 1))
+    df.to_excel(filepath, index=index, sheet_name=sheet_name, freeze_panes=(1, 1), header_style='text-align: right')
     
     # Load the Excel file into a DataFrame
     df = pd.read_excel(filepath, sheet_name=sheet_name)
@@ -41,12 +44,14 @@ def save_excel(df, filename, path=None, sheet_name=None, append_version=False, i
     # Create a Pandas ExcelWriter using openpyxl
     with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name=sheet_name)
+        # Set the position of the sheet to be the left-most tab
+        writer.sheets[sheet_name].index = 0
         
         # Access the workbook and the sheet
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
 
-        worksheet.freeze_panes = 'B2'
+        worksheet.freeze_panes = freeze_at
         if wrapping:
             # Set the text wrapping for all cells in the sheet
             for row in worksheet.iter_rows(min_row=1, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
