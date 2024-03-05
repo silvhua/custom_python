@@ -61,8 +61,13 @@ def save_excel(
         if col_width:
             # Set column widths
             for col_idx, width in col_width.items():
-                worksheet.column_dimensions[col_idx if type(col_idx) == str else chr(65 + col_idx)].width = width
-
+                if (type(col_idx) == str) & (len(col_idx) <3): # If col_idx is Excel column index such as 'A' or 'AA'
+                    pass
+                elif type(col_idx) == str:  # If col_idx is a column name
+                    col_idx = df.columns.get_loc(col_name)
+                else:  # If col_idx is an integer or float
+                    col_idx = chr(65 + col_idx)
+                worksheet.column_dimensions[col_idx].width = width
         # Save the workbook
         workbook.save(filepath)
 
