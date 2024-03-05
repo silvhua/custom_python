@@ -5,6 +5,21 @@ sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 from silvhua import *
 from datetime import datetime, timedelta
 
+def get_value_counts(df, columns):
+    """
+    Prints the unique values and their counts for each column in the given dataframe.
+
+    Parameters:
+    - df: The dataframe to explore (pandas.DataFrame).
+    - columns: A list of column names to explore (list or string).
+    """
+    if type(columns) == str:
+        columns = [columns]
+    for column in columns:
+        print(f'Data type: {df[column].dtype}')
+        print(df[column].value_counts())
+        print(f'\tNull values: {df[column].isnull().sum()}')
+        print('\n')
 
 def explore_categorical(df, categorical_columns, show_numbers=True):
     """
