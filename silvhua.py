@@ -15,6 +15,19 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
+def load_and_describe_csv(filename, path, **kwargs):
+    """
+    Load a CSV as a dataframe and list the dataframe's columns and data types.
+
+    Parameters:
+    - filename (str)
+    - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
+    - kwargs: Additional arguments to pass to pd.read_csv
+    """
+    df = load_csv(filename, path, **kwargs)
+    print(df.dtypes)
+    return df
+
 def save_excel(
     df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None
     freeze_at='B2'
@@ -76,7 +89,7 @@ def save_excel(
     return df
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
-def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
+def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=',', **kwargs):
     """
     Load a csv file as a dataframe using specified file path copied from windows file explorer.
     Back slashes in file path will be converted to forward slashes.
@@ -89,7 +102,7 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
     Returns: dataframe object.
     """
     filename = f'{filepath}/'.replace('\\','/')+filename
-    df = pd.read_csv(filename, usecols=usecols, sep=sep)
+    df = pd.read_csv(filename, usecols=usecols, sep=sep, **kwargs)
     if column1_as_index==True:
         df.set_index(df.columns[0], inplace=True)
         df.index.name = None
