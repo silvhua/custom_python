@@ -20,7 +20,23 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
-def save_excel(df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None):
+def load_and_describe_csv(filename, path, **kwargs):
+    """
+    Load a CSV as a dataframe and list the dataframe's columns and data types.
+
+    Parameters:
+    - filename (str)
+    - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
+    - kwargs: Additional arguments to pass to pd.read_csv
+    """
+    df = load_csv(filename, path, **kwargs)
+    print(df.dtypes)
+    return df
+
+def save_excel(
+    df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None
+    freeze_at='B2'
+    ):
     """
     Export dataframe to Excel.
     Parameters:
@@ -37,16 +53,20 @@ def save_excel(df, filename, path=None, sheet_name=None, append_version=False, i
     if append_version:
         filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     sheet_name = sheet_name if sheet_name else filename
-    filepath = path + filename + '.xlsx'
+    filepath = path + filename + '.xlsx
     
     mode = 'a' if os.path.exists(filepath) else 'w'
 
     with pd.ExcelWriter(filepath, engine='openpyxl', mode=mode) as writer:
         df.to_excel(writer, index=False, sheet_name=sheet_name)
+        # Set the position of the sheet to be the left-most tab
+        writer.sheets[sheet_name].index = 0
+        
+        # Access the workbook and the sheet
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
-        
-        worksheet.freeze_panes = 'B2'
+
+        worksheet.freeze_panes = freeze_at
         if wrapping:
             # Set the text wrapping for all cells in the sheet
             for row in worksheet.iter_rows(min_row=1, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
@@ -56,8 +76,13 @@ def save_excel(df, filename, path=None, sheet_name=None, append_version=False, i
         if col_width:
             # Set column widths
             for col_idx, width in col_width.items():
-                worksheet.column_dimensions[col_idx if type(col_idx) == str else chr(65 + col_idx)].width = width
-
+                if (type(col_idx) == str) & (len(col_idx) <3): # If col_idx is Excel column index such as 'A' or 'AA'
+                    pass
+                elif type(col_idx) == str:  # If col_idx is a column name
+                    col_idx = df.columns.get_loc(col_name)
+                else:  # If col_idx is an integer or float
+                    col_idx = chr(65 + col_idx)
+                worksheet.column_dimensions[col_idx].width = width
         # Save the workbook
         workbook.save(filepath)
 
@@ -81,7 +106,7 @@ def check_sheet_existence(filename, path, sheet_name):
     return False
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
-def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
+def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=',', **kwargs):
     """
     Load a csv file as a dataframe using specified file path copied from windows file explorer.
     Back slashes in file path will be converted to forward slashes.
@@ -94,7 +119,7 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
     Returns: dataframe object.
     """
     filename = f'{filepath}/'.replace('\\','/')+filename
-    df = pd.read_csv(filename, usecols=usecols, sep=sep)
+    df = pd.read_csv(filename, usecols=usecols, sep=sep, **kwargs)
     if column1_as_index==True:
         df.set_index(df.columns[0], inplace=True)
         df.index.name = None
