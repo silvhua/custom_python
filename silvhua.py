@@ -29,8 +29,8 @@ def load_and_describe_csv(filename, path, **kwargs):
     return df
 
 def save_excel(
-    df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, col_width=None
-    freeze_at='B2'
+    df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, 
+    col_width=None, freeze_at='B2'
     ):
     """
     Export dataframe to Excel.

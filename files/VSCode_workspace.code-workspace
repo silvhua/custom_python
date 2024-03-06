@@ -24,10 +24,6 @@
 		{
 			"name": "volunteer",
 			"path": "../../portfolio-projects/volunteer"
-		},
-		{
-			"name": "LambdaServices",
-			"path": "../../ginkgo-repos/LambdaServices"
 		}
 	],
 	"settings": {
