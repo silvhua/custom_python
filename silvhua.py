@@ -48,46 +48,48 @@ def save_excel(
     - wrapping (bool): If true, enable text wrapping in Excel.
     - col_width (dict): Dictionary specifying column widths. Keys are column indices, values are column widths.
     """
-    if path:
-        path = convert_windows_path(path)
-    if append_version:
-        filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     sheet_name = sheet_name if sheet_name else filename
-    filepath = path + filename + '.xlsx
-    
-    mode = 'a' if os.path.exists(filepath) else 'w'
-
-    with pd.ExcelWriter(filepath, engine='openpyxl', mode=mode) as writer:
-        df.to_excel(writer, index=False, sheet_name=sheet_name)
-        # Set the position of the sheet to be the left-most tab
-        writer.sheets[sheet_name].index = 0
+    if check_sheet_existence(filename, path, sheet_name=sheet_name) == False:
+        if path:
+            path = convert_windows_path(path)
+        if append_version:
+            filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
+        filepath = path + filename + '.xlsx'
         
-        # Access the workbook and the sheet
-        workbook = writer.book
-        worksheet = writer.sheets[sheet_name]
+        mode = 'a' if os.path.exists(filepath) else 'w'
 
-        worksheet.freeze_panes = freeze_at
-        if wrapping:
-            # Set the text wrapping for all cells in the sheet
-            for row in worksheet.iter_rows(min_row=1, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
-                for cell in row:
-                    cell.alignment = openpyxl.styles.Alignment(wrapText=True, vertical='top')
-    
-        if col_width:
-            # Set column widths
-            for col_idx, width in col_width.items():
-                if (type(col_idx) == str) & (len(col_idx) <3): # If col_idx is Excel column index such as 'A' or 'AA'
-                    pass
-                elif type(col_idx) == str:  # If col_idx is a column name
-                    col_idx = df.columns.get_loc(col_name)
-                else:  # If col_idx is an integer or float
-                    col_idx = chr(65 + col_idx)
-                worksheet.column_dimensions[col_idx].width = width
-        # Save the workbook
-        workbook.save(filepath)
+        with pd.ExcelWriter(filepath, engine='openpyxl', mode=mode) as writer:
+            df.to_excel(writer, index=False, sheet_name=sheet_name)
+            # Set the position of the sheet to be the left-most tab
+            writer.sheets[sheet_name].index = 0
+            
+            # Access the workbook and the sheet
+            workbook = writer.book
+            worksheet = writer.sheets[sheet_name]
 
-    print('File saved:', path + filename + '.xlsx')
-    print('Time completed:', datetime.now())
+            worksheet.freeze_panes = freeze_at
+            if wrapping:
+                # Set the text wrapping for all cells in the sheet
+                for row in worksheet.iter_rows(min_row=1, max_row=worksheet.max_row, min_col=1, max_col=worksheet.max_column):
+                    for cell in row:
+                        cell.alignment = openpyxl.styles.Alignment(wrapText=True, vertical='top')
+        
+            if col_width:
+                # Set column widths
+                for col_idx, width in col_width.items():
+                    if (type(col_idx) == str) : # If col_idx is Excel column index such as 'A' or 'AA'
+                        if len(col_idx) > 3:  # If col_idx is a column name
+                            col_idx = df.columns.get_loc(col_idx)
+                    if type(col_idx) != str:  # If col_idx is an integer or float
+                        col_idx = chr(65 + col_idx)
+                    worksheet.column_dimensions[col_idx].width = width
+            # Save the workbook
+            workbook.save(filepath)
+
+        print('File saved:', path + filename + '.xlsx')
+        print('Time completed:', datetime.now())
+    else:
+        pass
     return df
 
 def check_sheet_existence(filename, path, sheet_name):
