@@ -7,6 +7,11 @@ try:
 except:
     pass
 from datetime import datetime
+import os
+
+def convert_windows_path(path):
+    path = f'{path}/'.replace('\\','/')
+    return path
 
 def append_timestamp(string):
     """
@@ -28,24 +33,19 @@ def save_excel(df, filename, path=None, sheet_name=None, append_version=False, i
     - col_width (dict): Dictionary specifying column widths. Keys are column indices, values are column widths.
     """
     if path:
-        path = f'{path}/'.replace('\\','/')
+        path = convert_windows_path(path)
     if append_version:
         filename += f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     sheet_name = sheet_name if sheet_name else filename
     filepath = path + filename + '.xlsx'
-    df.to_excel(filepath, index=index, sheet_name=sheet_name, freeze_panes=(1, 1))
     
-    # Load the Excel file into a DataFrame
-    df = pd.read_excel(filepath, sheet_name=sheet_name)
+    mode = 'a' if os.path.exists(filepath) else 'w'
 
-    # Create a Pandas ExcelWriter using openpyxl
-    with pd.ExcelWriter(filepath, engine='openpyxl') as writer:
+    with pd.ExcelWriter(filepath, engine='openpyxl', mode=mode) as writer:
         df.to_excel(writer, index=False, sheet_name=sheet_name)
-        
-        # Access the workbook and the sheet
         workbook = writer.book
         worksheet = writer.sheets[sheet_name]
-
+        
         worksheet.freeze_panes = 'B2'
         if wrapping:
             # Set the text wrapping for all cells in the sheet
@@ -64,6 +64,21 @@ def save_excel(df, filename, path=None, sheet_name=None, append_version=False, i
     print('File saved:', path + filename + '.xlsx')
     print('Time completed:', datetime.now())
     return df
+
+def check_sheet_existence(filename, path, sheet_name):
+    if path:
+        path = convert_windows_path(path)
+    file_path = os.path.join(path, filename + '.xlsx')
+    if os.path.exists(file_path):
+        wb = openpyxl.load_workbook(file_path)
+        if sheet_name in wb.sheetnames:
+            print(f"The file '{filename}.xlsx' exists in '{path}' and the sheet '{sheet_name}' exists.")
+            return True
+        else:
+            print(f"The file '{filename}.xlsx' exists in '{path}' but the sheet '{sheet_name}' does not exist.")
+    else:
+        print(f"The file '{filename}.xlsx' does not exist in '{path}'.")
+    return False
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
 def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=','):
