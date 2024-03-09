@@ -4,6 +4,57 @@ import os
 sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 from silvhua import *
 from datetime import datetime, timedelta
+import re
+import json
+
+def spreadsheet_to_dict(string):
+    """
+    Made so you can copy data from 2 columns of a Google sheet and convert into a dictionary
+    Where the left column text is the key and the right column text is the value of the dictionary.
+    Created originally for CYSIS table mapping project.
+    """
+    result = string.strip()
+    result = re.sub(r'\n', r', ', result)
+    result = re.sub(r'\t', r': ', result)
+    result = re.sub(r'([a-zA-Z0-9_]+)', r'"\1"', result)
+    result = "{" + result + "}"
+    print(f'result string: \n{result}')
+    result = json.loads(result)
+    print(f'Number of dictionary items: {len(result)}')
+    return result
+
+def decode_json_string(json_str):
+    decoded_dict = json.loads(json_str, object_hook=lambda d: {eval(k): v for k, v in d.items()})
+    return decoded_dict
+
+def spreadsheet_to_tuple_dict(string, key_length=2):
+    """
+    Made so you can copy data from 2+ columns of a Google sheet and convert into a dictionary
+    Where the right column text is the value of the dictionary and the values in the remaining
+    columns are concatenated to create the key.
+    Created originally for CYSIS table mapping project.
+    """
+
+    result = string.strip()
+    result = re.sub(r'\t', r':\t', result)
+    result = re.sub(r' ,', r',', result)
+    result = re.sub(r'\n', r',', result)
+    # result = re.sub(r' ([^:,\s]+:)', r'_\1', result) # Replace spaces in keys with underscore
+    key_regex = r'([^:,]+):\t'
+    for i in range(1, key_length):
+        key_regex += r'([^:,]+):\t'
+    key_regex += r'([^:,]+)(?:, )?'
+    print(key_regex)
+    key_regex_capture_groups = '"' + r'__'.join([rf'\{int}' for int in range(1, key_length+1)]) + '"'
+    
+    print(f'key regex capture groups: {key_regex_capture_groups}')
+    result = re.sub(key_regex, rf'{key_regex_capture_groups}: "\{key_length+1}"', result).rstrip(',\n')
+    result = "\n{" + result + "}\n"
+
+    # print(f'result string: \n{result}')
+    result = json.loads(result)
+    # print(f'Number of dictionary items: {len(result)}')
+    return result
 
 def get_value_counts(df, columns):
     """
