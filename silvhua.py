@@ -321,17 +321,22 @@ def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
 def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_difference=True):
     """
     Print the number of common values and unique values between two dataframe columns.
+    Return the unique rows of the dataframe with more records.
     
     """
     df1_values = df1[df1_column].unique()
     df2_values = df2[df2_column].unique()
     common_values = set(df1_values) & set(df2_values)
     if len(df1_values) > len(df2_values):
-        different_values = set(df1_values) - set(df2_values)
+        different_values = list(set(df1_values) - set(df2_values))
         print(f'Proper subset = {set(df2_values) < set(df1_values)}')
+        parent_df = df1
+        parent_df_column = df1_column
     else:
-        different_values = set(df2_values) - set(df1_values)
+        different_values = list(set(df2_values) - set(df1_values))
         print(f'Proper subset = {set(df1_values) < set(df2_values)}')
+        parent_df = df2
+        parent_df_column = df2_column
     print('Unique values in df1:',len(df1_values))
     print('Unique values in df2:',len(df2_values))
     print('Number of common values between df1 and df2:',len(common_values))
@@ -340,6 +345,7 @@ def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_differe
         print('Values in common:',common_values)
     if print_difference == True:
         print('Different values:',different_values)
+    return parent_df[parent_df[parent_df_column].isin(different_values)]
     
 # function that prints null values
 def explore(df,id=0,print_n_unique=False, printValues=False):
