@@ -400,6 +400,40 @@ def dict_list_to_json(dict_list, primary_key='id'):
         for index, dictionary in enumerate(new_dict_list):
             result[index] = dictionary
     return result
+
+def list_files(path, substring='.csv'):
+    """
+    List the filenames in a given filepath.
+
+    Parameters:
+    - path (str): Filepath.
+    - substring (str): Return only filenames containing this string/extension. 
+        Default is '.csv'.
+
+    Returns: 
+    - filenames_list (list)
+    """
+    filenames_list = [file for file in os.listdir(path) if substring in file]
+    print(f'Number of files {f" containing `{substring}`" if substring else ""}: {len(filenames_list)}')
+    return filenames_list
+
+def sample_csv_files(path, nrows=5, **kwargs):
+    """
+    Load a few rows from all CSV files from a given path and substring.
+
+    Returns:
+    - df_dict (dict): A dictionary of dataframes where the key is the filename without the extension.
+    """
+    filenames_list = list_files(path, substring='.csv')
+    df_dict = dict()
+    for file in filenames_list:
+        dict_key = file.split('.')[0]
+        print(f'**{file}**:')
+        df_dict[dict_key] = load_csv(file, path, nrows=nrows, **kwargs)
+        print()
+
+    return df_dict
+
     
 # def time_columns(df,time_column,format='%H%M'):
 #     """ 
