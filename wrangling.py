@@ -502,6 +502,28 @@ def filter_any_and_all_chain(
 
     return filtered_df
 
+def return_duplicate_rows(df, subset=None, keep=False):
+    """
+    Identify duplicate rows in a dataframe.
+
+    Parameters:
+        - df (DataFrame)
+        - subset (str or list): Only consider certain columns for identifying duplicates, 
+            by default use all of the columns.
+        - keep ('first', 'last', or None): Default 'first. Determines which duplicates (if any) to mark.
+            first : Mark duplicates as True except for the first occurrence.
+            last : Mark duplicates as True except for the last occurrence.
+            False : Mark all duplicates as True.
+    Returns:
+        - DataFrame with the duplicate rows.
+    """
+    print(f'DataFrame shape: {df.shape}')
+    print(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
+    duplicate_index = df.duplicated(subset=subset, keep=keep)
+    duplicate_rows = df.loc[duplicate_index].sort_values(by=subset)
+    print(f'Returning {keep if keep else "all"} duplicate rows.')
+    return duplicate_rows
+
 def remove_duplicates_by_lettercase(df, column='Reference'):
     """
     Removes rows from a pandas DataFrame if the strings in the specified column are identical aside from letter case,
