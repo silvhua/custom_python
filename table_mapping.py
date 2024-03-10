@@ -9,6 +9,8 @@ def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indica
     print(f'Total rows: {left_df.shape[0] + right_df.shape[0]}')
     print(f'\tLeft DF shape: {left_df.shape}')
     print(f'\tRight DF shape: {right_df.shape}')
+    common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
+    print(f'\tCommon columns: {common_columns}')
     # print(f'\tLeft DF columns: {left_df.columns}')
     merged_df = left_df.merge(
         right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
@@ -24,6 +26,8 @@ def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indica
         print(f'Shape after dropping duplicates: {merged_df.shape}\n')
     else:
         print(f'Drop duplicates = {str(drop_duplicates)}')
+    for column in common_columns:
+        merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
     merged_df = merged_df.drop(columns=[indicator] + [column for column in merged_df.columns if column.endswith('_y')])
     return merged_df
 
