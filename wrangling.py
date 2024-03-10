@@ -74,7 +74,7 @@ def get_value_counts(df, columns, copy_paste=False):
 
         result = df[column].value_counts()
         if copy_paste:
-            result.reset_index().apply(lambda x: print(f'{x["count"]}: {x[column]}'), axis=1)
+            result.reset_index().apply(lambda x: print(f'{x[column]}: {x["count"]}'), axis=1)
         print(f'\tNull values: {df[column].isnull().sum()}')
         print(f'\tData type: {df[column].dtype}')
     return result
