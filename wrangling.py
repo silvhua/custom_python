@@ -56,21 +56,28 @@ def spreadsheet_to_tuple_dict(string, key_length=2):
     # print(f'Number of dictionary items: {len(result)}')
     return result
 
-def get_value_counts(df, columns):
+def get_value_counts(df, columns, copy_paste=False):
     """
     Prints the unique values and their counts for each column in the given dataframe.
 
     Parameters:
     - df: The dataframe to explore (pandas.DataFrame).
     - columns: A list of column names to explore (list or string).
+
+    Returns:
+        Pandas Series object from `pd.value_counts()` 
     """
     if type(columns) == str:
         columns = [columns]
     for column in columns:
-        print(f'Data type: {df[column].dtype}')
-        print(df[column].value_counts())
+        print(f'Value counts for `{column}` column:')
+
+        result = df[column].value_counts()
+        if copy_paste:
+            result.reset_index().apply(lambda x: print(f'{x["count"]}: {x[column]}'), axis=1)
         print(f'\tNull values: {df[column].isnull().sum()}')
-        print('\n')
+        print(f'\tData type: {df[column].dtype}')
+    return result
 
 def explore_categorical(df, categorical_columns, show_numbers=True):
     """
