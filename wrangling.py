@@ -527,9 +527,10 @@ def return_duplicate_rows(df, subset=None, keep=False):
     print(f'DataFrame shape: {df.shape}')
     print(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
     duplicate_index = df.duplicated(subset=subset, keep=keep)
-    duplicate_rows = df.loc[duplicate_index].sort_values(by=subset)
+    duplicate_rows = df.loc[duplicate_index].sort_values(by=subset if subset else df.columns[0])
     print(f'Returning {keep if keep else "all"} duplicate rows.')
     return duplicate_rows
+
 
 def remove_duplicates_by_lettercase(df, column='Reference'):
     """
