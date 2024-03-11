@@ -41,6 +41,10 @@ def one_row_per_id(
     has 1 row in the DataFrame. Value columns are added based on the maximum number of 
     rows per ID in the original dataframe. 
     """
+    def number_rows_in_group(groupby):
+        groupby = groupby.reset_index(drop=True)
+        return groupby
+
     print(f'Initial shape: {df.shape}')
     original_columns = df.columns.tolist()
     original_columns.remove(id_column)
@@ -56,7 +60,8 @@ def one_row_per_id(
     n_groups = reshaped_df.columns.str.contains(original_columns[0]).sum()
     print(f'Number of groups: {n_groups}')
     sorted_columns = []
-    for group in range(1, n_groups + 1):
+    # for group in range(1, n_groups + 1):
+    for group in range(n_groups):
         for original_column in original_columns:
             sorted_columns.append(f'{original_column}{sep}{group}')
     reshaped_df = reshaped_df.reset_index()
