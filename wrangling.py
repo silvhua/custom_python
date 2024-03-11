@@ -756,7 +756,7 @@ def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_differe
     return parent_df[parent_df[parent_df_column].isin(different_values)]
     
 # function that prints null values
-def explore(df,id=0,print_n_unique=False, printValues=False):
+def explore(df,id=0,print_n_unique=False, printValues=False, axis=0):
     """
     Explore dataframe data and print missing values.
     Parameters:
@@ -784,9 +784,10 @@ def explore(df,id=0,print_n_unique=False, printValues=False):
                 print(len(df[column].value_counts()),'\t', column)
     
     # count amount of missing values in each column
-    total = df.isnull().sum().sort_values(ascending=False) 
+    total = df.isnull().sum(axis=axis).sort_values(ascending=False) 
     # % of rows with missing data from each column
-    percent = (df.isnull().sum()/df.isnull().count()).sort_values(ascending=False) 
+    percent = (df.isnull().sum(axis=axis)/df.isnull().count(axis=axis)).sort_values(ascending=False)
+    # return percent
 
     # create a table that lists total and % of missing values starting with the highest
     missing_data = pd.concat([total, percent], axis=1, keys=['Total', 'Percent']) 
