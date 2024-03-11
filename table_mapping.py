@@ -33,6 +33,38 @@ def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indica
     merged_df = merged_df.drop(columns=[indicator] + [column for column in merged_df.columns if column.endswith('_y')])
     return merged_df
 
+def one_row_per_id(
+    df, id_column='kIntakeID', sep='_'
+    ):
+    """
+    Reshape a DataFrame that has multiple rows for a given ID value so that every ID value only
+    has 1 row in the DataFrame. Value columns are added based on the maximum number of 
+    rows per ID in the original dataframe. 
+    """
+    print(f'Initial shape: {df.shape}')
+    original_columns = df.columns.tolist()
+    original_columns.remove(id_column)
+    reshaped_df = pd.DataFrame()
+    print(f'Original columns without id_column: {original_columns}')
+    reshaped_df = df.groupby(id_column).apply(lambda x: number_rows_in_group(x))
+    reshaped_df = reshaped_df.unstack()
+    reshaped_df = reshaped_df.sort_index(axis=1, level=-1)
+    new_columns = []
+    for column_tuple in reshaped_df.columns:
+        new_columns.append(f'{column_tuple[0]}{sep}{column_tuple[1]}')
+    reshaped_df.columns = new_columns
+    n_groups = reshaped_df.columns.str.contains(original_columns[0]).sum()
+    print(f'Number of groups: {n_groups}')
+    sorted_columns = []
+    for group in range(1, n_groups + 1):
+        for original_column in original_columns:
+            sorted_columns.append(f'{original_column}{sep}{group}')
+    reshaped_df = reshaped_df.reset_index()
+    reshaped_df = reshaped_df[[id_column] + sorted_columns]
+    print(f'Final shape: {reshaped_df.shape}')
+    print(f'final columns: {[column for column in reshaped_df.columns]}')        
+    return reshaped_df
+
 def lookup_value(id, df, id_column, value_column):
     result = []
     if type(id) == str:
