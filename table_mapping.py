@@ -6,11 +6,12 @@ import numpy as np
 
 def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False):
     indicator = '_merge' if indicator == True else indicator
-    print(f'Total rows: {left_df.shape[0] + right_df.shape[0]}')
+    print(f'\nTotal rows: {left_df.shape[0] + right_df.shape[0]}')
     print(f'\tLeft DF shape: {left_df.shape}')
     print(f'\tRight DF shape: {right_df.shape}')
     common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
     print(f'\tCommon columns: {common_columns}')
+    print(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}.`')
     # print(f'\tLeft DF columns: {left_df.columns}')
     merged_df = left_df.merge(
         right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
@@ -20,12 +21,13 @@ def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indica
     print(f'Columns after merge: {[column for column in merged_df.columns]}')
     print(f"Merge indicator value counts: {merged_df[indicator].value_counts()}")
     print(f"\tSum: {merged_df[indicator].value_counts().sum()}")
+    duplicate_rows = return_duplicate_rows(merged_df)
     if drop_duplicates:
         merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
         # drop columns containing the '_y' indicator
-        print(f'Shape after dropping duplicates: {merged_df.shape}\n')
+        print(f'\tShape after dropping duplicates: {merged_df.shape}\n')
     else:
-        print(f'Drop duplicates = {str(drop_duplicates)}')
+        print(f'\tDrop duplicates = {str(drop_duplicates)}')
     for column in common_columns:
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
     merged_df = merged_df.drop(columns=[indicator] + [column for column in merged_df.columns if column.endswith('_y')])
