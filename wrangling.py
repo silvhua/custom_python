@@ -526,10 +526,10 @@ def return_duplicate_rows(df, subset=None, keep=False, id_column=None):
     """
     print(f'DataFrame shape: {df.shape}')
     print(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
-    if id_column:
-        print(f'{id_column} values of duplicate rows: {sorted(list(set(df[id_column])))}')
     duplicate_index = df.duplicated(subset=subset, keep=keep)
     duplicate_rows = df.loc[duplicate_index].sort_values(by=subset if subset else df.columns[0])
+    if id_column:
+        print(f'{id_column} values of duplicate rows: {sorted(list(set(duplicate_rows[id_column])))}')
     print(f'\tReturning {keep if keep else "all"} duplicate rows.')
     return duplicate_rows
 
