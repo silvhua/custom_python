@@ -107,7 +107,6 @@ def merge_to_replace(left_df, right_df, left_on, right_index_column, value_colum
     print(f'right index length: {len(right_df.index)}')
     print(f'right index unique values : {len(right_df.index.unique())}')
     print(f'left_df[left_on] shape {left_df[left_on].shape}')
-    print(f'left_df[value_column] shape {left_df[value_column].shape}')
     try:
         if value_column in left_df.columns:
             new_value_column = f'{value_column}_y'
@@ -115,6 +114,7 @@ def merge_to_replace(left_df, right_df, left_on, right_index_column, value_colum
             value_column = new_value_column
         else:
             new_value_column = value_column 
+        print(f'right_df[value_column] shape {right_df[new_value_column].shape}')
         print(f'\nBefore `merge_to_replace`: \n\tColumns:{[col for col in left_df.columns]}')
         print(f'\tLeft DataFrame shape: {left_df.shape}')
         right_df = right_df.copy().set_index(right_index_column)
