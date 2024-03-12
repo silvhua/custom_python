@@ -4,6 +4,24 @@ from silvhua import *
 from wrangling import *
 import numpy as np
 
+def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
+    try:
+        df[columns] = df[columns].replace({np.nan: ''}).replace({-1: ''}).astype(str)
+        df[new_column] = df[columns[0]]
+        for column in columns[1:]:
+            df[new_column] = df[new_column].str.cat(df[column], sep=sep)
+        df[new_column] = df[new_column].replace({sep * (len(columns) - 1): None})
+        if drop_columns:
+            df = df.drop(columns=columns)
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        print(message)
+    return df
+
 def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False):
     indicator = '_merge' if indicator == True else indicator
     print(f'\nTotal rows: {left_df.shape[0] + right_df.shape[0]}')
@@ -127,15 +145,15 @@ def remove_time_from_date_string(date_string, delimiter=' '):
         date = None
     return date
 
-def concatenate_columns(row, columns, new_column_name, delimiter='; '):
-    row[new_column_name] = delimiter.join([row[column] for column in columns if row[column] != -1])
-    if len(row[new_column_name]) == 0:
-        row[new_column_name] = None
-    return row
-
 def map_many_to_one(row, columns, new_column, mapping_dict):
     key = '__'.join([row[col] for col in columns])
     row[new_column] = mapping_dict.get(key, None)
     # if row[new_column] == None:
     #     print(f'index {row.name} key {key} has no value')
     return row
+
+# def concatenate_columns(row, columns, new_column_name, delimiter='; '):
+#     row[new_column_name] = delimiter.join([row[column] for column in columns if row[column] != -1])
+#     if len(row[new_column_name]) == 0:
+#         row[new_column_name] = None
+#     return row
