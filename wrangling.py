@@ -789,6 +789,14 @@ def compare_df_columns(df1, df1_column, df2, df2_column,print_common=False,print
         print('Different values:', different_values)
     return parent_df[parent_df[parent_df_column].isin(different_values)]
     
+def drop_na(df, subset=None, **kwargs):
+    before_length = len(df)
+    print(f'Shape before dropping nulls: {df.shape}')
+    df = df.dropna(subset=subset, how='all')
+    print(f'\tShape after dropping nulls: {df.shape}')
+    print(f'\t{before_length - len(df)} rows dropped')
+    return df
+
 # function that prints null values
 def explore(df,id=0,print_n_unique=False, printValues=False, axis=0):
     """
