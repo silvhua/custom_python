@@ -745,10 +745,10 @@ def compare_iterables(iterable1, iterable2, print_common=False, print_difference
     else:
         different_values = list(set(iterable2) - set(iterable1))
         print(f'Proper subset = {set(iterable1) < set(iterable2)}')
-    print('Unique values in iterable 1:',len(iterable1))
-    print('Unique values in iterable 2:',len(iterable2))
+    print('Unique values in iterable 1:',len(set(iterable1)))
+    print('Unique values in iterable 2:',len(set(iterable2)))
     print('Number of common values between iterables 1 and 2:',len(common_values))
-    print('Number of different values between s 1 and 2:',len(different_values))
+    print('Number of different values between iterables 1 and 2:',len(different_values))
     if print_common == True:
         print('Values in common:',common_values)
     if print_difference == True:
