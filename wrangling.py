@@ -765,7 +765,7 @@ def find_unique_df_ids(df1, df1_column, df2, df2_column, **kwargs):
     )
     return different_ids, common_ids
 
-def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_difference=True):
+def compare_df_columns(df1, df1_column, df2, df2_column,print_common=False,print_difference=True):
     """
     Print the number of common values and unique values between two dataframe columns.
     Return the unique rows of the dataframe with more records.
