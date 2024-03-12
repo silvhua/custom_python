@@ -727,6 +727,44 @@ def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
     print('\tTime completed:', datetime.now())
     return df
 
+def compare_iterables(iterable1, iterable2, print_common=False, print_difference=True):
+    """
+    Print the number of common values and unique values between two iterables (e.g. lists, series).
+    
+    Returns:
+        - different_values (list)
+        - common_values (list)           
+    """
+    common_values = set(iterable1) & set(iterable2)
+    if len(iterable1) > len(iterable2):
+        different_values = list(set(iterable1) - set(iterable2))
+        print(f'Proper subset = {set(iterable2) < set(iterable1)}')
+    else:
+        different_values = list(set(iterable2) - set(iterable1))
+        print(f'Proper subset = {set(iterable1) < set(iterable2)}')
+    print('Unique values in iterable 1:',len(iterable1))
+    print('Unique values in iterable 2:',len(iterable2))
+    print('Number of common values between iterables 1 and 2:',len(common_values))
+    print('Number of different values between s 1 and 2:',len(different_values))
+    if print_common == True:
+        print('Values in common:',common_values)
+    if print_difference == True:
+        print('Different values:',different_values)
+    return different_values, common_values
+
+def find_unique_df_ids(df1, df1_column, df2, df2_column):
+    """
+    Print the number of common values and unique values between two DataFrame columns.
+    
+    Returns:
+        - different_values (list)
+        - common_values (list)           
+    """        
+    different_ids, common_ids = compare_iterables(
+        df1[df1_column].values, df2[df2_column]
+    )
+    return different_ids, common_ids
+
 def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_difference=True):
     """
     Print the number of common values and unique values between two dataframe columns.
