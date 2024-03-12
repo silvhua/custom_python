@@ -104,6 +104,10 @@ def lookup_value(id, df, id_column, value_column):
     return result
 
 def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column):
+    print(f'right index length: {len(right_df.index)}')
+    print(f'right index unique values : {len(right_df.index.unique())}')
+    print(f'left_df[left_on] shape {left_df[left_on].shape}')
+    print(f'left_df[value_column] shape {left_df[value_column].shape}')
     try:
         if value_column in left_df.columns:
             new_value_column = f'{value_column}_y'
@@ -111,25 +115,24 @@ def merge_to_replace(left_df, right_df, left_on, right_index_column, value_colum
             value_column = new_value_column
         else:
             new_value_column = value_column 
-        print(f'Before `merge_to_replace`: \n\tColumns:{[col for col in left_df.columns]}')
+        print(f'\nBefore `merge_to_replace`: \n\tColumns:{[col for col in left_df.columns]}')
         print(f'\tLeft DataFrame shape: {left_df.shape}')
         right_df = right_df.copy().set_index(right_index_column)
-        col_to_fill = left_on if type(left_on) == str else left_on[0] 
-        print(f'col_to_fill: {col_to_fill}')
+        column_to_fill = left_on if type(left_on) == str else left_on[-1] 
+        print(f'column_to_fill: {column_to_fill}')
         # In case there are duplicate values in any of the merge columns, merge the dataframes, then 
         # drop the extra column.
         left_df = left_df.merge(
-                right_df[value_column], how='left', left_on=left_on, right_index=True
+                right_df[value_column], how='left', left_on=left_on, right_index=True,
+                indicator=True
             )
-        left_df[left_on] = left_df[value_column]
-        left_df = left_df.drop(columns=[value_column])
+        left_df[column_to_fill] = left_df[value_column]
+        print(f"Merge indicator value counts: {left_df['_merge'].value_counts()}\n")
+        left_df = left_df.drop(columns=[value_column, '_merge'])
         print(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')
         print(f'\tLeft DataFrame shape: {left_df.shape}')
+        duplicate_rows = return_duplicate_rows(left_df)
     except Exception as error:
-        print(f'right index length: {len(right_df.index)}')
-        print(f'right index unique values : {len(right_df.index.unique())}')
-        print(f'left_df[left_on] shape {left_df[left_on].shape}')
-        print(f'left_df[value_column] shape {left_df[value_column].shape}')
         exc_type, exc_obj, tb = sys.exc_info()
         f = tb.tb_frame
         lineno = tb.tb_lineno
