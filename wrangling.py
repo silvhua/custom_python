@@ -178,7 +178,7 @@ def filter_by_period(
     
     return filtered_df
 
-def filter_df_any_condition(df, filters, view_columns=None, verbose=False):
+def filter_df_any_condition(df, filters, view_columns=None, verbose=False, show_indices=True):
     """
     Filters a DataFrame based on any of the given conditions in a dictionary.
 
@@ -238,8 +238,9 @@ def filter_df_any_condition(df, filters, view_columns=None, verbose=False):
     combined_df = pd.concat(filtered_dfs).sort_index()
     deduped_df = combined_df.drop_duplicates(ignore_index=False)
     deduped_df = deduped_df[view_columns] if view_columns != None else deduped_df
-    print(f'Results where any condition is met:')
-    print(f'\tDataFrame indices: {[index for index in deduped_df.index]}')
+    if show_indices:
+        print(f'Results where any condition is met:')
+        print(f'\tDataFrame indices: {[index for index in deduped_df.index]}')
     print(f'\tDataFrame shape: {deduped_df.shape}')
     return deduped_df
 
