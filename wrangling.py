@@ -752,7 +752,7 @@ def compare_iterables(iterable1, iterable2, print_common=False, print_difference
         print('Different values:',different_values)
     return different_values, common_values
 
-def find_unique_df_ids(df1, df1_column, df2, df2_column):
+def find_unique_df_ids(df1, df1_column, df2, df2_column, **kwargs):
     """
     Print the number of common values and unique values between two DataFrame columns.
     
@@ -761,7 +761,7 @@ def find_unique_df_ids(df1, df1_column, df2, df2_column):
         - common_values (list)           
     """        
     different_ids, common_ids = compare_iterables(
-        df1[df1_column].values, df2[df2_column]
+        df1[df1_column].values, df2[df2_column], **kwargs
     )
     return different_ids, common_ids
 
@@ -773,25 +773,20 @@ def compare_id(df1, df1_column, df2, df2_column,print_common=False,print_differe
     """
     df1_values = df1[df1_column].unique()
     df2_values = df2[df2_column].unique()
-    common_values = set(df1_values) & set(df2_values)
+    different_values, common_values = compare_iterables(
+        df1[df1_column].values, df2[df2_column], 
+        print_common=print_common, print_difference=print_difference
+    )
     if len(df1_values) > len(df2_values):
-        different_values = list(set(df1_values) - set(df2_values))
-        print(f'Proper subset = {set(df2_values) < set(df1_values)}')
         parent_df = df1
         parent_df_column = df1_column
     else:
-        different_values = list(set(df2_values) - set(df1_values))
-        print(f'Proper subset = {set(df1_values) < set(df2_values)}')
         parent_df = df2
         parent_df_column = df2_column
-    print('Unique values in df1:',len(df1_values))
-    print('Unique values in df2:',len(df2_values))
-    print('Number of common values between df1 and df2:',len(common_values))
-    print('Number of different values between df1 and df2:',len(different_values))
     if print_common == True:
-        print('Values in common:',common_values)
+        print('Values in common:', common_values)
     if print_difference == True:
-        print('Different values:',different_values)
+        print('Different values:', different_values)
     return parent_df[parent_df[parent_df_column].isin(different_values)]
     
 # function that prints null values
