@@ -84,3 +84,37 @@ def concat_parsed_pdfs(dfs_list):
     result_df = pd.concat(dfs_list, ignore_index=True)
     print(f'\tFinal dataframe shape: {result_df.shape}')
     return result_df
+
+def join_2_cells_below(
+        df, column_to_concat, columns_to_fill=['Major Heading', 'Activity Code', 'MET Value'], 
+        fill_method='bfill'
+        ):
+    """
+    Generate a new DataFrame by joining the values of two cells below each row in the input DataFrame.
+    
+    Parameters:
+    df (DataFrame): The input DataFrame to process.
+    column_to_concat (str): The column name to concatenate with the shifted values.
+    columns_to_fill (list, optional): List of column names to fill missing values. Defaults to ['Major Heading', 'Activity Code', 'MET Value'].
+    fill_method (str, optional): The method to use for filling missing values. Defaults to 'bfill'.
+    
+    Returns:
+    DataFrame: A new DataFrame with the specified transformations applied.
+    """
+    df = df.copy()
+    df['shifted'] = df[column_to_concat].shift(-2)
+    rows_to_fix_filter = df['Major Heading'].isna()
+    df.loc[rows_to_fix_filter, f'{column_to_concat} fixed'] = df[rows_to_fix_filter]['Activity Description'] + ' ' + df[rows_to_fix_filter]['shifted']
+    df['Check Parsing'] = df[f'{column_to_concat} fixed'].notna()
+    df[f'{column_to_concat} fixed'].fillna(df[column_to_concat], inplace=True)
+    df[f'{column_to_concat} fixed'].fillna(method=fill_method, inplace=True)
+    df.drop_duplicates(
+        subset=f'{column_to_concat} fixed', keep='first', inplace=True
+        )
+    df.drop(columns=[column_to_concat, 'shifted'], inplace=True)
+    df.rename(columns={f'{column_to_concat} fixed': column_to_concat}, inplace=True)
+    df[columns_to_fill] = df[columns_to_fill].fillna(method=fill_method)
+    df.drop_duplicates(
+        subset=columns_to_fill, keep='first', inplace=True
+        )
+    return df
