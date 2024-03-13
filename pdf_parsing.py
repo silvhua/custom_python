@@ -118,3 +118,19 @@ def join_2_cells_below(
         subset=columns_to_fill, keep='first', inplace=True
         )
     return df
+
+def convert_dict_keys_to_regex(dictionary):
+    new_dict = {}
+    for key, value in dictionary.items():
+        new_key = re.compile(rf'(?i)^.*?{key}.*?$')
+        new_dict[new_key] = value
+    return new_dict
+
+def simplify_strings(
+        df, mapping_dict, original_column='Activity Description', new_column='Simplified Name', regex=True):
+    if regex == True:
+        mapping_dict = convert_dict_keys_to_regex(mapping_dict)
+    df[new_column] = df[original_column].replace(
+        mapping_dict, regex=regex,
+        )
+    return df
