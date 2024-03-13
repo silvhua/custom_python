@@ -103,8 +103,10 @@ def lookup_value(id, df, id_column, value_column):
         result = None
     return result
 
-def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column):
-    print(f'right index length: {len(right_df.index)}')
+def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):
+    if nan_fill:
+        left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
+    print(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
     print(f'right index unique values : {len(right_df.index.unique())}')
     print(f'left_df[left_on] shape {left_df[left_on].shape}')
     try:
