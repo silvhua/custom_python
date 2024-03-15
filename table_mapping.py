@@ -10,7 +10,7 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
         df[new_column] = df[columns[0]]
         for column in columns[1:]:
             df[new_column] = df[new_column].str.cat(df[column], sep=sep)
-        df[new_column] = df[new_column].replace({sep * (len(columns) - 1): None})
+        df[new_column] = df[new_column].replace({sep * (len(columns) - 1): None}).str.strip(sep)
         if drop_columns:
             df = df.drop(columns=columns)
     except Exception as error:
