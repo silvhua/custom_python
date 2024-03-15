@@ -178,6 +178,48 @@ def map_many_to_one(row, columns, new_column, mapping_dict):
     #     print(f'index {row.name} key {key} has no value')
     return row
 
+def get_dropdown_values(
+        df, dropdown_columns, 
+        dropdown_values_df, right_index_column='RID', value_column='cValues',         
+        ):
+    """[not needed if table is to be reshaped]
+    Use this if needing to replace values using `merge_to_replace` on multiple columns using the
+    same values table.
+    """
+    print(f'Getting dropdown values for {len(dropdown_columns)} columns...')
+    for column in dropdown_columns:
+        print(f'\t{column} Unique values: {[value for value in df[column].unique()]}')
+        df = merge_to_replace(
+            df, dropdown_values_df,
+            left_on=column, 
+            right_index_column=right_index_column, 
+            value_column=value_column, nan_fill=-1
+        )  
+    return df
+
+def concatenate_df(dfs_list, axis=0, renaming_dict={}):
+    print(f'Concatenating {len(dfs_list)} DataFrames...')
+    print(f'\tRenaming dict: {renaming_dict}')
+    print(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
+    if (len(renaming_dict) > 0) & (axis==0):
+        for df in dfs_list:
+            df = df.rename(columns=renaming_dict)
+    different_columns  = compare_iterables(dfs_list[0].columns,dfs_list[1].columns, print_common=1)
+    concatenated_df = pd.concat(dfs_list, axis=axis)
+    print(f'\tShape after concatenation: {concatenated_df.shape}')
+    return concatenated_df
+
+def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, renaming_dict=None, **kwargs):
+    concatenated_df = concatenate_df(dfs_list, axis=0, renaming_dict=renaming_dict)
+    for column in date_columns:
+        concatenated_df[column] = concatenated_df[column].apply(lambda x: remove_time_from_date_string(x))
+    melted_df = pd.melt(
+        concatenated_df, 
+        id_vars=id_vars, value_vars=value_vars, var_name=var_name, value_name=value_name, 
+        **kwargs)
+    print(f'Shape of melted dataframe: {melted_df.shape}')
+    return melted_df
+
 # def concatenate_columns(row, columns, new_column_name, delimiter='; '):
 #     row[new_column_name] = delimiter.join([row[column] for column in columns if row[column] != -1])
 #     if len(row[new_column_name]) == 0:
