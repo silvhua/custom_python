@@ -7,22 +7,6 @@ from datetime import datetime, timedelta
 import re
 import json
 
-def spreadsheet_to_dict(string):
-    """
-    Made so you can copy data from 2 columns of a Google sheet and convert into a dictionary
-    Where the left column text is the key and the right column text is the value of the dictionary.
-    Created originally for CYSIS table mapping project.
-    """
-    result = string.strip()
-    result = re.sub(r'\n', r', ', result)
-    result = re.sub(r'\t', r': ', result)
-    result = re.sub(r'([a-zA-Z0-9_]+)', r'"\1"', result)
-    result = "{" + result + "}"
-    print(f'result string: \n{result}')
-    result = json.loads(result)
-    print(f'Number of dictionary items: {len(result)}')
-    return result
-
 def decode_json_string(json_str):
     decoded_dict = json.loads(json_str, object_hook=lambda d: {eval(k): v for k, v in d.items()})
     return decoded_dict
@@ -218,14 +202,14 @@ def filter_df_any_condition(df, filters, view_columns=None, verbose=False, show_
             if verbose:
                 print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
         elif condition == "notnull":
-            if filtered_df[col].dtype == 'datetime64[ns]':
+            if filtered_df[col].dtypes== 'datetime64[ns]':
                 filtered_dfs.append(filtered_df[filtered_df[col] > datetime(1900, 1, 1)])
             else:
                 filtered_dfs.append(filtered_df[filtered_df[col].notnull()])
             if verbose:
                 print(f'Filtered on {col} in {condition}: {[index for index in filtered_df.index]}')
         elif condition == "null":
-            if filtered_df[col].dtype == 'datetime64[ns]':
+            if filtered_df[col].dtypes== 'datetime64[ns]':
                 filtered_dfs.append(filtered_df[filtered_df[col] == datetime(1900, 1, 1)])
             else:
                 filtered_dfs.append(filtered_df[filtered_df[col].isnull()])
@@ -286,14 +270,14 @@ def filter_df_all_conditions(df, filters, view_columns=None, verbose=False, show
             filters_list.append(filtered_df[filtered_df[col] == condition].index.tolist())
         elif condition == "notnull":
             print(f'Date column dtype: {filtered_df[col].dtype}')
-            if filtered_df[col].dtype == 'datetime64[ns]':
+            if filtered_df[col].dtypes== 'datetime64[ns]':
                 filters_list.append(filtered_df[filtered_df[col] > datetime(1900, 1, 1)].index.tolist())
                 if verbose:
                     print('Removed rows with null dates')
             else:
                 filters_list.append(filtered_df[filtered_df[col].notnull()].index.tolist())
         elif condition == "null":
-            if filtered_df[col].dtype == 'datetime64[ns]':
+            if filtered_df[col].dtypes== 'datetime64[ns]':
                 filters_list.append(filtered_df[filtered_df[col] == datetime(1900, 1, 1)].index.tolist())
             else:
                 filters_list.append(filtered_df[filtered_df[col].isnull()].index.tolist())

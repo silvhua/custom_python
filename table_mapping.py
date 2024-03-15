@@ -22,9 +22,14 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
         print(message)
     return df
 
-def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False):
+def merge_and_validate(
+        left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
+        nan_fill=None
+        ):
+    if nan_fill:
+        left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
     indicator = '_merge' if indicator == True else indicator
-    print(f'\nTotal rows: {left_df.shape[0] + right_df.shape[0]}')
+    print(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
     print(f'\tLeft DF shape: {left_df.shape}')
     print(f'\tRight DF shape: {right_df.shape}')
     common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
@@ -50,6 +55,46 @@ def merge_and_validate(left_df, right_df, left_on, right_on, how='outer', indica
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
     merged_df = merged_df.drop(columns=[indicator] + [column for column in merged_df.columns if column.endswith('_y')])
     return merged_df
+
+def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):
+    if nan_fill:
+        left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
+    print(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
+    print(f'right index unique values : {len(right_df.index.unique())}')
+    print(f'left_df[left_on] shape {left_df[left_on].shape}')
+    try:
+        if value_column in left_df.columns:
+            new_value_column = f'{value_column}_y'
+            right_df = right_df.rename(columns={value_column: new_value_column})
+            value_column = new_value_column
+        else:
+            new_value_column = value_column 
+        print(f'right_df[value_column] shape {right_df[new_value_column].shape}')
+        print(f'\nBefore `merge_to_replace`: \n\tColumns:{[col for col in left_df.columns]}')
+        print(f'\tLeft DataFrame shape: {left_df.shape}')
+        right_df = right_df.copy().set_index(right_index_column)
+        column_to_fill = left_on if type(left_on) == str else left_on[-1] 
+        print(f'column_to_fill: {column_to_fill}')
+        # In case there are duplicate values in any of the merge columns, merge the dataframes, then 
+        # drop the extra column.
+        left_df = left_df.merge(
+                right_df[value_column], how='left', left_on=left_on, right_index=True,
+                indicator=True
+            )
+        left_df[column_to_fill] = left_df[value_column]
+        print(f"Merge indicator value counts: {left_df['_merge'].value_counts()}\n")
+        left_df = left_df.drop(columns=[value_column, '_merge'])
+        print(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')
+        print(f'\tLeft DataFrame shape: {left_df.shape}')
+        duplicate_rows = return_duplicate_rows(left_df)
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        print(message)
+    return left_df
 
 def one_row_per_id(
     df, id_column='kIntakeID', sep='_'
@@ -103,52 +148,28 @@ def lookup_value(id, df, id_column, value_column):
         result = None
     return result
 
-def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):
-    if nan_fill:
-        left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
-    print(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
-    print(f'right index unique values : {len(right_df.index.unique())}')
-    print(f'left_df[left_on] shape {left_df[left_on].shape}')
-    try:
-        if value_column in left_df.columns:
-            new_value_column = f'{value_column}_y'
-            right_df = right_df.rename(columns={value_column: new_value_column})
-            value_column = new_value_column
-        else:
-            new_value_column = value_column 
-        print(f'right_df[value_column] shape {right_df[new_value_column].shape}')
-        print(f'\nBefore `merge_to_replace`: \n\tColumns:{[col for col in left_df.columns]}')
-        print(f'\tLeft DataFrame shape: {left_df.shape}')
-        right_df = right_df.copy().set_index(right_index_column)
-        column_to_fill = left_on if type(left_on) == str else left_on[-1] 
-        print(f'column_to_fill: {column_to_fill}')
-        # In case there are duplicate values in any of the merge columns, merge the dataframes, then 
-        # drop the extra column.
-        left_df = left_df.merge(
-                right_df[value_column], how='left', left_on=left_on, right_index=True,
-                indicator=True
-            )
-        left_df[column_to_fill] = left_df[value_column]
-        print(f"Merge indicator value counts: {left_df['_merge'].value_counts()}\n")
-        left_df = left_df.drop(columns=[value_column, '_merge'])
-        print(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')
-        print(f'\tLeft DataFrame shape: {left_df.shape}')
-        duplicate_rows = return_duplicate_rows(left_df)
-    except Exception as error:
-        exc_type, exc_obj, tb = sys.exc_info()
-        f = tb.tb_frame
-        lineno = tb.tb_lineno
-        filename = f.f_code.co_filename
-        message = f'An error occurred on line {lineno} in {filename}: {error}.'
-        print(message)
-    return left_df
-
 def remove_time_from_date_string(date_string, delimiter=' '):
     if type(date_string) == str:
         date = date_string.split(delimiter)[0] if delimiter in date_string else date_string
     else:
         date = None
     return date
+
+def spreadsheet_to_dict(string):
+    """
+    Made so you can copy data from 2 columns of a Google sheet and convert into a dictionary
+    Where the left column text is the key and the right column text is the value of the dictionary.
+    Created originally for CYSIS table mapping project.
+    """
+    result = string.strip()
+    result = re.sub(r'\n', r', ', result)
+    result = re.sub(r'\t', r': ', result)
+    result = re.sub(r'([a-zA-Z0-9_]+)', r'"\1"', result)
+    result = "{" + result + "}"
+    print(f'result string: \n{result}')
+    result = json.loads(result)
+    print(f'Number of dictionary items: {len(result)}')
+    return result
 
 def map_many_to_one(row, columns, new_column, mapping_dict):
     key = '__'.join([row[col] for col in columns])
