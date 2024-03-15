@@ -122,16 +122,20 @@ def one_row_per_id(
     reshaped_df.columns = new_columns
     n_groups = reshaped_df.columns.str.contains(original_columns[0]).sum()
     print(f'Number of groups: {n_groups}')
-    sorted_columns = []
+    final_columns = [id_column]
+    group_value_columns_dict = {}
     # for group in range(1, n_groups + 1):
-    for group in range(n_groups):
+    for group in range(n_groups):        
+        group_value_columns = []
         for original_column in original_columns:
-            sorted_columns.append(f'{original_column}{sep}{group}')
+            group_value_columns.append(f'{original_column}{sep}{group}')
+        final_columns += group_value_columns
+        group_value_columns_dict[group] = group_value_columns
     reshaped_df = reshaped_df.reset_index()
-    reshaped_df = reshaped_df[[id_column] + sorted_columns]
+    reshaped_df = reshaped_df[final_columns]
     print(f'Final shape: {reshaped_df.shape}')
     print(f'final columns: {[column for column in reshaped_df.columns]}')        
-    return reshaped_df
+    return reshaped_df, group_value_columns_dict
 
 def lookup_value(id, df, id_column, value_column):
     result = []
