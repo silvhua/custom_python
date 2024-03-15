@@ -104,37 +104,46 @@ def one_row_per_id(
     has 1 row in the DataFrame. Value columns are added based on the maximum number of 
     rows per ID in the original dataframe. 
     """
-    def number_rows_in_group(groupby):
-        groupby = groupby.reset_index(drop=True)
-        return groupby
+    reshaped_df, group_value_columns_dict = pd.DataFrame(), {}
+    try:
+        def number_rows_in_group(groupby):
+            groupby = groupby.reset_index(drop=True)
+            return groupby
 
-    print(f'Initial shape: {df.shape}')
-    original_columns = df.columns.tolist()
-    original_columns.remove(id_column)
-    reshaped_df = pd.DataFrame()
-    print(f'Original columns without id_column: {original_columns}')
-    reshaped_df = df.groupby(id_column).apply(lambda x: number_rows_in_group(x))
-    reshaped_df = reshaped_df.unstack()
-    reshaped_df = reshaped_df.sort_index(axis=1, level=-1)
-    new_columns = []
-    for column_tuple in reshaped_df.columns:
-        new_columns.append(f'{column_tuple[0]}{sep}{column_tuple[1]}')
-    reshaped_df.columns = new_columns
-    n_groups = reshaped_df.columns.str.contains(original_columns[0]).sum()
-    print(f'Number of groups: {n_groups}')
-    final_columns = [id_column]
-    group_value_columns_dict = {}
-    # for group in range(1, n_groups + 1):
-    for group in range(n_groups):        
-        group_value_columns = []
-        for original_column in original_columns:
-            group_value_columns.append(f'{original_column}{sep}{group}')
-        final_columns += group_value_columns
-        group_value_columns_dict[group] = group_value_columns
-    reshaped_df = reshaped_df.reset_index()
-    reshaped_df = reshaped_df[final_columns]
-    print(f'Final shape: {reshaped_df.shape}')
-    print(f'final columns: {[column for column in reshaped_df.columns]}')        
+        print(f'Initial shape: {df.shape}')
+        original_columns = df.columns.tolist()
+        original_columns.remove(id_column)
+        reshaped_df = pd.DataFrame()
+        print(f'Original columns without id_column: {original_columns}')
+        reshaped_df = df.groupby(id_column).apply(lambda x: number_rows_in_group(x))
+        reshaped_df = reshaped_df.unstack()
+        reshaped_df = reshaped_df.sort_index(axis=1, level=-1)
+        new_columns = []
+        for column_tuple in reshaped_df.columns:
+            new_columns.append(f'{column_tuple[0]}{sep}{column_tuple[1]}')
+        reshaped_df.columns = new_columns
+        n_groups = reshaped_df.columns.str.contains(original_columns[0]).sum()
+        print(f'Number of groups: {n_groups}')
+        final_columns = [id_column]
+        group_value_columns_dict = {}
+        # for group in range(1, n_groups + 1):
+        for group in range(n_groups):        
+            group_value_columns = []
+            for original_column in original_columns:
+                group_value_columns.append(f'{original_column}{sep}{group}')
+            final_columns += group_value_columns
+            group_value_columns_dict[group] = group_value_columns
+        reshaped_df = reshaped_df.reset_index()
+        reshaped_df = reshaped_df[final_columns]
+        print(f'Final shape: {reshaped_df.shape}')
+        print(f'final columns: {[column for column in reshaped_df.columns]}')    
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        print(message)
     return reshaped_df, group_value_columns_dict
 
 def lookup_value(id, df, id_column, value_column):
