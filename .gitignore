@@ -5,3 +5,5 @@ files/conda_env_var*.bat
 files/env_var*.sh
 __pycache__
 personal
+files/logger_files
+log_file*
