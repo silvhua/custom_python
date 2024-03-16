@@ -4,11 +4,26 @@ from silvhua import *
 
 class Custom_Logger:
     def __init__(
-            self, logger_name='custom_logger', level=logging.DEBUG,
+            self, logger_name='custom_logger', level=logging.DEBUG, file_level=logging.WARNING,
             propagate=False, log_file=None, log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files'
             ):
+        """
+        Initialize the custom_logger with the specified parameters.
+
+        Parameters:
+            logger_name (str): The name of the logger (default is 'custom_logger').
+            level (int): The logging level (default is logging.DEBUG).
+            propagate (bool): Whether the logs should be propagated to parent loggers (default is False).
+            log_file (str): The name of the log file (default is None).
+            log_path (str): The path to store log files (default is r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files').
+
+        Returns:
+            None
+
+        Documentation: https://docs.python.org/3/howto/logging.html#handlers
+        """
         self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(level)
+        self.logger.setLevel(file_level)
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
         log_path = convert_windows_path(log_path)
@@ -27,40 +42,92 @@ class Custom_Logger:
         self.logger.addHandler(console_handler)
 
     def save_log_messages(self, level, message):
-        # Format the log message in the specified format and append to the log_messages list
+        """
+        Format the log message in the specified format and append to the log_messages list
+
+        Parameters:
+        - level (str): The level of the log message
+        - message (str): The message to be logged
+
+        """
         log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Adjusted format for microseconds
         log_message = f"{log_time} - {self.logger.name} - {level.upper()} - {message}"
         self.log_messages.append(log_message)
 
     def get_log_messages(self):
+        """
+        Return the log messages associated with this object.
+        """
+
         return self.log_messages
     
     def debug(self, message, save=False):
+        """
+        - Logs a debug message and optionally saves it to the log file.
+        - Parameters:
+            - message: The debug message to be logged
+            - save: A boolean indicating whether to save the message to the log file (default is False)
+        - Returns:
+            - None
+        """
         self.logger.debug(message)
         if save:
             self.save_log_messages('debug', message)
 
     def info(self, message, save=False):
+        """
+        Logs an informational message using the provided message. 
+        Parameters:
+            message (str): The message to be logged.
+            save (bool): A flag indicating whether to save the log message. Defaults to False.
+        """
         self.logger.info(message)
         if save:
             self.save_log_messages('info', message)
 
     def warning(self, message, save=False):
+        """
+        A method to log a warning message and optionally save it to a file.
+
+        - message: The warning message to be logged.
+        - save: A boolean indicating whether to save the warning message to a file.
+        """
         self.logger.warning(message)
         if save:
             self.save_log_messages('warning', message)
 
     def error(self, message, save=False):
+        """
+        - A method to log an error message and optionally save it to the log file.
+        - 
+        - :param message: The error message to be logged
+        - :param save: A boolean indicating whether to save the error message to the log file
+        - :return: None
+        """
         self.logger.error(message)
         if save:
             self.save_log_messages('error', message)
 
     def critical(self, message, save=False):
+        """
+        A function that logs a critical message and optionally saves it. 
+
+        Parameters:
+            message (str): The critical message to log.
+            save (bool, optional): Whether to save the critical message. Defaults to False.
+        """
         self.logger.critical(message)
         if save:
             self.save_log_messages('critical', message)
             
 def test_logger(logger, messages_dict, save=True):
+    """
+    A function that logs messages at different levels using the provided logger.
+    Parameters:
+        logger: the logger object used for logging
+        messages_dict: a dictionary with log messages for different levels
+        save: a boolean indicating whether to save the log messages (default is True)
+    """
     for level in messages_dict:
         message = messages_dict[level]
         if level == 'debug':
