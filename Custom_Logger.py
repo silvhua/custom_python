@@ -28,18 +28,40 @@ class Custom_Logger:
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        console_handler = None
+        if len(self.logger.handlers) > 0:
+            print(f'Found existing handlers: {self.logger.handlers}')
+            for handler in self.logger.handlers:
+                if isinstance(handler, logging.StreamHandler):
+                    console_handler = handler
+                    print(f'Found existing file handler: {console_handler}')
+                    break
+        if console_handler == None:
+            print(f'Creating new console handler')
+            console_handler = logging.StreamHandler() # https://docs.python.org/3/library/logging.handlers.html#logging.StreamHandler
 
-        if log_file:
-            log_path = convert_windows_path(log_path)
-            file_handler = logging.FileHandler(f'{log_path}/{log_file}')
-            file_handler.setLevel(level)
-            file_handler.setFormatter(formatter)
-            self.logger.addHandler(file_handler)
-
-        console_handler = logging.StreamHandler()
+        print(f'Setting console handler level to: {level}')
         console_handler.setLevel(level)
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
+        self.console_handler = console_handler
+
+        if log_file:
+            file_handler = None
+            log_path = convert_windows_path(log_path)
+        
+            for handler in self.logger.handlers:
+                if isinstance(handler, logging.FileHandler):
+                    file_handler = handler
+                    print(f'Found existing file handler: {file_handler}')
+                    break
+            if file_handler == None:
+                print(f'Creating new file handler')
+                file_handler = logging.FileHandler(f'{log_path}/{log_file}')
+            file_handler.setLevel(level)
+            file_handler.setFormatter(formatter)
+            self.logger.addHandler(file_handler)
+            self.file_handler = file_handler
 
     def save_log_messages(self, level, message):
         """
