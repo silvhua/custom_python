@@ -3,6 +3,7 @@ sys.path.append(r"C:\Users\silvh\OneDrive\lighthouse\custom_python")
 from silvhua import *
 from wrangling import *
 import numpy as np
+from Custom_Logger import *
 
 def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
     try:
@@ -23,40 +24,46 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
     return df
 
 def merge_and_validate(
-        logger, left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
-        nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False
+        left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
+        nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False,
+        logger=None
         ):
+    if logger==None:
+        logger = Custom_Logger(
+            'merge_and_validate', level=logging.INFO,
+            log_file=None, file_level=logging.DEBUG, propagate=False
+            )
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
     indicator = '_merge' if indicator == True else indicator
-    logger.debug(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
+    logger.info(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
     logger.debug(f'\tLeft DF shape: {left_df.shape}')
     logger.debug(f'\tRight DF shape: {right_df.shape}')
-    common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on])
+    common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
     logger.debug(f'\tCommon columns: {common_columns}')
-    logger.debug(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}.')
+    logger.info(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}.')
     
     merged_df = left_df.merge(
         right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
         left_on=left_on, right_on=right_on
     )
-    logger.debug(f'Shape after initial merge: {merged_df.shape}')
+    logger.info(f'Shape after initial merge: {merged_df.shape}')
     logger.debug(f'Columns after merge: {[column for column in merged_df.columns]}')
-    logger.debug(f"Merge indicator value counts: {merged_df[indicator].value_counts()}")
+    logger.info(f"Merge indicator value counts: {merged_df[indicator].value_counts()}")
     
     merged_df[indicator] = merged_df[indicator].replace({
         'left_only': left_df_name, 'right_only': right_df_name, 
         'both': f'{left_df_name}, {right_df_name}'
     })
     
-    logger.debug(f"\tSum: {merged_df[indicator].value_counts().sum()}")
+    logger.info(f"\tSum: {merged_df[indicator].value_counts().sum()}")
     
     duplicate_rows = return_duplicate_rows(merged_df)
     if drop_duplicates:
         merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
-        logger.debug(f'\tShape after dropping duplicates: {merged_df.shape}\n')
+        logger.info(f'\tShape after dropping duplicates: {merged_df.shape}\n')
     else:
-        logger.debug(f'\tDrop duplicates = {str(drop_duplicates)}')
+        logger.info(f'\tDrop duplicates = {str(drop_duplicates)}')
     
     for column in common_columns:
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
@@ -67,7 +74,41 @@ def merge_and_validate(
     
     merged_df = merged_df.drop(columns=columns_to_drop)
     
-    return merged_df
+    return merged_df, logger
+
+def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
+    if logger==None:
+        logger = Custom_Logger(
+            'concatenate_df', level=logging.INFO,
+            log_file=None, propagate=False
+            )
+    logger.info(f'Concatenating {len(dfs_list)} DataFrames...')
+    logger.debug(f'\tRenaming dict: {renaming_dict}')
+    logger.info(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
+    if (len(renaming_dict) > 0) & (axis == 0):
+        for df in dfs_list:
+            df = df.rename(columns=renaming_dict)    
+    different_columns = compare_iterables(dfs_list[0].columns, dfs_list[1].columns, print_common=1)    
+    concatenated_df = pd.concat(dfs_list, axis=axis)    
+    logger.info(f'\tShape after concatenation: {concatenated_df.shape}')
+    return concatenated_df
+
+def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, renaming_dict={}, logger=None, **kwargs):
+    if logger is None:
+        logger = Custom_Logger(
+            'melt_dfs', level=logging.INFO,
+            log_file=None, propagate=False
+            )
+    logger.info(f'Melting {len(dfs_list)} DataFrames...')    
+    concatenated_df = concatenate_df(dfs_list, axis=0, renaming_dict=renaming_dict, logger=logger)    
+    for column in date_columns:
+        concatenated_df[column] = concatenated_df[column].apply(lambda x: remove_time_from_date_string(x))
+        melted_df = pd.melt(
+        concatenated_df, 
+        id_vars=id_vars, value_vars=value_vars, var_name=var_name, value_name=value_name, 
+        **kwargs)    
+    logger.info(f'\tShape after melting: {melted_df.shape}')
+    return melted_df
 
 def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):
     if nan_fill:
@@ -223,29 +264,6 @@ def get_dropdown_values(
             value_column=value_column, nan_fill=-1
         )  
     return df
-
-def concatenate_df(dfs_list, axis=0, renaming_dict={}):
-    print(f'Concatenating {len(dfs_list)} DataFrames...')
-    print(f'\tRenaming dict: {renaming_dict}')
-    print(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
-    if (len(renaming_dict) > 0) & (axis==0):
-        for df in dfs_list:
-            df = df.rename(columns=renaming_dict)
-    different_columns  = compare_iterables(dfs_list[0].columns,dfs_list[1].columns, print_common=1)
-    concatenated_df = pd.concat(dfs_list, axis=axis)
-    print(f'\tShape after concatenation: {concatenated_df.shape}')
-    return concatenated_df
-
-def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, renaming_dict=None, **kwargs):
-    concatenated_df = concatenate_df(dfs_list, axis=0, renaming_dict=renaming_dict)
-    for column in date_columns:
-        concatenated_df[column] = concatenated_df[column].apply(lambda x: remove_time_from_date_string(x))
-    melted_df = pd.melt(
-        concatenated_df, 
-        id_vars=id_vars, value_vars=value_vars, var_name=var_name, value_name=value_name, 
-        **kwargs)
-    print(f'Shape of melted dataframe: {melted_df.shape}')
-    return melted_df
 
 # def concatenate_columns(row, columns, new_column_name, delimiter='; '):
 #     row[new_column_name] = delimiter.join([row[column] for column in columns if row[column] != -1])
