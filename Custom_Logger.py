@@ -173,14 +173,28 @@ def create_function_logger(
     function_name, parent_logger, level=logging.INFO,
     log_file=None, **kwargs
     ):
+    """
+    Create a logger for a specific function.
+
+    Args:
+        function_name (str): The name of the function.
+        parent_logger (Logger): The logger of the parent function or module.
+            If None (default), a new logger will be created.
+        level (int, optional): The logging level (default is logging.INFO).
+        log_file (str, optional): The path to the log file (default is None).
+        **kwargs: Additional keyword arguments to be passed to Custom_Logger.
+
+    Returns:
+        Logger: The logger for the specific function.
+    """
     if parent_logger:
-        function_logger_name = f'{parent_logger.logger.name}.{function_name}'
         propagate = True
+        function_logger = parent_logger
     else:
         function_logger_name = f'{function_name}'
         propagate = False
-    function_logger = Custom_Logger(
-            logger_name=function_logger_name, level=level,
-            log_file=log_file, propagate=propagate, **kwargs
-            )
+        function_logger = Custom_Logger(
+                logger_name=function_logger_name, level=level,
+                log_file=log_file, propagate=propagate, **kwargs
+                )
     return function_logger
