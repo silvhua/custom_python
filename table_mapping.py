@@ -28,11 +28,12 @@ def merge_and_validate(
         nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False,
         logger=None
         ):
-    if logger==None:
-        logger = Custom_Logger(
-            'merge_and_validate', level=logging.INFO,
-            log_file=None, file_level=logging.DEBUG, propagate=False
-            )
+    logger = create_function_logger('merge_and_validate', logger)
+    # if logger==None:
+    #     logger = Custom_Logger(
+    #         'merge_and_validate', level=logging.INFO,
+    #         log_file=None, file_level=logging.DEBUG, propagate=False
+    #         )
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
     indicator = '_merge' if indicator == True else indicator
@@ -74,14 +75,10 @@ def merge_and_validate(
     
     merged_df = merged_df.drop(columns=columns_to_drop)
     
-    return merged_df, logger
+    return merged_df
 
 def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
-    if logger==None:
-        logger = Custom_Logger(
-            'concatenate_df', level=logging.INFO,
-            log_file=None, propagate=False
-            )
+    logger = create_function_logger('concatenate_df', logger)
     logger.info(f'Concatenating {len(dfs_list)} DataFrames...')
     logger.debug(f'\tRenaming dict: {renaming_dict}')
     logger.info(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
@@ -94,11 +91,7 @@ def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
     return concatenated_df
 
 def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, renaming_dict={}, logger=None, **kwargs):
-    if logger is None:
-        logger = Custom_Logger(
-            'melt_dfs', level=logging.INFO,
-            log_file=None, propagate=False
-            )
+    logger = create_function_logger('melt_dfs', logger)
     logger.info(f'Melting {len(dfs_list)} DataFrames...')    
     concatenated_df = concatenate_df(dfs_list, axis=0, renaming_dict=renaming_dict, logger=logger)    
     for column in date_columns:
