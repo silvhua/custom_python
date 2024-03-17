@@ -41,7 +41,7 @@ def spreadsheet_to_tuple_dict(string, key_length=2):
     # print(f'Number of dictionary items: {len(result)}')
     return result
 
-def get_value_counts(df, columns, copy_paste=False):
+def get_value_counts(df, columns, copy_paste=False, logger=None):
     """
     Prints the unique values and their counts for each column in the given dataframe.
 
@@ -52,16 +52,20 @@ def get_value_counts(df, columns, copy_paste=False):
     Returns:
         Pandas Series object from `pd.value_counts()` 
     """
+    logger = create_function_logger('get_value_counts', logger)
     if type(columns) == str:
         columns = [columns]
+    print_data = []
     for column in columns:
-        print(f'Value counts for `{column}` column:')
+        print_data.append(f'Value counts for `{column}` column:')
 
         result = df[column].value_counts()
         if copy_paste:
-            result.reset_index().apply(lambda x: print(f'- {x[column]}: {int(x["count"])}'), axis=1)
-        print(f'\tNull values: {df[column].isnull().sum()}')
-        print(f'\tData type: {df[column].dtype}')
+            result.reset_index().apply(lambda x: print_data.append(f'- {x[column]}: {int(x["count"])}'), axis=1)
+        print_data.append(f'\tNull values: {df[column].isnull().sum()}')
+        print_data.append(f'\tData type: {df[column].dtype}')
+        print_data.append('\n')
+    logger.info('\n'.join(print_data))
     return result
 
 def explore_categorical(df, categorical_columns, show_numbers=True):
@@ -737,7 +741,6 @@ def compare_iterables(iterable1, iterable2, print_common=False, print_difference
     debug_message += f'Unique values in iterable 2: {len(set(iterable2))}\n'
     info_message += f'Number of common values between iterables 1 and 2: {len(common_values)}\n'
     info_message += f'Number of different values between iterables 1 and 2: {len(different_values)}\n'
-    print(f'compare_iterables logger level: {logger.logger.level}')
     if (logger.console_handler.level <=10) | (print_common == True):
         info_message += f'Values in common: {common_values} \n'
     else:
