@@ -24,7 +24,7 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
 
 def merge_and_validate(
         left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
-        nan_fill=None
+        nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False
         ):
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
@@ -43,6 +43,12 @@ def merge_and_validate(
     print(f'Shape after initial merge: {merged_df.shape}')
     print(f'Columns after merge: {[column for column in merged_df.columns]}')
     print(f"Merge indicator value counts: {merged_df[indicator].value_counts()}")
+    # Rename the values in the `_merge` column with df names provided in params.
+    merged_df[indicator] = merged_df[indicator].replace({
+        'left_only': left_df_name, 'right_only': right_df_name, 
+        'both': f'{left_df_name}, {right_df_name}'
+        })
+
     print(f"\tSum: {merged_df[indicator].value_counts().sum()}")
     duplicate_rows = return_duplicate_rows(merged_df)
     if drop_duplicates:
@@ -53,7 +59,10 @@ def merge_and_validate(
         print(f'\tDrop duplicates = {str(drop_duplicates)}')
     for column in common_columns:
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
-    merged_df = merged_df.drop(columns=[indicator] + [column for column in merged_df.columns if column.endswith('_y')])
+    columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
+    if drop_indictor_column:
+        columns_to_drop.append(indicator)
+    merged_df = merged_df.drop(columns=columns_to_drop)
     return merged_df
 
 def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):
@@ -105,6 +114,7 @@ def one_row_per_id(
     rows per ID in the original dataframe. 
     """
     reshaped_df, group_value_columns_dict = pd.DataFrame(), {}
+    print(f'\n***Reshaping DataFrame with `one_row_per_id`***\n')
     try:
         def number_rows_in_group(groupby):
             groupby = groupby.reset_index(drop=True)
