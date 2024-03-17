@@ -83,10 +83,14 @@ def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
     logger.info(f'Concatenating {len(dfs_list)} DataFrames...')
     logger.debug(f'\tRenaming dict: {renaming_dict}')
     logger.info(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
-    if (len(renaming_dict) > 0) & (axis == 0):
-        for df in dfs_list:
-            df = df.rename(columns=renaming_dict)    
-    different_columns = compare_iterables(dfs_list[0].columns, dfs_list[1].columns, print_common=1)    
+    if (len(renaming_dict) > 0) & (axis == 0):   
+        logger.info(f'Renaming DataFrame columns...')
+        for index, df in enumerate(dfs_list):
+            dfs_list[index] = df.rename(columns=renaming_dict) 
+    different_columns = compare_iterables(
+        dfs_list[0].columns, dfs_list[1].columns, print_common=0,
+        print_difference=0, logger=logger
+        )    
     concatenated_df = pd.concat(dfs_list, axis=axis)    
     logger.info(f'\tShape after concatenation: {concatenated_df.shape}')
     return concatenated_df
