@@ -254,6 +254,34 @@ def lookup_value(id, df, id_column, value_column):
     if result == '':
         result = None
     return result
+    
+def map_to_new_column(
+        df, mapping, map_from_column, map_to_column, normalize_casing=True, logger=None
+        ):
+    """
+    A function to map values from one column to another based on a provided mapping.
+    
+    Parameters:
+    - df: The DataFrame to operate on
+    - mapping: A dictionary containing the mapping of values
+    - map_from_column: The column in df to map values from
+    - map_to_column: The column in df to map values to
+    - normalize_casing: A boolean indicating whether to normalize the casing of keys
+    - logger: An optional Custom_Logger object for logging information
+    
+    Returns:
+    - The DataFrame with the values mapped to the new column
+    """
+    final_mapping = {}
+    logger = create_function_logger('map_to_new_column', logger)
+    if normalize_casing:
+        for key, value in mapping.items():
+            final_mapping[key] = value
+        else:
+            final_mapping = mapping
+    df[map_to_column] = df[map_from_column].map(final_mapping)
+    logger.debug(f'Final mapping: {final_mapping}\nColumns after `map_to_new_column`: {df.columns}')
+    return df
 
 def remove_time_from_date_string(date_string, delimiter=' '):
     if type(date_string) == str:
