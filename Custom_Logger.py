@@ -4,8 +4,9 @@ from silvhua import *
 
 class Custom_Logger:
     def __init__(
-            self, logger_name=__name__, level=logging.DEBUG, file_level=logging.WARNING,
-            propagate=False, log_file=None, log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files'
+            self, logger_name=__name__, level=logging.DEBUG, file_level=logging.DEBUG,
+            propagate=False, log_file=None, 
+            log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files'
             ):
         """
         Initialize the custom_logger with the specified parameters.
@@ -166,3 +167,19 @@ def test_logger(logger, messages_dict, save=True):
             logger.error(message, save=save)
         elif level == 'critical':
             logger.critical(message, save=save)
+
+def create_function_logger(
+    function_name, parent_logger, level=logging.INFO,
+    log_file=None, **kwargs
+    ):
+    if parent_logger:
+        function_logger_name = f'{parent_logger.logger.name}.{function_name}'
+        propagate = True
+    else:
+        function_logger_name = f'{function_name}'
+        propagate = False
+    function_logger = Custom_Logger(
+            logger_name=function_logger_name, level=level,
+            log_file=log_file, propagate=propagate, **kwargs
+            )
+    return function_logger
