@@ -85,7 +85,8 @@ class Custom_Logger:
         """
         Return the log messages associated with this object.
         """
-
+        for message in self.log_messages:
+            print(message)
         return self.log_messages
     
     def debug(self, message, save=True):
