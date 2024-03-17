@@ -79,24 +79,44 @@ def merge_and_validate(
     return merged_df
 
 def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
+    """
+    A function to concatenate a list of DataFrames along a specified axis with optional renaming of columns.
+    
+    Parameters:
+    - dfs_list: list of pandas DataFrames to concatenate.
+        Each item in the list can be a pandas DataFrame or a tuple of (df_name, df) 
+        where df_name is the name of the DataFrame and df is the DataFrame itself.
+    - axis: axis along which to concatenate the DataFrames (default is 0)
+    - renaming_dict: dictionary to rename columns (default is an empty dictionary)
+    - logger: optional Custom_Logger object for logging messages
+    
+    Returns:
+    - concatenated_df: the concatenated pandas DataFrame
+    """
     concatenated_df = pd.DataFrame()
     try:
         logger = create_function_logger('concatenate_df', logger)
         logger.info(f'Concatenating {len(dfs_list)} DataFrames...')
         logger.debug(f'\tRenaming dict: {renaming_dict}')
-        logger.info(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
-        if (len(renaming_dict) > 0) & (axis == 0):   
-            logger.info(f'Renaming DataFrame columns...')
-            for index, df in enumerate(dfs_list):
-                dfs_list[index] = df.rename(columns=renaming_dict) 
-        # for index, df in enumerate(dfs_list):
-        #     dfs_list[index] = df.reset_index()
+        info_message = []
+        parsed_dfs_list = []
+        for index, df_tuple in enumerate(dfs_list):
+            if isinstance(df_tuple, pd.DataFrame):
+                df_name = f'df_{index}'
+                df = df_tuple
+            else: # if df_tuple is a tuple or list
+                df_name = df_tuple[0]
+                df = df_tuple[1]
+            info_message.append(f'\t`{df_name}` DataFrame shape: {df.shape}')
+            parsed_dfs_list.append(df)
+            df['source_table'] = df_name
+            if (len(renaming_dict) > 0) & (axis == 0):  
+                df = df.rename(columns=renaming_dict) 
         different_columns = compare_iterables(
-            dfs_list[0].columns, dfs_list[1].columns, print_common=0,
+            parsed_dfs_list[0].columns, parsed_dfs_list[1].columns, print_common=0,
             print_difference=0, logger=logger
             )    
-        concatenated_df = pd.concat(dfs_list, axis=axis)   
-        # concatenated_df = pd.concat(dfs_list, axis=axis)   
+        concatenated_df = pd.concat(parsed_dfs_list, axis=axis)  
         logger.info(f'\tShape after concatenation: {concatenated_df.shape}')
     except Exception as error:
         exc_type, exc_obj, tb = sys.exc_info()
@@ -117,7 +137,7 @@ def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, 
             concatenated_df[column] = concatenated_df[column].apply(lambda x: remove_time_from_date_string(x))
             melted_df = pd.melt(
             concatenated_df, 
-            id_vars=id_vars, value_vars=value_vars, var_name=var_name, value_name=value_name, 
+            id_vars=id_vars+['source_table'], value_vars=value_vars, var_name=var_name, value_name=value_name, 
             **kwargs)    
         logger.info(f'\tShape after melting: {melted_df.shape}')
     except Exception as error:
