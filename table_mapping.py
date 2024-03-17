@@ -79,33 +79,54 @@ def merge_and_validate(
     return merged_df
 
 def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
-    logger = create_function_logger('concatenate_df', logger)
-    logger.info(f'Concatenating {len(dfs_list)} DataFrames...')
-    logger.debug(f'\tRenaming dict: {renaming_dict}')
-    logger.info(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
-    if (len(renaming_dict) > 0) & (axis == 0):   
-        logger.info(f'Renaming DataFrame columns...')
-        for index, df in enumerate(dfs_list):
-            dfs_list[index] = df.rename(columns=renaming_dict) 
-    different_columns = compare_iterables(
-        dfs_list[0].columns, dfs_list[1].columns, print_common=0,
-        print_difference=0, logger=logger
-        )    
-    concatenated_df = pd.concat(dfs_list, axis=axis)    
-    logger.info(f'\tShape after concatenation: {concatenated_df.shape}')
+    concatenated_df = pd.DataFrame()
+    try:
+        logger = create_function_logger('concatenate_df', logger)
+        logger.info(f'Concatenating {len(dfs_list)} DataFrames...')
+        logger.debug(f'\tRenaming dict: {renaming_dict}')
+        logger.info(f'\tDataFrame shapes: {dfs_list[0].shape}, {dfs_list[1].shape}')
+        if (len(renaming_dict) > 0) & (axis == 0):   
+            logger.info(f'Renaming DataFrame columns...')
+            for index, df in enumerate(dfs_list):
+                dfs_list[index] = df.rename(columns=renaming_dict) 
+        # for index, df in enumerate(dfs_list):
+        #     dfs_list[index] = df.reset_index()
+        different_columns = compare_iterables(
+            dfs_list[0].columns, dfs_list[1].columns, print_common=0,
+            print_difference=0, logger=logger
+            )    
+        concatenated_df = pd.concat(dfs_list, axis=axis)   
+        # concatenated_df = pd.concat(dfs_list, axis=axis)   
+        logger.info(f'\tShape after concatenation: {concatenated_df.shape}')
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
     return concatenated_df
 
 def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, renaming_dict={}, logger=None, **kwargs):
-    logger = create_function_logger('melt_dfs', logger)
-    logger.info(f'Melting {len(dfs_list)} DataFrames...')    
-    concatenated_df = concatenate_df(dfs_list, axis=0, renaming_dict=renaming_dict, logger=logger)    
-    for column in date_columns:
-        concatenated_df[column] = concatenated_df[column].apply(lambda x: remove_time_from_date_string(x))
-        melted_df = pd.melt(
-        concatenated_df, 
-        id_vars=id_vars, value_vars=value_vars, var_name=var_name, value_name=value_name, 
-        **kwargs)    
-    logger.info(f'\tShape after melting: {melted_df.shape}')
+    melted_df = pd.DataFrame()
+    try:
+        logger = create_function_logger('melt_dfs', logger)
+        logger.info(f'Melting {len(dfs_list)} DataFrames...')    
+        concatenated_df = concatenate_df(dfs_list, axis=0, renaming_dict=renaming_dict, logger=logger)    
+        for column in date_columns:
+            concatenated_df[column] = concatenated_df[column].apply(lambda x: remove_time_from_date_string(x))
+            melted_df = pd.melt(
+            concatenated_df, 
+            id_vars=id_vars, value_vars=value_vars, var_name=var_name, value_name=value_name, 
+            **kwargs)    
+        logger.info(f'\tShape after melting: {melted_df.shape}')
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
     return melted_df
 
 def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):
