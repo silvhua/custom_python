@@ -23,46 +23,50 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
     return df
 
 def merge_and_validate(
-        left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
+        logger, left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
         nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False
         ):
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
     indicator = '_merge' if indicator == True else indicator
-    print(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
-    print(f'\tLeft DF shape: {left_df.shape}')
-    print(f'\tRight DF shape: {right_df.shape}')
-    common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
-    print(f'\tCommon columns: {common_columns}')
-    print(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}.`')
-    # print(f'\tLeft DF columns: {left_df.columns}')
+    logger.debug(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
+    logger.debug(f'\tLeft DF shape: {left_df.shape}')
+    logger.debug(f'\tRight DF shape: {right_df.shape}')
+    common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on])
+    logger.debug(f'\tCommon columns: {common_columns}')
+    logger.debug(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}.')
+    
     merged_df = left_df.merge(
         right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
         left_on=left_on, right_on=right_on
     )
-    print(f'Shape after initial merge: {merged_df.shape}')
-    print(f'Columns after merge: {[column for column in merged_df.columns]}')
-    print(f"Merge indicator value counts: {merged_df[indicator].value_counts()}")
-    # Rename the values in the `_merge` column with df names provided in params.
+    logger.debug(f'Shape after initial merge: {merged_df.shape}')
+    logger.debug(f'Columns after merge: {[column for column in merged_df.columns]}')
+    logger.debug(f"Merge indicator value counts: {merged_df[indicator].value_counts()}")
+    
     merged_df[indicator] = merged_df[indicator].replace({
         'left_only': left_df_name, 'right_only': right_df_name, 
         'both': f'{left_df_name}, {right_df_name}'
-        })
-
-    print(f"\tSum: {merged_df[indicator].value_counts().sum()}")
+    })
+    
+    logger.debug(f"\tSum: {merged_df[indicator].value_counts().sum()}")
+    
     duplicate_rows = return_duplicate_rows(merged_df)
     if drop_duplicates:
         merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
-        # drop columns containing the '_y' indicator
-        print(f'\tShape after dropping duplicates: {merged_df.shape}\n')
+        logger.debug(f'\tShape after dropping duplicates: {merged_df.shape}\n')
     else:
-        print(f'\tDrop duplicates = {str(drop_duplicates)}')
+        logger.debug(f'\tDrop duplicates = {str(drop_duplicates)}')
+    
     for column in common_columns:
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
+    
     columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
     if drop_indictor_column:
         columns_to_drop.append(indicator)
+    
     merged_df = merged_df.drop(columns=columns_to_drop)
+    
     return merged_df
 
 def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):

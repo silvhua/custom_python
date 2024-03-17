@@ -28,7 +28,7 @@ class Custom_Logger:
         self.logger.setLevel(file_level)
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s:\n%(message)s\n')
         handler_messages = ''
         console_handler = None
         if len(self.logger.handlers) > 0:
@@ -36,7 +36,7 @@ class Custom_Logger:
             for handler in self.logger.handlers:
                 if isinstance(handler, logging.StreamHandler):
                     console_handler = handler
-                    handler_messages += f'Found existing file handler: {console_handler}. '
+                    handler_messages += f'Found existing console handler: {console_handler}. '
                     break
         if console_handler == None:
             handler_messages += f'Creating new console handler. '
