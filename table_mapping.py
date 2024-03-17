@@ -38,36 +38,37 @@ def merge_and_validate(
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
     indicator = '_merge' if indicator == True else indicator
     logger.info(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
-    logger.debug(f'\tLeft DF shape: {left_df.shape}')
-    logger.debug(f'\tRight DF shape: {right_df.shape}')
     common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
-    logger.debug(f'\tCommon columns: {common_columns}')
+    logger.debug(f'\tLeft DF shape: {left_df.shape}\n\tRight DF shape: {right_df.shape}\n\tCommon columns: {common_columns}')
     logger.info(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}.')
     
     merged_df = left_df.merge(
         right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
         left_on=left_on, right_on=right_on
     )
-    logger.info(f'Shape after initial merge: {merged_df.shape}')
+    merge_info_message = ''
+    merge_info_message += f'Shape after initial merge: {merged_df.shape}\n'
     logger.debug(f'Columns after merge: {[column for column in merged_df.columns]}')
-    logger.info(f"Merge indicator value counts: {merged_df[indicator].value_counts()}")
+
+    merge_info_message += f"Merge indicator value counts: {merged_df[indicator].value_counts()}\n"
     
     merged_df[indicator] = merged_df[indicator].replace({
         'left_only': left_df_name, 'right_only': right_df_name, 
         'both': f'{left_df_name}, {right_df_name}'
     })
     
-    logger.info(f"\tSum: {merged_df[indicator].value_counts().sum()}")
+    merge_info_message += f"\tSum: {merged_df[indicator].value_counts().sum()}\n"
     
     duplicate_rows = return_duplicate_rows(merged_df)
     if drop_duplicates:
         merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
-        logger.info(f'\tShape after dropping duplicates: {merged_df.shape}\n')
+        merge_info_message += f'\tShape after dropping duplicates: {merged_df.shape}\n'
     else:
-        logger.info(f'\tDrop duplicates = {str(drop_duplicates)}')
+        merge_info_message += f'\tDrop duplicates = {str(drop_duplicates)}\n'
     
     for column in common_columns:
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
+    logger.info(merge_info_message)
     
     columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
     if drop_indictor_column:
