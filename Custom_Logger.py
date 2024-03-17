@@ -11,26 +11,26 @@ class Custom_Logger:
         Initialize the custom_logger with the specified parameters.
 
         Parameters:
-            logger_name (str): The name of the logger (default is 'custom_logger').
-            level (int): The logging level (default is logging.DEBUG).
-            propagate (bool): Whether the logs should be propagated to parent loggers (default is False).
-            log_file (str): The name of the log file (default is None).
-            log_path (str): The path to store log files (default is r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files').
+            - logger_name (str): The name of the logger (default is 'custom_logger').
+            - level (int): The logging level (default is logging.DEBUG).
+            - propagate (bool): Whether the logs should be propagated to parent loggers (default is False).
+            - log_file (str): The name of the log file (default is None).
+            - log_path (str): The path to store log files ]
 
         Returns:
             None
 
         Documentation: https://docs.python.org/3/howto/logging.html#handlers
+        
         """
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(file_level)
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
-        log_path = convert_windows_path(log_path)
-
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
         if log_file:
+            log_path = convert_windows_path(log_path)
             file_handler = logging.FileHandler(f'{log_path}/{log_file}')
             file_handler.setLevel(level)
             file_handler.setFormatter(formatter)
