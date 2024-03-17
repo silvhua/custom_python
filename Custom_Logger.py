@@ -4,7 +4,7 @@ from silvhua import *
 
 class Custom_Logger:
     def __init__(
-            self, logger_name='custom_logger', level=logging.DEBUG, file_level=logging.WARNING,
+            self, logger_name=__name__, level=logging.DEBUG, file_level=logging.WARNING,
             propagate=False, log_file=None, log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files'
             ):
         """
@@ -23,24 +23,26 @@ class Custom_Logger:
         Documentation: https://docs.python.org/3/howto/logging.html#handlers
         
         """
+        # self.logger = logging.getLogger(logger_name if logger_name else __name__)
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(file_level)
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler_messages = ''
         console_handler = None
         if len(self.logger.handlers) > 0:
-            print(f'Found existing handlers: {self.logger.handlers}')
+            handler_messages += f'Found existing handlers: {self.logger.handlers}. '
             for handler in self.logger.handlers:
                 if isinstance(handler, logging.StreamHandler):
                     console_handler = handler
-                    print(f'Found existing file handler: {console_handler}')
+                    handler_messages += f'Found existing file handler: {console_handler}. '
                     break
         if console_handler == None:
-            print(f'Creating new console handler')
+            handler_messages += f'Creating new console handler. '
             console_handler = logging.StreamHandler() # https://docs.python.org/3/library/logging.handlers.html#logging.StreamHandler
 
-        print(f'Setting console handler level to: {level}')
+        handler_messages += f'Setting console handler level to: {level}. '
         console_handler.setLevel(level)
         console_handler.setFormatter(formatter)
         self.logger.addHandler(console_handler)
@@ -53,15 +55,17 @@ class Custom_Logger:
             for handler in self.logger.handlers:
                 if isinstance(handler, logging.FileHandler):
                     file_handler = handler
-                    print(f'Found existing file handler: {file_handler}')
+                    handler_messages += f'Found existing file handler: {file_handler}. '
                     break
             if file_handler == None:
-                print(f'Creating new file handler')
+                handler_messages += f'Creating new file handler. '
                 file_handler = logging.FileHandler(f'{log_path}/{log_file}')
             file_handler.setLevel(level)
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
             self.file_handler = file_handler
+        self.logger.debug(handler_messages)
+        self.log_messages.append(handler_messages)
 
     def save_log_messages(self, level, message):
         """
@@ -83,7 +87,7 @@ class Custom_Logger:
 
         return self.log_messages
     
-    def debug(self, message, save=False):
+    def debug(self, message, save=True):
         """
         - Logs a debug message and optionally saves it to the log file.
         - Parameters:
@@ -96,7 +100,7 @@ class Custom_Logger:
         if save:
             self.save_log_messages('debug', message)
 
-    def info(self, message, save=False):
+    def info(self, message, save=True):
         """
         Logs an informational message using the provided message. 
         Parameters:
@@ -107,7 +111,7 @@ class Custom_Logger:
         if save:
             self.save_log_messages('info', message)
 
-    def warning(self, message, save=False):
+    def warning(self, message, save=True):
         """
         A method to log a warning message and optionally save it to a file.
 
@@ -118,7 +122,7 @@ class Custom_Logger:
         if save:
             self.save_log_messages('warning', message)
 
-    def error(self, message, save=False):
+    def error(self, message, save=True):
         """
         - A method to log an error message and optionally save it to the log file.
         - 
@@ -130,7 +134,7 @@ class Custom_Logger:
         if save:
             self.save_log_messages('error', message)
 
-    def critical(self, message, save=False):
+    def critical(self, message, save=True):
         """
         A function that logs a critical message and optionally saves it. 
 
