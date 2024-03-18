@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from silvhua import *
 
 class Custom_Logger:
     def __init__(
@@ -147,6 +146,10 @@ class Custom_Logger:
         self.logger.critical(message)
         if save:
             self.save_log_messages('critical', message)
+
+def convert_windows_path(path):
+    path = f'{path}/'.replace('\\','/')
+    return path
             
 def test_logger(logger, messages_dict, save=True):
     """
