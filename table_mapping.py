@@ -149,12 +149,27 @@ def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, 
         logger.error(message)
     return melted_df
 
-def merge_to_replace(left_df, right_df, left_on, right_index_column, value_column, nan_fill=None):
+def merge_to_replace(
+        left_df, right_df, left_on, right_index_column, value_column, nan_fill=None, 
+        left_df_name='left', right_df_name='right', drop_indictor_column=False, logger=None
+        ):
+    logger = create_function_logger('merge_to_replace', logger)
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
-    print(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
-    print(f'right index unique values : {len(right_df.index.unique())}')
-    print(f'left_df[left_on] shape {left_df[left_on].shape}')
+    info_messages = []
+    debug_messages = []
+    logger.info(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
+    logger.info(f'Merging on: \n\tLeft: {left_on}\n\t{right_index_column}')
+    debug_messages.append(f'right index unique values : {len(right_df.index.unique())}')
+    
+    debug_messages.append(f'left_df[left_on] shape {left_df[left_on].shape}')
+    indicator = '_merge'
+    merge_integer = 1
+    while indicator in left_df.columns:
+        merge_integer +=1
+        indicator = f'{indicator}{merge_integer}'
+        logger.info(f'`Using `{indicator}` as indicator column')
+        
     try:
         if value_column in left_df.columns:
             new_value_column = f'{value_column}_y'
@@ -162,23 +177,38 @@ def merge_to_replace(left_df, right_df, left_on, right_index_column, value_colum
             value_column = new_value_column
         else:
             new_value_column = value_column 
-        print(f'right_df[value_column] shape {right_df[new_value_column].shape}')
-        print(f'\nBefore `merge_to_replace`: \n\tColumns:{[col for col in left_df.columns]}')
-        print(f'\tLeft DataFrame shape: {left_df.shape}')
+        debug_messages.append(f'Before `merge_to_replace`: ')
+        debug_messages.append(f'\tLeft DataFrame shape: {left_df.shape}')
+        debug_messages.append(f'\t\tColumns:{[col for col in left_df.columns]}')
+        debug_messages.append(f'\tright_df[value_column] shape {right_df[new_value_column].shape}')
+        debug_messages.append(f'\t\tColumns:{[col for col in right_df.columns]}')
+        logger.debug('\n'.join(debug_messages))
         right_df = right_df.copy().set_index(right_index_column)
         column_to_fill = left_on if type(left_on) == str else left_on[-1] 
-        print(f'column_to_fill: {column_to_fill}')
+        logger.info(f'column_to_fill: {column_to_fill}')
+        logger.info(f'Value column: {value_column}')
         # In case there are duplicate values in any of the merge columns, merge the dataframes, then 
         # drop the extra column.
+        logger.debug(f'Null values in right DF {value_column}: {right_df.isna().sum()}')
         left_df = left_df.merge(
                 right_df[value_column], how='left', left_on=left_on, right_index=True,
-                indicator=True
+                indicator=indicator
             )
         left_df[column_to_fill] = left_df[value_column]
-        print(f"Merge indicator value counts: {left_df['_merge'].value_counts()}\n")
-        left_df = left_df.drop(columns=[value_column, '_merge'])
-        print(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')
-        print(f'\tLeft DataFrame shape: {left_df.shape}')
+        info_messages.append(f"Merge indicator value counts: {left_df[indicator].value_counts()}\n")
+        left_df[indicator] = left_df[indicator].replace({
+            'left_only': left_df_name, 'right_only': right_df_name, 
+            'both': f'{left_df_name}, {right_df_name}'
+        })
+        if column_to_fill in value_column:
+            left_df[column_to_fill] = left_df[column_to_fill].fillna(left_df[value_column])
+        columns_to_drop = [value_column]
+        if drop_indictor_column:
+            columns_to_drop.append(indicator)
+        left_df = left_df.drop(columns=columns_to_drop)
+        logger.debug(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')
+        info_messages.append(f'\tLeft DataFrame shape: {left_df.shape}')
+        logger.info('\n'.join(info_messages))
         duplicate_rows = return_duplicate_rows(left_df)
     except Exception as error:
         exc_type, exc_obj, tb = sys.exc_info()
@@ -186,7 +216,7 @@ def merge_to_replace(left_df, right_df, left_on, right_index_column, value_colum
         lineno = tb.tb_lineno
         filename = f.f_code.co_filename
         message = f'An error occurred on line {lineno} in {filename}: {error}.'
-        print(message)
+        logger.error(message)
     return left_df
 
 def one_row_per_id(
@@ -239,21 +269,6 @@ def one_row_per_id(
         message = f'An error occurred on line {lineno} in {filename}: {error}.'
         print(message)
     return reshaped_df, group_value_columns_dict
-
-def lookup_value(id, df, id_column, value_column):
-    result = []
-    if type(id) == str:
-        id_list = id.split(',')
-    else:
-        id_list = [id]
-    for id in id_list:
-        value_series = df.loc[df[id_column] == int(id), value_column]
-        if len(value_series) > 0:
-            result.append(value_series.values[0])
-    result = '; '.join(result)
-    if result == '':
-        result = None
-    return result
     
 def map_to_new_column(
         df, mapping, map_from_column, map_to_column, normalize_casing=True, logger=None
@@ -331,6 +346,21 @@ def get_dropdown_values(
             value_column=value_column, nan_fill=-1
         )  
     return df
+
+def lookup_value(id, df, id_column, value_column):
+    result = []
+    if type(id) == str:
+        id_list = id.split(',')
+    else:
+        id_list = [id]
+    for id in id_list:
+        value_series = df.loc[df[id_column] == int(id), value_column]
+        if len(value_series) > 0:
+            result.append(value_series.values[0])
+    result = '; '.join(result)
+    if result == '':
+        result = None
+    return result
 
 # def concatenate_columns(row, columns, new_column_name, delimiter='; '):
 #     row[new_column_name] = delimiter.join([row[column] for column in columns if row[column] != -1])
