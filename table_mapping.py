@@ -159,7 +159,7 @@ def merge_to_replace(
     info_messages = []
     debug_messages = []
     logger.info(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
-    logger.info(f'Merging on: \n\tLeft: {left_on}\n\t{right_index_column}')
+    logger.info(f'Merging on: \n\tLeft: {left_on}\n\tRight: {right_index_column}')
     debug_messages.append(f'right index unique values : {len(right_df.index.unique())}')
     
     debug_messages.append(f'left_df[left_on] shape {left_df[left_on].shape}')
@@ -189,7 +189,7 @@ def merge_to_replace(
         logger.info(f'Value column: {value_column}')
         # In case there are duplicate values in any of the merge columns, merge the dataframes, then 
         # drop the extra column.
-        logger.debug(f'Null values in right DF {value_column}: {right_df.isna().sum()}')
+        logger.debug(f'Null values in right DF {value_column}: {right_df[value_column].isna().sum()}')
         left_df = left_df.merge(
                 right_df[value_column], how='left', left_on=left_on, right_index=True,
                 indicator=indicator
