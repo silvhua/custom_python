@@ -108,10 +108,10 @@ def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
                 df_name = df_tuple[0]
                 df = df_tuple[1]
             info_message.append(f'\t`{df_name}` DataFrame shape: {df.shape}')
-            parsed_dfs_list.append(df)
             df['source_table'] = df_name
             if (len(renaming_dict) > 0) & (axis == 0):  
                 df = df.rename(columns=renaming_dict) 
+            parsed_dfs_list.append(df)
         different_columns = compare_iterables(
             parsed_dfs_list[0].columns, parsed_dfs_list[1].columns, print_common=0,
             print_difference=0, logger=logger
