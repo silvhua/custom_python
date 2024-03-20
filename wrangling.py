@@ -591,7 +591,7 @@ def get_duplicates(
     return df
 
 def check_for_nulls(
-        df, subset=None, id_column=None, null_column_name='null_values',
+        df, subset=None, id_column=None, how='all', null_column_name='null_values',
         logger=None, logging_level=logging.INFO
         ):
     """
@@ -603,6 +603,7 @@ def check_for_nulls(
         - logger: Custom_Logger instance. If None, new instance is created with the logging level
             indicated by the `logging_level` parameter.
     """
+    logger = create_function_logger('check_for_nulls', logger, level=logging_level)
     logger.debug('**Creating column with nulls indicator**')
     if subset == None:
         subset = df.columns.tolist() 
@@ -610,11 +611,13 @@ def check_for_nulls(
         subset.remove(id_column)
     if null_column_name in subset:
         subset.remove(null_column_name)
-    logger = create_function_logger('check_for_nulls', logger, level=logging_level)
 
     messages_list = []
     messages_list.append(f'Checking for null values in these columns: {subset}')
-    df[null_column_name] = df[subset].isnull().all(axis=1)
+    if 'how' == 'any':
+        df[null_column_name] = df[subset].isnull().all(axis=1)
+    else:
+        df[null_column_name] = df[subset].isnull().any(axis=1)
     messages_list.append(f'\tNumber of null records: {df[null_column_name].sum()}')
     logger.log('\n'.join(messages_list))
     return df
