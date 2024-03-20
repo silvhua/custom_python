@@ -516,9 +516,10 @@ def return_duplicate_rows(df, subset=None, keep=False, id_column=None):
     """
     print(f'DataFrame shape: {df.shape}')
     print(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
-    if (subset == None) & (id_column != None):
-            subset = df.columns.tolist() 
-            subset.remove(id_column)
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column in subset:
+        subset.remove(id_column)
     duplicate_index = df.duplicated(subset=subset, keep=keep)
     duplicate_rows = df.loc[duplicate_index].sort_values(by=subset if subset else df.columns[0])
     if id_column:
@@ -557,6 +558,65 @@ def remove_duplicates_by_lettercase(df, column='Reference'):
     
     print(f'Number of rows after removing duplicates: {len(df)}')
     
+    return df
+
+def get_duplicates(
+        df, subset=None, keep='first', id_column=None, duplicate_column_name='duplicate',
+        logger=None, logging_level=logging.INFO, **kwargs
+        ):
+    """
+    Add a column that indicates which rows are duplicate rows given the subset of columns.
+            
+    Parameters:
+        - subset (list or None): Subset of column names to check. If none, all columns will be used except for id_column.
+        - id_column (str): Name of the column to exclude from checking.
+        - logger: Custom_Logger instance. If None, new instance is created with the logging level
+            indicated by the `logging_level` parameter.
+        - **kwargs are passed to the pandas `.duplicated` method.
+    """
+    logger = create_function_logger('get_duplicates', logger, level=logging_level)
+    logger.debug('**Creating column with duplicate indicator**')
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column != None:
+        subset.remove(id_column)
+    if duplicate_column_name in subset:
+        subset.remove(duplicate_column_name)
+    print(f'Checking duplicates')
+    df[duplicate_column_name] = df.duplicated(subset=subset, keep=keep, **kwargs)
+    messages_list = []
+    messages_list.append(f'Checking for duplicate rows based on these columns: {subset}')
+    messages_list.append(f'\tNumber of duplicate rows `(keep={keep})`: {df[duplicate_column_name].sum()}')
+    logger.log('\n'.join(messages_list))
+    return df
+
+def check_for_nulls(
+        df, subset=None, id_column=None, null_column_name='null_values',
+        logger=None, logging_level=logging.INFO
+        ):
+    """
+    Add a column that indicates which rows have null values for the subset of columns.
+            
+    Parameters:
+        - subset (list or None): Subset of column names to check. If none, all columns will be used except for id_column.
+        - id_column (str): Name of the column to exclude from checking.
+        - logger: Custom_Logger instance. If None, new instance is created with the logging level
+            indicated by the `logging_level` parameter.
+    """
+    logger.debug('**Creating column with nulls indicator**')
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column != None:
+        subset.remove(id_column)
+    if null_column_name in subset:
+        subset.remove(null_column_name)
+    logger = create_function_logger('check_for_nulls', logger, level=logging_level)
+
+    messages_list = []
+    messages_list.append(f'Checking for null values in these columns: {subset}')
+    df[null_column_name] = df[subset].isnull().all(axis=1)
+    messages_list.append(f'\tNumber of null records: {df[null_column_name].sum()}')
+    logger.log('\n'.join(messages_list))
     return df
 
 def convert_dtypes(
