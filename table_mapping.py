@@ -291,11 +291,11 @@ def map_to_new_column(
     logger = create_function_logger('map_to_new_column', logger)
     if normalize_casing:
         for key, value in mapping.items():
-            final_mapping[key] = value
-        else:
-            final_mapping = mapping
-    df[map_to_column] = df[map_from_column].map(final_mapping)
-    logger.debug(f'Final mapping: {final_mapping}\nColumns after `map_to_new_column`: {df.columns}')
+            final_mapping[key.lower()] = value
+    else:
+        final_mapping = mapping
+    df[map_to_column] = df[map_from_column].str.lower().map(final_mapping)
+    logger.debug(f'Final mapping in `map_to_new_column`: {final_mapping}\nColumns after `map_to_new_column`: {df.columns}')
     return df
 
 def remove_time_from_date_string(date_string, delimiter=' '):
