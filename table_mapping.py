@@ -29,14 +29,14 @@ def merge_and_validate(
         logger=None
         ):
     logger = create_function_logger('merge_and_validate', logger)
-    # if logger==None:
-    #     logger = Custom_Logger(
-    #         'merge_and_validate', level=logging.INFO,
-    #         log_file=None, file_level=logging.DEBUG, propagate=False
-    #         )
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
     indicator = '_merge' if indicator == True else indicator
+    merge_integer = 1
+    while indicator in left_df.columns:
+        merge_integer +=1
+        indicator = f'{indicator}{merge_integer}'
+        logger.info(f'`Using `{indicator}` as indicator column')
     logger.info(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
     common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
     logger.debug(f'\tLeft DF shape: {left_df.shape}\n\tRight DF shape: {right_df.shape}\n\tCommon columns: {common_columns}')
