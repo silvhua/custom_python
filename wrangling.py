@@ -614,7 +614,7 @@ def check_for_nulls(
 
     messages_list = []
     messages_list.append(f'Checking for null values in these columns: {subset}')
-    if 'how' == 'any':
+    if how == 'all':
         df[null_column_name] = df[subset].isnull().all(axis=1)
     else:
         df[null_column_name] = df[subset].isnull().any(axis=1)
@@ -750,6 +750,47 @@ def convert_to_pascal_case(text):
     words = text.split()
     words = [w.title() for w in words]
     return ''.join(words)
+
+def to_iso8601(series, from_tz=None, to_tz='UTC', **kwargs):
+    """
+    Converts a given series of datetime values to ISO 8601 format.
+
+    Parameters:
+        series (pandas.Series): The series of datetime values to be converted.
+        from_tz (str, optional): The timezone of the input series. Defaults to None.
+        to_tz (str, optional): The timezone to convert the series to. Defaults to 'UTC'.
+        **kwargs: Additional keyword arguments to pass to `pd.to_datetime()`.
+
+    Returns:
+        pandas.Series: The series of datetime values converted to ISO 8601 format.
+
+    Raises:
+        TypeError: If `series` is not a pandas.Series.
+        ValueError: If `from_tz` is not a valid timezone.
+
+    Note:
+        The output series will have the format '%Y-%m-%dT%H:%M:%S.%fZ' if `to_tz` is 'UTC',
+        and '%Y-%m-%dT%H:%M:%S.%f%z' otherwise.
+    """
+
+    if not isinstance(series, pd.Series):
+        raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
+
+    try:
+        datetime_series = pd.to_datetime(series, **kwargs)
+        if from_tz:
+            datetime_series = datetime_series.dt.tz_localize(from_tz).dt.tz_convert(to_tz)
+    except pytz.UnknownTimeZoneError as e:
+        raise ValueError("Invalid timezone '{}'".format(from_tz)) from e
+
+    # return datetime_series
+    formatted_series_no_tz = datetime_series.dt.strftime('%Y-%m-%dT%H:%M:%S.') + datetime_series.dt.strftime('%f').str[:3]# + datetime_series.dt.strftime('%z')
+    if to_tz == 'UTC':
+        formatted_series = formatted_series_no_tz + 'Z'
+    else:
+        formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%z')
+    return formatted_series
+
 
 # convert dates from string to datetime objects
 def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
