@@ -798,11 +798,14 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=log
         formatted_series = series_str.replace(replacement_dict, regex=True)
     return formatted_series
 
-def columns_to_iso8601(df, columns, from_tz=None, to_tz='UTC', **kwargs):
-    new_columns = [f'{column}_dt' for column in columns]
+def columns_to_iso8601(
+        df, columns, from_tz=None, to_tz='UTC', suffix='dt',
+        logger=None, logging_level=logging.DEBUG, **kwargs
+        ):
+    logger = create_function_logger('columns_to_iso8601', logger, level=logging_level)
+    new_columns = [f'{column}_{suffix}' for column in columns]
     df[new_columns] = df[columns].apply(lambda x: to_iso8601(x, from_tz=from_tz, to_tz=to_tz, **kwargs), axis=0)
     return df
-
 
 # convert dates from string to datetime objects
 def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
