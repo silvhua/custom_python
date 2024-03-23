@@ -798,14 +798,35 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=log
         formatted_series = series_str.replace(replacement_dict, regex=True)
     return formatted_series
 
-def columns_to_iso8601(
-        df, columns, from_tz=None, to_tz='UTC', suffix='dt',
-        logger=None, logging_level=logging.DEBUG, drop=True, **kwargs
-        ):
-    logger = create_function_logger('columns_to_iso8601', logger, level=logging_level)
+def columns_to_function(df, columns, function, suffix=None, logger=None, logging_level=logging.DEBUG, drop=True, **kwargs):
+    """
+    Apply a function to specified columns of a DataFrame.
+
+    Parameters:
+    - df (pandas.DataFrame): The input DataFrame.
+    - columns (list): The list of columns to apply the function to.
+    - function (function): The function to apply to the columns.
+    - suffix (str): The suffix to append to the new column names.
+    - logger (logging.Logger): The logger to use for logging.
+    - logging_level (int): The logging level to use.
+    - drop (bool): Whether to drop the original columns after creating the new ones.
+    - **kwargs: Additional keyword arguments to pass to the function.
+
+    Returns:
+    - pandas.DataFrame: A new DataFrame with the new columns.
+
+    """
+    debug_messages = []
+    if suffix==None:
+        suffix = function.__name__
+    logger = create_function_logger('columns_to_function', logger, level=logging_level)
+    debug_messages.append(f'`columns_to_function` input columns: {columns}')
     new_columns = [f'{column}_{suffix}' for column in columns] if drop == False else columns
-    df[new_columns] = df[columns].apply(lambda x: to_iso8601(x, from_tz=from_tz, to_tz=to_tz, **kwargs), axis=0)
+    debug_messages.append(f'`columns_to_function` output columns: {new_columns}')
+    logger.debug('\n'.join(debug_messages))
+    df[new_columns] = df[columns].apply(lambda x: function(x, **kwargs), axis=0)
     return df
+
 
 # convert dates from string to datetime objects
 def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
