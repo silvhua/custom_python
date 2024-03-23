@@ -347,6 +347,42 @@ def get_dropdown_values(
         )  
     return df
 
+def verify_email(series):
+    """
+    Verify and extract email addresses from a pandas series.
+
+    Parameters:
+    - series (pandas.Series): The input series containing email addresses.
+
+    Returns:
+    - pandas.Series: A new series with the extracted email addresses. If an email address is invalid, it will be marked as '[invalid]'. If an email address is empty or None, it will be marked as None.
+
+    Example:
+    >>> series = pd.Series(['john@example.com', 'invalid_email', '', None])
+    >>> verify_email(series)
+    0        john@example.com
+    1            [invalid]
+    2                   None
+    3                   None
+    dtype: object
+    """
+    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+    
+    def extract_email(email_str):
+        if pd.isnull(email_str):
+            return None
+        match = re.search(email_regex, str(email_str))
+        if match:
+            return match.group()
+        else:
+            if len(str(email_str)) > 0:
+                return '[invalid]'
+            else:
+                return None
+    
+    series = series.apply(extract_email)
+    return series
+
 def lookup_value(id, df, id_column, value_column):
     result = []
     if type(id) == str:
