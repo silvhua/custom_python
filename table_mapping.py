@@ -383,6 +383,82 @@ def verify_email(series):
     series = series.apply(extract_email)
     return series
 
+def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=logging.DEBUG, **kwargs):
+    """
+    Converts a given series of datetime values to ISO 8601 format.
+
+    Parameters:
+        series (pandas.Series): The series of datetime values to be converted.
+        from_tz (str, optional): The timezone of the input series. Defaults to None.
+        to_tz (str, optional): The timezone to convert the series to. Defaults to 'UTC'.
+        **kwargs: Additional keyword arguments to pass to `pd.to_datetime()`.
+
+    Returns:
+        pandas.Series: The series of datetime values converted to ISO 8601 format, or None if the input can't be converted.
+
+    Raises:
+        ValueError: If `from_tz` is not a valid timezone.
+
+    Note:
+        The output series will have the format '%Y-%m-%dT%H:%M:%S.%fZ' if `to_tz` is 'UTC',
+        and '%Y-%m-%dT%H:%M:%S.%f%z' otherwise.
+    """
+    logger = create_function_logger('to_iso8601', logger, level=logging_level)
+    try:
+        if not isinstance(series, pd.Series):
+            raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
+
+        datetime_series = pd.to_datetime(series, **kwargs)
+        if from_tz:
+            datetime_series = datetime_series.dt.tz_localize(from_tz).dt.tz_convert(to_tz)
+
+        # return datetime_series
+        formatted_series_no_tz = datetime_series.dt.strftime('%Y-%m-%dT%H:%M:%S.') + datetime_series.dt.strftime('%f').str[:3]
+        if to_tz == 'UTC':
+            formatted_series = formatted_series_no_tz + 'Z'
+        else:
+            formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%z')
+    except Exception as e: # Use regex to convert the timestamp to ISO 8601 format
+        logger.debug(f'Using regex to convert to ISO 8601 format for column {series.name}: \n{e}')        
+        replacement_dict = {
+            r'(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$': r'\1T\2.000Z',
+            r'(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})(\.\d)$': r'\1T\2\300Z',
+            r'(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})(\.\d{2})$': r'\1T\2\30Z',
+            r'(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})(\.\d{3})': r'\1T\2\3Z',
+            }
+        series_str = series.astype(str)
+        formatted_series = series_str.replace(replacement_dict, regex=True)
+    return formatted_series
+
+def columns_to_function(df, columns, function, suffix=None, logger=None, logging_level=logging.DEBUG, drop=True, **kwargs):
+    """
+    Apply a function to specified columns of a DataFrame.
+
+    Parameters:
+    - df (pandas.DataFrame): The input DataFrame.
+    - columns (list): The list of columns to apply the function to.
+    - function (function): The function to apply to the columns.
+    - suffix (str): The suffix to append to the new column names.
+    - logger (logging.Logger): The logger to use for logging.
+    - logging_level (int): The logging level to use.
+    - drop (bool): Whether to drop the original columns after creating the new ones.
+    - **kwargs: Additional keyword arguments to pass to the function.
+
+    Returns:
+    - pandas.DataFrame: A new DataFrame with the new columns.
+
+    """
+    debug_messages = []
+    if suffix==None:
+        suffix = function.__name__
+    logger = create_function_logger('columns_to_function', logger, level=logging_level)
+    debug_messages.append(f'`columns_to_function` input columns: {columns}')
+    new_columns = [f'{column}_{suffix}' for column in columns] if drop == False else columns
+    debug_messages.append(f'`columns_to_function` output columns: {new_columns}')
+    logger.debug('\n'.join(debug_messages))
+    df[new_columns] = df[columns].apply(lambda x: function(x, **kwargs), axis=0)
+    return df
+
 def lookup_value(id, df, id_column, value_column):
     result = []
     if type(id) == str:
