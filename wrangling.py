@@ -751,7 +751,7 @@ def convert_to_pascal_case(text):
     words = [w.title() for w in words]
     return ''.join(words)
 
-def to_iso8601(series, from_tz=None, to_tz='UTC', **kwargs):
+def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=logging.DEBUG, **kwargs):
     """
     Converts a given series of datetime values to ISO 8601 format.
 
@@ -762,34 +762,42 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', **kwargs):
         **kwargs: Additional keyword arguments to pass to `pd.to_datetime()`.
 
     Returns:
-        pandas.Series: The series of datetime values converted to ISO 8601 format.
+        pandas.Series: The series of datetime values converted to ISO 8601 format, or None if the input can't be converted.
 
     Raises:
-        TypeError: If `series` is not a pandas.Series.
         ValueError: If `from_tz` is not a valid timezone.
 
     Note:
         The output series will have the format '%Y-%m-%dT%H:%M:%S.%fZ' if `to_tz` is 'UTC',
         and '%Y-%m-%dT%H:%M:%S.%f%z' otherwise.
     """
+    logger = create_function_logger('to_iso8601', logger, level=logging_level)
+    try:
+        if not isinstance(series, pd.Series):
+            raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
 
-    if not isinstance(series, pd.Series):
-        raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
+        datetime_series = pd.to_datetime(series, **kwargs)
+        if from_tz:
+            datetime_series = datetime_series.dt.tz_localize(from_tz).dt.tz_convert(to_tz)
 
-    datetime_series = pd.to_datetime(series, **kwargs)
-    if from_tz:
-        datetime_series = datetime_series.dt.tz_localize(from_tz).dt.tz_convert(to_tz)
-
-    # return datetime_series
-    formatted_series_no_tz = datetime_series.dt.strftime('%Y-%m-%dT%H:%M:%S.') + datetime_series.dt.strftime('%f').str[:3]# + datetime_series.dt.strftime('%z')
-    if to_tz == 'UTC':
-        formatted_series = formatted_series_no_tz + 'Z'
-    else:
-        formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%z')
-    return formatted_series
+        # return datetime_series
+        formatted_series_no_tz = datetime_series.dt.strftime('%Y-%m-%dT%H:%M:%S.') + datetime_series.dt.strftime('%f').str[:3]
+        if to_tz == 'UTC':
+            formatted_series = formatted_series_no_tz + 'Z'
+        else:
+            formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%z')
+        return formatted_series
+    except Exception as e:
+        logger.debug(f'Using regex to convert to ISO 8601 format for column {series.name}: \n{e}')
+        # Use regex to convert the timestamp to ISO 8601 format
+        iso8601_format = r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'
+        series_str = series.astype(str)
+        formatted_series = series_str.replace(iso8601_format, r'\1', regex=True)
+        return formatted_series
 
 def columns_to_iso8601(df, columns, from_tz=None, to_tz='UTC', **kwargs):
-    df[columns] = df[columns].apply(lambda x: to_iso8601(x, from_tz=from_tz, to_tz=to_tz, **kwargs), axis=0)
+    new_columns = [f'{column}_dt' for column in columns]
+    df[new_columns] = df[columns].apply(lambda x: to_iso8601(x, from_tz=from_tz, to_tz=to_tz, **kwargs), axis=0)
     return df
 
 
