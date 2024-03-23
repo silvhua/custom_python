@@ -776,12 +776,9 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', **kwargs):
     if not isinstance(series, pd.Series):
         raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
 
-    try:
-        datetime_series = pd.to_datetime(series, **kwargs)
-        if from_tz:
-            datetime_series = datetime_series.dt.tz_localize(from_tz).dt.tz_convert(to_tz)
-    except pytz.UnknownTimeZoneError as e:
-        raise ValueError("Invalid timezone '{}'".format(from_tz)) from e
+    datetime_series = pd.to_datetime(series, **kwargs)
+    if from_tz:
+        datetime_series = datetime_series.dt.tz_localize(from_tz).dt.tz_convert(to_tz)
 
     # return datetime_series
     formatted_series_no_tz = datetime_series.dt.strftime('%Y-%m-%dT%H:%M:%S.') + datetime_series.dt.strftime('%f').str[:3]# + datetime_series.dt.strftime('%z')
@@ -790,6 +787,10 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', **kwargs):
     else:
         formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%z')
     return formatted_series
+
+def columns_to_iso8601(df, columns, from_tz=None, to_tz='UTC', **kwargs):
+    df[columns] = df[columns].apply(lambda x: to_iso8601(x, from_tz=from_tz, to_tz=to_tz, **kwargs), axis=0)
+    return df
 
 
 # convert dates from string to datetime objects
