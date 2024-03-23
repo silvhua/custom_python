@@ -786,14 +786,12 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=log
             formatted_series = formatted_series_no_tz + 'Z'
         else:
             formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%z')
-        return formatted_series
-    except Exception as e:
-        logger.debug(f'Using regex to convert to ISO 8601 format for column {series.name}: \n{e}')
-        # Use regex to convert the timestamp to ISO 8601 format
-        iso8601_format = r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})'
+    except Exception as e: # Use regex to convert the timestamp to ISO 8601 format
+        logger.debug(f'Using regex to convert to ISO 8601 format for column {series.name}: \n{e}')        
+        iso8601_format = r'(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}(?:\.\d+)?)'
         series_str = series.astype(str)
-        formatted_series = series_str.replace(iso8601_format, r'\1', regex=True)
-        return formatted_series
+        formatted_series = series_str.replace(iso8601_format, r'\1T\2Z', regex=True)
+    return formatted_series
 
 def columns_to_iso8601(df, columns, from_tz=None, to_tz='UTC', **kwargs):
     new_columns = [f'{column}_dt' for column in columns]
