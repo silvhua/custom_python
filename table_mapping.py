@@ -357,42 +357,6 @@ def get_dropdown_values(
         )  
     return df
 
-def verify_email(series):
-    """
-    Verify and extract email addresses from a pandas series.
-
-    Parameters:
-    - series (pandas.Series): The input series containing email addresses.
-
-    Returns:
-    - pandas.Series: A new series with the extracted email addresses. If an email address is invalid, it will be marked as '[invalid]'. If an email address is empty or None, it will be marked as None.
-
-    Example:
-    >>> series = pd.Series(['john@example.com', 'invalid_email', '', None])
-    >>> verify_email(series)
-    0        john@example.com
-    1            [invalid]
-    2                   None
-    3                   None
-    dtype: object
-    """
-    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
-    
-    def extract_email(email_str, logger=None, logging_level=logging.DEBUG):
-        if pd.isnull(email_str):
-            return None
-        match = re.search(email_regex, str(email_str))
-        if match:
-            return match.group()
-        else:
-            if len(str(email_str)) > 0:
-                return '[invalid]'
-            else:
-                return None
-    
-    series = series.apply(extract_email)
-    return series
-
 def to_iso8601(
         series, from_tz=None, to_tz='UTC', iso=True, logger=None, logging_level=logging.DEBUG, 
         **kwargs
@@ -451,7 +415,9 @@ def to_iso8601(
         formatted_series = series_str.replace(replacement_dict, regex=True)
     return formatted_series
     
-def columns_to_function(df, columns, function, suffix=None, logger=None, logging_level=logging.DEBUG, drop=True, **kwargs):
+def columns_to_function(
+        df, columns, function, suffix=None, logger=None, logging_level=logging.DEBUG, drop=True, **kwargs
+        ):
     """
     Apply a function to specified columns of a DataFrame.
 
@@ -469,6 +435,12 @@ def columns_to_function(df, columns, function, suffix=None, logger=None, logging
     - pandas.DataFrame: A new DataFrame with the new columns.
 
     """
+    def validate_regex(row):
+        if row.str.contains('\[invalid\]').any():
+            return ', '.join(row[row.str.contains('\[invalid\]')].values)
+        else:
+            return None
+        
     debug_messages = []
     if suffix==None:
         suffix = function.__name__
@@ -480,14 +452,53 @@ def columns_to_function(df, columns, function, suffix=None, logger=None, logging
     df[new_columns] = df[columns].apply(lambda x: function(
         x, logger=logger, logging_level=logging_level, **kwargs
         ), axis=0)
-    if function == verify_email:
-        # validate_columns = [f'{column}_validate' for column in columns]
-        df[f'valid_email'] = df[new_columns].apply(lambda x: x.str.contains('\[invalid\]').any(), axis=1)
-        # df[f'valid_email'] = df[new_columns].apply(lambda x: x.str.contains('@').any(), axis=1)
-        # df[new_columns] = df[new_columns].fillna('').replace({
-        #     r'.* [invalid]': 'testing'
-        # }, regex=True).replace({'': None})
+    if function == verify_regex:
+        # Determine if the passed `regex` kwarg is a regex ; regex_name is 'email' if `regex='email'`
+        regex_special_chars = r'^$.*+?{}[]\|()' 
+        regex_name = 'regex' if any(char in regex_special_chars for char in kwargs["regex"]) else kwargs["regex"] 
+        df[f'invalid_{regex_name}'] = df[new_columns].apply(lambda x: validate_regex(x), axis=1)
+        
+        # Replace invalid values with None
+        df[new_columns] = df[new_columns].fillna('').replace({
+            r'.* \[invalid\]': None
+        }, regex=True).replace({'': None})
     return df
+
+def verify_regex(series, regex='email', logger=None, logging_level=logging.DEBUG):
+    """
+    Verify and extract strings using regex from a pandas series.
+
+    Parameters:
+    - series (pandas.Series): The input series to extract.df
+    - regex (str): The regex pattern to use. Defaults to 'email', which uses a regex email.
+
+    Returns:
+    - pandas.Series: A new series with the extracted email addresses. If an email address is invalid, it will be marked as '[invalid]'. If an email address is empty or None, it will be marked as None.
+
+    """
+    logger = create_function_logger('verify_email', logger, level=logging_level)
+    log_messages = []
+    if regex == 'email':
+        regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+    
+    def extract_regex(string):
+        if pd.isnull(string):
+            return None
+        match = re.search(regex, str(string))
+        if match:
+            return match.group()
+        else:
+            if len(str(string)) > 0:
+                index = series[series == string].index[0]
+                log_messages.append(f"Invalid email at index: {index}")
+                return f'{string} [invalid]'
+            else:
+                return None
+    
+    series = series.apply(extract_regex)
+    if len(log_messages) > 0:
+        logger.debug('\n'.join(log_messages))
+    return series
 
 def lookup_value(id, df, id_column, value_column):
     result = []
@@ -509,3 +520,39 @@ def lookup_value(id, df, id_column, value_column):
 #     if len(row[new_column_name]) == 0:
 #         row[new_column_name] = None
 #     return row
+
+def verify_email(series):
+    """[use `verify_regex` instead]
+    Verify and extract email addresses from a pandas series.
+
+    Parameters:
+    - series (pandas.Series): The input series containing email addresses.
+
+    Returns:
+    - pandas.Series: A new series with the extracted email addresses. If an email address is invalid, it will be marked as '[invalid]'. If an email address is empty or None, it will be marked as None.
+
+    Example:
+    >>> series = pd.Series(['john@example.com', 'invalid_email', '', None])
+    >>> verify_email(series)
+    0        john@example.com
+    1            [invalid]
+    2                   None
+    3                   None
+    dtype: object
+    """
+    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
+    
+    def extract_email(email_str, logger=None, logging_level=logging.DEBUG):
+        if pd.isnull(email_str):
+            return None
+        match = re.search(email_regex, str(email_str))
+        if match:
+            return match.group()
+        else:
+            if len(str(email_str)) > 0:
+                return '[invalid]'
+            else:
+                return None
+    
+    series = series.apply(extract_email)
+    return series
