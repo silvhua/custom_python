@@ -447,6 +447,7 @@ def columns_to_function(
     if suffix==None:
         suffix = function.__name__
     logger = create_function_logger('columns_to_function', logger, level=logging_level)
+    debug_messages.append(f'`columns_to_function` function: {function.__name__}')
     debug_messages.append(f'`columns_to_function` input columns: {columns}')
     new_columns = [f'{column}_{suffix}' for column in columns] if drop == False else columns
     debug_messages.append(f'`columns_to_function` output columns: {new_columns}')
