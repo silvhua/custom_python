@@ -378,7 +378,7 @@ def verify_email(series):
     """
     email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b'
     
-    def extract_email(email_str):
+    def extract_email(email_str, logger=None, logging_level=logging.DEBUG):
         if pd.isnull(email_str):
             return None
         match = re.search(email_regex, str(email_str))
@@ -470,6 +470,13 @@ def columns_to_function(df, columns, function, suffix=None, logger=None, logging
     df[new_columns] = df[columns].apply(lambda x: function(
         x, logger=logger, logging_level=logging_level, **kwargs
         ), axis=0)
+    if function == verify_email:
+        # validate_columns = [f'{column}_validate' for column in columns]
+        df[f'valid_email'] = df[new_columns].apply(lambda x: x.str.contains('\[invalid\]').any(), axis=1)
+        # df[f'valid_email'] = df[new_columns].apply(lambda x: x.str.contains('@').any(), axis=1)
+        # df[new_columns] = df[new_columns].fillna('').replace({
+        #     r'.* [invalid]': 'testing'
+        # }, regex=True).replace({'': None})
     return df
 
 def lookup_value(id, df, id_column, value_column):
