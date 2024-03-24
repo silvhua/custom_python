@@ -5,7 +5,10 @@ from wrangling import *
 import numpy as np
 from Custom_Logger import *
 
-def concat_columns(df, columns, new_column, sep='; ', drop_columns=False):
+def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
+    logger=None
+    ):
+    logger = create_function_logger('merge_and_validate', logger)
     try:
         df[columns] = df[columns].replace({np.nan: ''}).replace({-1: ''}).astype(str)
         df[new_column] = df[columns[0]]
@@ -36,11 +39,14 @@ def merge_and_validate(
     while indicator in left_df.columns:
         merge_integer +=1
         indicator = f'{indicator}{merge_integer}'
-        logger.info(f'`Using `{indicator}` as indicator column')
-    logger.info(f'\n****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
+    info_messages = []
+    debug_messages = []
+    info_messages.append(f'****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
     common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
-    logger.debug(f'\tLeft DF shape: {left_df.shape}\n\tRight DF shape: {right_df.shape}\n\tCommon columns: {common_columns}')
-    logger.info(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}.')
+    info_messages.append(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}`.')
+    info_messages.append(f'`Using `{indicator}` as indicator column')
+    logger.info('\n'.join(info_messages))
+    debug_messages.append(f'\tLeft DF shape: {left_df.shape}\n\tRight DF shape: {right_df.shape}\n\tCommon columns: {common_columns}')
     
     merged_df = left_df.merge(
         right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
@@ -48,7 +54,7 @@ def merge_and_validate(
     )
     merge_info_message = ''
     merge_info_message += f'Shape after initial merge: {merged_df.shape}\n'
-    logger.debug(f'Columns after merge: {[column for column in merged_df.columns]}')
+    debug_messages.append(f'Columns after merge: {[column for column in merged_df.columns]}')
 
     merge_info_message += f"Merge indicator value counts: {merged_df[indicator].value_counts()}\n"
     
@@ -68,8 +74,8 @@ def merge_and_validate(
     
     for column in common_columns:
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
+    logger.debug('\n'.join(debug_messages))
     logger.info(merge_info_message)
-    
     columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
     if drop_indictor_column:
         columns_to_drop.append(indicator)
@@ -156,10 +162,11 @@ def merge_to_replace(
     logger = create_function_logger('merge_to_replace', logger)
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
+    initiate_messages = []
     info_messages = []
     debug_messages = []
-    logger.info(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
-    logger.info(f'Merging on: \n\tLeft: {left_on}\n\tRight: {right_index_column}')
+    initiate_messages.append(f'\n****`merge_to_replace`****: \nright index length: {len(right_df.index)}')
+    initiate_messages.append(f'Merging on: \n\tLeft: {left_on}\n\tRight: {right_index_column}')
     debug_messages.append(f'right index unique values : {len(right_df.index.unique())}')
     
     debug_messages.append(f'left_df[left_on] shape {left_df[left_on].shape}')
@@ -168,7 +175,8 @@ def merge_to_replace(
     while indicator in left_df.columns:
         merge_integer +=1
         indicator = f'{indicator}{merge_integer}'
-        logger.info(f'`Using `{indicator}` as indicator column')
+    initiate_messages.append(f'`Using `{indicator}` as indicator column')
+    logger.info('\n'.join(initiate_messages))
         
     try:
         if value_column in left_df.columns:
@@ -182,14 +190,13 @@ def merge_to_replace(
         debug_messages.append(f'\t\tColumns:{[col for col in left_df.columns]}')
         debug_messages.append(f'\tright_df[value_column] shape {right_df[new_value_column].shape}')
         debug_messages.append(f'\t\tColumns:{[col for col in right_df.columns]}')
-        logger.debug('\n'.join(debug_messages))
         right_df = right_df.copy().set_index(right_index_column)
         column_to_fill = left_on if type(left_on) == str else left_on[-1] 
-        logger.info(f'column_to_fill: {column_to_fill}')
-        logger.info(f'Value column: {value_column}')
+        info_messages.append(f'column_to_fill: {column_to_fill}')
+        info_messages.append(f'Value column: {value_column}')
         # In case there are duplicate values in any of the merge columns, merge the dataframes, then 
         # drop the extra column.
-        logger.debug(f'Null values in right DF {value_column}: {right_df[value_column].isna().sum()}')
+        debug_messages.append(f'Null values in right DF {value_column}: {right_df[value_column].isna().sum()}')
         left_df = left_df.merge(
                 right_df[value_column], how='left', left_on=left_on, right_index=True,
                 indicator=indicator
@@ -206,7 +213,8 @@ def merge_to_replace(
         if drop_indictor_column:
             columns_to_drop.append(indicator)
         left_df = left_df.drop(columns=columns_to_drop)
-        logger.debug(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')
+        debug_messages.append(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')
+        logger.debug('\n'.join(debug_messages))
         info_messages.append(f'\tLeft DataFrame shape: {left_df.shape}')
         logger.info('\n'.join(info_messages))
         duplicate_rows = return_duplicate_rows(left_df)
@@ -404,6 +412,7 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=log
         and '%Y-%m-%dT%H:%M:%S.%f%z' otherwise.
     """
     logger = create_function_logger('to_iso8601', logger, level=logging_level)
+    logger.info(f'***Running `to_iso8601` on column {series.name}***')
     try:
         if not isinstance(series, pd.Series):
             raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
@@ -456,7 +465,9 @@ def columns_to_function(df, columns, function, suffix=None, logger=None, logging
     new_columns = [f'{column}_{suffix}' for column in columns] if drop == False else columns
     debug_messages.append(f'`columns_to_function` output columns: {new_columns}')
     logger.debug('\n'.join(debug_messages))
-    df[new_columns] = df[columns].apply(lambda x: function(x, **kwargs), axis=0)
+    df[new_columns] = df[columns].apply(lambda x: function(
+        x, logger=logger, logging_level=logging_level, **kwargs
+        ), axis=0)
     return df
 
 def lookup_value(id, df, id_column, value_column):
