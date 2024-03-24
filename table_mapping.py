@@ -385,7 +385,6 @@ def to_iso8601(
     """
     logger = create_function_logger('to_iso8601', logger, level=logging_level)
     logger.info(f'***Running `to_iso8601` on column {series.name}***')
-    logger.debug(f'kwargs: {kwargs}')
     try:
         if not isinstance(series, pd.Series):
             raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
@@ -437,11 +436,12 @@ def columns_to_function(
     """
     def validate_regex(row):
         if row.str.contains('\[invalid\]').any():
-            invalid_values = ', '.join(row[row.str.contains(f'\[{kwargs["tag"]}\]')].values)
+            row = row.replace({None: ''})
+            invalid_values = ', '.join(row[row.str.contains(f'{kwargs["tag"]}')].values)
             return invalid_values
         else:
             return None
-        
+
     debug_messages = []
     if suffix==None:
         suffix = function.__name__
@@ -464,8 +464,7 @@ def columns_to_function(
             rf'.* \[{kwargs["tag"]}\]': None
         }, regex=True).replace({'': None})
         df[f'invalid_{regex_name}'] = df[f'invalid_{regex_name}'].replace({
-            rf'(.*) \[{kwargs["tag"]}\]': r'\1'
-        }, regex=True)
+            rf' \[{kwargs["tag"]}\]': r''}, regex=True)
     return df
 
 def verify_regex(series, regex='email', tag='invalid', logger=None, logging_level=logging.DEBUG):
