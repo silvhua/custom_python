@@ -783,7 +783,7 @@ def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
     print('\tTime completed:', datetime.now())
     return df
 
-def compare_iterables(iterable1, iterable2, print_common=False, print_difference=True, logger=None):
+def compare_iterables(iterable1, iterable2, print_common=False, print_difference=True, logger=None, logging_level=logging.DEBUG):
     """
     Print the number of common values and unique values between two iterables (e.g. lists, series).
     
@@ -791,16 +791,21 @@ def compare_iterables(iterable1, iterable2, print_common=False, print_difference
         - different_values (list)
         - common_values (list)           
     """
-    logger = create_function_logger('melt_dfs', logger)
+    logger = create_function_logger('compare_iterables', logger, level=logging_level)
     common_values = set(iterable1) & set(iterable2)
-    info_message = '`compare_iterables`: \n'
+    info_message = '***`compare_iterables`***: \n'
     debug_message = ''
+
     if len(iterable1) > len(iterable2):
-        different_values = list(set(iterable1) - set(iterable2))
-        debug_message += f'Proper subset = {set(iterable2) < set(iterable1)} \n'
+        larger_set = set(iterable1)
+        smaller_set = set(iterable2)
     else:
-        different_values = list(set(iterable2) - set(iterable1))
-        debug_message += f'Proper subset = {set(iterable1) < set(iterable2)}'
+        larger_set = set(iterable2)
+        smaller_set = set(iterable1)
+    different_values = list(larger_set - smaller_set)
+    debug_message += f'Proper subset = {smaller_set < larger_set} \n'
+    opposite_subtraction = list(smaller_set - larger_set)
+    debug_message = f'\tOpposite set subtraction ({len(opposite_subtraction)} values): {opposite_subtraction}\n'
     debug_message += f'Unique values in iterable 1: {len(set(iterable1))}\n'
     debug_message += f'Unique values in iterable 2: {len(set(iterable2))}\n'
     info_message += f'Number of common values between iterables 1 and 2: {len(common_values)}\n'
@@ -830,29 +835,35 @@ def find_unique_df_ids(df1, df1_column, df2, df2_column, **kwargs):
     )
     return different_ids, common_ids
 
-def compare_df_columns(df1, df1_column, df2, df2_column,print_common=False,print_difference=True):
+def compare_df_columns(
+        df1, df1_column, df2, df2_column,print_common=False,print_difference=True, logger=None, logging_level=logging.DEBUG
+        ):
     """
     Print the number of common values and unique values between two dataframe columns.
     Return the unique rows of the dataframe with more records.
     
     """
-    df1_values = df1[df1_column].unique()
-    df2_values = df2[df2_column].unique()
+    logger = create_function_logger('compare_iterables', logger, level=logging_level)
+    df1_values = df1[df1_column].values
+    df2_values = df2[df2_column].values
     different_values, common_values = compare_iterables(
         df1[df1_column].values, df2[df2_column], 
-        print_common=print_common, print_difference=print_difference
+        print_common=print_common, print_difference=print_difference,
+        logger=logger, logging_level=logging_level
     )
-    if len(df1_values) > len(df2_values):
-        parent_df = df1
-        parent_df_column = df1_column
+    if df1.equals(df2):
+        logger.info(f'Returning rows in DataFrame where {df1_column} != {df2_column}')
+        return df1[df1[df1_column] != df1[df2_column]].dropna(subset=[df1_column, df2_column], how='all')
     else:
-        parent_df = df2
-        parent_df_column = df2_column
-    if print_common == True:
-        print('Values in common:', common_values)
-    if print_difference == True:
-        print('Different values:', different_values)
-    return parent_df[parent_df[parent_df_column].isin(different_values)]
+        logger.info(f'Returning different rows of the larger DataFrame.')
+        if len(df1_values) > len(df2_values):
+            parent_df = df1
+            parent_df_column = df1_column
+        else:
+            parent_df = df2
+            parent_df_column = df2_column
+        return parent_df[parent_df[parent_df_column].isin(different_values)]
+
     
 def drop_na(df, subset=None, **kwargs):
     before_length = len(df)
