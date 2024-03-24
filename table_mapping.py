@@ -393,15 +393,21 @@ def verify_email(series):
     series = series.apply(extract_email)
     return series
 
-def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=logging.DEBUG, **kwargs):
+def to_iso8601(
+        series, from_tz=None, to_tz='UTC', iso=True, logger=None, logging_level=logging.DEBUG, 
+        **kwargs
+        ):
     """
     Converts a given series of datetime values to ISO 8601 format.
 
     Parameters:
-        series (pandas.Series): The series of datetime values to be converted.
-        from_tz (str, optional): The timezone of the input series. Defaults to None.
-        to_tz (str, optional): The timezone to convert the series to. Defaults to 'UTC'.
-        **kwargs: Additional keyword arguments to pass to `pd.to_datetime()`.
+        -series (pandas.Series): The series of datetime values to be converted.
+        - from_tz (str, optional): The timezone of the input series. Defaults to None.
+        - to_tz (str, optional): The timezone to convert the series to. Defaults to 'UTC'.
+        - iso (bool, optional): Whether to use the alpha_tz function to put the timezone in
+        ISO 8601 format (True)or human-readable format (False), e.g. 'EST'. 
+        Defaults to True to preserve ISO 8601 format.
+        - **kwargs: Additional keyword arguments to pass to `pd.to_datetime()`.
 
     Returns:
         pandas.Series: The series of datetime values converted to ISO 8601 format, or None if the input can't be converted.
@@ -415,6 +421,7 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=log
     """
     logger = create_function_logger('to_iso8601', logger, level=logging_level)
     logger.info(f'***Running `to_iso8601` on column {series.name}***')
+    logger.debug(f'kwargs: {kwargs}')
     try:
         if not isinstance(series, pd.Series):
             raise TypeError("`series` must be a pandas.Series, not {}".format(type(series)))
@@ -427,8 +434,11 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=log
         formatted_series_no_tz = datetime_series.dt.strftime('%Y-%m-%dT%H:%M:%S.') + datetime_series.dt.strftime('%f').str[:3]
         if to_tz == 'UTC':
             formatted_series = formatted_series_no_tz + 'Z'
-        else:
+        elif iso == True:
             formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%z')
+        else:
+            logger.debug(f'Using human-readable format for column {series.name}')
+            formatted_series = formatted_series_no_tz + datetime_series.dt.strftime('%Z')
     except Exception as e: # Use regex to convert the timestamp to ISO 8601 format
         logger.debug(f'Using regex to convert to ISO 8601 format for column {series.name}: \n{e}')        
         replacement_dict = {
@@ -440,7 +450,7 @@ def to_iso8601(series, from_tz=None, to_tz='UTC', logger=None, logging_level=log
         series_str = series.astype(str)
         formatted_series = series_str.replace(replacement_dict, regex=True)
     return formatted_series
-
+    
 def columns_to_function(df, columns, function, suffix=None, logger=None, logging_level=logging.DEBUG, drop=True, **kwargs):
     """
     Apply a function to specified columns of a DataFrame.
