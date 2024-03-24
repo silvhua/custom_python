@@ -441,7 +441,7 @@ def columns_to_function(
             return invalid_values
         else:
             return None
-
+        
     debug_messages = []
     if suffix==None:
         suffix = function.__name__
@@ -449,7 +449,6 @@ def columns_to_function(
     debug_messages.append(f'`columns_to_function` input columns: {columns}')
     new_columns = [f'{column}_{suffix}' for column in columns] if drop == False else columns
     debug_messages.append(f'`columns_to_function` output columns: {new_columns}')
-    logger.debug('\n'.join(debug_messages))
     df[new_columns] = df[columns].apply(lambda x: function(
         x, logger=logger, logging_level=logging_level, **kwargs
         ), axis=0)
@@ -460,11 +459,16 @@ def columns_to_function(
         df[f'invalid_{regex_name}'] = df[new_columns].apply(lambda x: validate_regex(x), axis=1)
         
         # Replace invalid values with None
-        df[new_columns] = df[new_columns].fillna('').replace({
+        df[new_columns] = df[new_columns].fillna('').replace({np.nan: ''}).replace({
             rf'.* \[{kwargs["tag"]}\]': None
-        }, regex=True).replace({'': None})
-        df[f'invalid_{regex_name}'] = df[f'invalid_{regex_name}'].replace({
-            rf' \[{kwargs["tag"]}\]': r''}, regex=True)
+        }, regex=True)
+        if df[f'invalid_{regex_name}'].notna().any():
+            df[f'invalid_{regex_name}'] = df[f'invalid_{regex_name}'].replace({
+                rf' \[{kwargs["tag"]}\]': r''}, regex=True)
+        else:
+            debug_messages.append(f'No invalid {regex_name} values found in the DataFrame.')
+        df[new_columns] = df[new_columns].replace({'': None})
+    logger.debug('\n'.join(debug_messages))
     return df
 
 def verify_regex(series, regex='email', tag='invalid', logger=None, logging_level=logging.DEBUG):
