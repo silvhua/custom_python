@@ -34,7 +34,8 @@ def merge_and_validate(
     logger = create_function_logger('merge_and_validate', logger)
     if nan_fill:
         left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
-    indicator = '_merge' if indicator == True else indicator
+    indicator_root = '_merge' if indicator == True else indicator
+    indicator = indicator_root
     merge_integer = 1
     while indicator in left_df.columns:
         merge_integer +=1
@@ -170,11 +171,12 @@ def merge_to_replace(
     debug_messages.append(f'right index unique values : {len(right_df.index.unique())}')
     
     debug_messages.append(f'left_df[left_on] shape {left_df[left_on].shape}')
-    indicator = '_merge'
+    indicator_root = '_merge'
+    indicator = indicator_root
     merge_integer = 1
     while indicator in left_df.columns:
         merge_integer +=1
-        indicator = f'{indicator}{merge_integer}'
+        indicator = f'{indicator_root}{merge_integer}'
     initiate_messages.append(f'`Using `{indicator}` as indicator column')
     logger.info('\n'.join(initiate_messages))
         
