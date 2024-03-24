@@ -437,7 +437,8 @@ def columns_to_function(
     """
     def validate_regex(row):
         if row.str.contains('\[invalid\]').any():
-            return ', '.join(row[row.str.contains('\[invalid\]')].values)
+            invalid_values = ', '.join(row[row.str.contains(f'\[{kwargs["tag"]}\]')].values)
+            return invalid_values
         else:
             return None
         
@@ -460,21 +461,31 @@ def columns_to_function(
         
         # Replace invalid values with None
         df[new_columns] = df[new_columns].fillna('').replace({
-            r'.* \[invalid\]': None
+            rf'.* \[{kwargs["tag"]}\]': None
         }, regex=True).replace({'': None})
+        df[f'invalid_{regex_name}'] = df[f'invalid_{regex_name}'].replace({
+            rf'(.*) \[{kwargs["tag"]}\]': r'\1'
+        }, regex=True)
     return df
 
-def verify_regex(series, regex='email', logger=None, logging_level=logging.DEBUG):
+def verify_regex(series, regex='email', tag='invalid', logger=None, logging_level=logging.DEBUG):
     """
-    Verify and extract strings using regex from a pandas series.
+    Verify and extract email addresses from a pandas series.
 
     Parameters:
-    - series (pandas.Series): The input series to extract.df
-    - regex (str): The regex pattern to use. Defaults to 'email', which uses a regex email.
+    - series (pandas.Series): The input series containing email addresses.
 
     Returns:
     - pandas.Series: A new series with the extracted email addresses. If an email address is invalid, it will be marked as '[invalid]'. If an email address is empty or None, it will be marked as None.
 
+    Example:
+    >>> series = pd.Series(['john@example.com', 'invalid_email', '', None])
+    >>> verify_email(series)
+    0        john@example.com
+    1            [invalid]
+    2                   None
+    3                   None
+    dtype: object
     """
     logger = create_function_logger('verify_email', logger, level=logging_level)
     log_messages = []
@@ -491,7 +502,7 @@ def verify_regex(series, regex='email', logger=None, logging_level=logging.DEBUG
             if len(str(string)) > 0:
                 index = series[series == string].index[0]
                 log_messages.append(f"Invalid email at index: {index}")
-                return f'{string} [invalid]'
+                return f'{string} [{tag}]'
             else:
                 return None
     
