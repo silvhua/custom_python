@@ -20,7 +20,10 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
-def load_and_describe_csv(filename, path, **kwargs):
+def load_and_describe_csv(
+        filename, path, subset=None, id_column=None, 
+        logger=None, logging_level=logging.INFO, **kwargs
+    ):
     """
     Load a CSV as a dataframe and list the dataframe's columns and data types.
 
@@ -29,13 +32,26 @@ def load_and_describe_csv(filename, path, **kwargs):
     - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
     - kwargs: Additional arguments to pass to pd.read_csv
     """
+    messages_list = []
+    logger = create_function_logger('load_and_describe_csv', logger, level=logging_level)
     df = load_csv(filename, path, **kwargs)
-    print(df.dtypes)
+    if type (id_column) == int:
+        id_column = df.columns[id_column]
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column != None:
+        subset.remove(id_column)
+    duplicate_rows = return_duplicate_rows(
+        df, subset=subset, id_column=id_column, logger=logger, logging_level=logging_level
+        )
+    messages_list.append(f'\tNumber of null records: {df[subset].isnull().all(axis=1).sum()}')
+    logger.debug('\n'.join(messages_list))
+    logger.debug(df.dtypes)
     return df
 
 def save_excel(
     df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, 
-    col_width=None, freeze_at='B2'
+    col_width=None, freeze_at='B2', overwrite=False
     ):
     """
     Export dataframe to Excel.
@@ -49,7 +65,7 @@ def save_excel(
     - col_width (dict): Dictionary specifying column widths. Keys are column indices, values are column widths.
     """
     sheet_name = sheet_name if sheet_name else filename
-    if check_sheet_existence(filename, path, sheet_name=sheet_name) == False:
+    if (check_sheet_existence(filename, path, sheet_name=sheet_name) == False) | (overwrite == True):
         if path:
             path = convert_windows_path(path)
         if append_version:
