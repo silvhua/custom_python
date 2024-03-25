@@ -5,6 +5,35 @@ from wrangling import *
 import numpy as np
 from Custom_Logger import *
 
+def load_and_describe_csv(
+        filename, path, subset=None, id_column=None, 
+        logger=None, logging_level=logging.INFO, **kwargs
+    ):
+    """
+    Load a CSV as a dataframe and list the dataframe's columns and data types.
+
+    Parameters:
+    - filename (str)
+    - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
+    - kwargs: Additional arguments to pass to pd.read_csv
+    """
+    messages_list = []
+    logger = create_function_logger('load_and_describe_csv', logger, level=logging_level)
+    df = load_csv(filename, path, **kwargs)
+    if type (id_column) == int:
+        id_column = df.columns[id_column]
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column != None:
+        subset.remove(id_column)
+    duplicate_rows = return_duplicate_rows(
+        df, subset=subset, id_column=id_column, logger=logger, logging_level=logging_level
+        )
+    messages_list.append(f'\tNumber of null records: {df[subset].isnull().all(axis=1).sum()}')
+    logger.debug('\n'.join(messages_list))
+    logger.debug(df.dtypes)
+    return df
+
 def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
     logger=None
     ):
@@ -66,7 +95,7 @@ def merge_and_validate(
     
     merge_info_message += f"\tSum: {merged_df[indicator].value_counts().sum()}\n"
     
-    duplicate_rows = return_duplicate_rows(merged_df)
+    duplicate_rows = return_duplicate_rows(merged_df, logger=logger)
     if drop_duplicates:
         merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
         merge_info_message += f'\tShape after dropping duplicates: {merged_df.shape}\n'
