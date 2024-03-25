@@ -44,8 +44,7 @@ def merge_and_validate(
     debug_messages = []
     info_messages.append(f'****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
     common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]))
-    # common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]) - set([right_on]))
-    info_messages.append(f'Performing {how} merge: left on `{left_on}` and right on `{right_on}`.')
+    info_messages.append(f'Performing {how} merge: {left_df_name} on `{left_on}` and \n\t{right_df_name} on `{right_on}`.')
     info_messages.append(f'`Using `{indicator}` as indicator column')
     logger.info('\n'.join(info_messages))
     debug_messages.append(f'\tLeft DF shape: {left_df.shape}\n\tRight DF shape: {right_df.shape}\n\tCommon columns: {common_columns}')
