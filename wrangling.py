@@ -865,12 +865,16 @@ def compare_df_columns(
         return parent_df[parent_df[parent_df_column].isin(different_values)]
 
     
-def drop_na(df, subset=None, **kwargs):
+def drop_na(df, subset=None, logger=None, logging_level=logging.INFO, **kwargs):
+    logger = create_function_logger('drop_na', logger, level=logging_level)
+    messages = []
     before_length = len(df)
-    print(f'Shape before dropping nulls: {df.shape}')
+    messages.append(f'***Running `drop_na`***')
+    messages.append(f'Shape before dropping nulls: {df.shape}')
     df = df.dropna(subset=subset, how='all')
-    print(f'\tShape after dropping nulls: {df.shape}')
-    print(f'\t{before_length - len(df)} rows dropped')
+    messages.append(f'\tShape after dropping nulls: {df.shape}')
+    messages.append(f'\t{before_length - len(df)} rows dropped')
+    logger.info('\n'.join(messages))
     return df
 
 # function that prints null values
