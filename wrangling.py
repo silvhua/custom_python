@@ -499,7 +499,7 @@ def filter_any_and_all_chain(
 
     return filtered_df
 
-def return_duplicate_rows(df, subset=None, keep=False, id_column=None):
+def return_duplicate_rows(df, subset=None, keep=False, id_column=None, logger=None, logging_level=logging.DEBUG):
     """
     Identify duplicate rows in a dataframe.
 
@@ -514,17 +514,22 @@ def return_duplicate_rows(df, subset=None, keep=False, id_column=None):
     Returns:
         - DataFrame with the duplicate rows.
     """
-    print(f'DataFrame shape: {df.shape}')
-    print(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
+    logger = create_function_logger('return_duplicate_rows', logger, level=logging_level)
+    messages = []
+    messages.append(f'***Running `return_duplicate_rows`***')
+    messages.append(f'DataFrame shape: {df.shape}')
     if subset == None:
         subset = df.columns.tolist() 
     if id_column in subset:
         subset.remove(id_column)
+    messages.append(f'Subset: {subset}')
+    messages.append(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
     duplicate_index = df.duplicated(subset=subset, keep=keep)
     duplicate_rows = df.loc[duplicate_index].sort_values(by=subset if subset else df.columns[0])
     if id_column:
-        print(f'{id_column} values of duplicate rows: {sorted(list(set(duplicate_rows[id_column])))}')
-    print(f'\tReturning {keep if keep else "all"} duplicate rows.')
+        messages.append(f'{id_column} values of duplicate rows: {sorted(list(set(duplicate_rows[id_column])))}')
+    messages.append(f'\tReturning {keep if keep else "all"} duplicate rows.')
+    logger.debug('\n'.join(messages))
     return duplicate_rows
 
 def remove_duplicates_by_lettercase(df, column='Reference'):
