@@ -591,8 +591,8 @@ def get_duplicates(
     df[duplicate_column_name] = df.duplicated(subset=subset, keep=keep, **kwargs)
     messages_list = []
     messages_list.append(f'Checking for duplicate rows based on these columns: {subset}')
-    messages_list.append(f'\tNumber of duplicate rows `(keep={keep})`: {df[duplicate_column_name].sum()}')
     logger.log('\n'.join(messages_list))
+    logger.info(f'\tNumber of duplicate rows `(keep={keep})`: {df[duplicate_column_name].sum()}')
     return df
 
 def check_for_nulls(
