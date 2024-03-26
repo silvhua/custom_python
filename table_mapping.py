@@ -34,6 +34,52 @@ def load_and_describe_csv(
     logger.debug(df.dtypes)
     return df
 
+def drop_rows_with_value(
+    df, column, value=True, drop_column=True,
+    logger=None, logging_level=logging.INFO, **kwargs
+    ):
+    logger = create_function_logger('drop_rows_with_value', logger, level=logging_level)
+    messages = []
+    before_length = len(df)
+    messages.append(f'\n***Running `drop_rows_with_value` using column "{column}" with value `{value}`***')
+    messages.append(f'\tShape before: {df.shape}')
+    df = df.drop(df[df[column] == value].index)
+    if drop_column:
+        messages.append(f'\t\tDropping column "{column}"')
+        df.drop(columns=[column], inplace=True)
+    messages.append(f'\tShape after: {df.shape}')
+    messages.append(f'\t{before_length - len(df)} rows dropped')
+    logger.info('\n'.join(messages))
+    return df
+
+def table_check(
+        result_df, final_columns, drop_na=False,
+        logger=None, logging_level=logging.DEBUG,
+        **kwargs
+        ):
+    logger = create_function_logger('table_check', logger, level=logging_level)
+    logger.info(f'\n***Running `table_check`***\n\t**kwargs: {kwargs}')
+    result_df = result_df.replace({-1: None}).replace({np.nan: None})[final_columns]
+    result_df = check_for_nulls(
+        result_df, **kwargs, logger=logger
+    )
+    result_df = get_duplicates(
+        result_df, logger=logger
+    )
+    result_df = drop_rows_with_value(
+        result_df, column='duplicate', value=True, drop_column=True, logger=logger
+    )
+    id_column = kwargs.get('id_column', None)
+    subset = kwargs.get('subset', None)
+    if (id_column == None) & (subset == None):
+        drop_na = True
+    if drop_na:
+        null_column_name = kwargs.get('null_column_name', 'null_values')
+        result_df = drop_rows_with_value(
+            result_df, column=null_column_name, value=True, drop_column=True, logger=logger
+        )
+    return result_df 
+
 def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
     logger=None
     ):
