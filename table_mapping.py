@@ -36,7 +36,7 @@ def load_and_describe_csv(
 
 def drop_rows_with_value(
     df, column, value=True, drop_column=True,
-    logger=None, logging_level=logging.INFO, **kwargs
+    logger=None, logging_level=logging.INFO, 
     ):
     logger = create_function_logger('drop_rows_with_value', logger, level=logging_level)
     messages = []
@@ -81,7 +81,7 @@ def table_check(
     return result_df 
 
 def save_tables(
-    result, table_name, exceptions_filter={'duplicate': [True]},
+    result, table_name, exceptions_filter={'null_values': [True]},
     columns_to_drop=[], excel=False, append_version=False,
     path = r'C:\Users\silvh\Documents\Cascadia local', excel_filename='CYSIS Data Mapping local',
     **review_filter_kwargs
