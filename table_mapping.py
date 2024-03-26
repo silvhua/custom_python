@@ -80,6 +80,52 @@ def table_check(
         )
     return result_df 
 
+def save_tables(
+    result, table_name, exceptions_filter={'duplicate': [True]},
+    columns_to_drop=[], excel=False, append_version=False,
+    path = r'C:\Users\silvh\Documents\Cascadia local', excel_filename='CYSIS Data Mapping local',
+    **review_filter_kwargs
+    ):
+    """
+    Remove extra columns to save a version of the table that is ready for load.
+    Filter rows to be excluded (`exceptions_filter`) and save them separately.
+    Filter rows to be reviewed by the client (`**review_filter_kwargs`) and save them separately as an Excel file.
+    """
+    if exceptions_filter:
+        exceptions = filter_df_all_conditions(result, exceptions_filter)
+        # col_width = {col: 20 for col in exceptions.columns}
+        save_csv(
+            exceptions, filename=f'{table_name} exceptions', path=path,  
+            append_version=append_version
+        )
+    if review_filter_kwargs:
+        for_review = filter_df_all_conditions(result, **review_filter_kwargs)
+        col_width = {col: 20 for col in for_review.columns}
+        save_excel(
+            for_review, filename=f'{table_name} for review', path=path, col_width=col_width, 
+            append_version=append_version, overwrite=True
+        )
+    if type(columns_to_drop) == str:
+        columns_to_drop = [columns_to_drop]
+    merge_columns = result.columns[result.columns.str.contains('_merge')].tolist()
+    columns_to_drop += merge_columns
+    result = result.drop(columns=columns_to_drop)
+    save_csv(
+        result,
+        filename = table_name,
+        path = path
+    )
+    if excel:
+        save_excel(
+            result,
+            filename = excel_filename,
+            path = r'C:\Users\silvh\Documents\Cascadia local',
+            sheet_name = table_name,
+            wrapping=False,
+            col_width = None,
+            overwrite=True
+        )
+
 def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
     logger=None
     ):
