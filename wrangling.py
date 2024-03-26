@@ -876,7 +876,7 @@ def drop_na(df, subset=None, logger=None, logging_level=logging.INFO, **kwargs):
     before_length = len(df)
     messages.append(f'***Running `drop_na`***')
     messages.append(f'Shape before dropping nulls: {df.shape}')
-    df = df.dropna(subset=subset, how='all')
+    df = df.dropna(subset=subset, how='all', **kwargs)
     messages.append(f'\tShape after dropping nulls: {df.shape}')
     messages.append(f'\t{before_length - len(df)} rows dropped')
     logger.info('\n'.join(messages))
