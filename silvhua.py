@@ -36,7 +36,8 @@ def save_excel(
     - col_width (dict): Dictionary specifying column widths. Keys are column indices, values are column widths.
     """
     sheet_name = sheet_name if sheet_name else filename
-    if (check_sheet_existence(filename, path, sheet_name=sheet_name) == False) | (overwrite == True):
+    if check_sheet_existence(filename, path, sheet_name=sheet_name) == False:
+    # if (check_sheet_existence(filename, path, sheet_name=sheet_name) == False) | (overwrite == True):
         if path:
             path = convert_windows_path(path)
         if append_version:
