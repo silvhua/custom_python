@@ -7,7 +7,7 @@ from Custom_Logger import *
 
 def load_and_describe_csv(
         filename, path, subset=None, id_column=None, 
-        logger=None, logging_level=logging.INFO, **kwargs
+        logger=None, logging_level=logging.INFO, file_level=logging.DEBUG, **kwargs
     ):
     """
     Load a CSV as a dataframe and list the dataframe's columns and data types.
@@ -18,7 +18,9 @@ def load_and_describe_csv(
     - kwargs: Additional arguments to pass to pd.read_csv
     """
     messages_list = []
-    logger = create_function_logger('load_and_describe_csv', logger, level=logging_level)
+    logger = create_function_logger(
+        'load_and_describe_csv', logger, level=logging_level, file_level=file_level
+    )
     df = load_csv(filename, path, **kwargs)
     if type (id_column) == int:
         id_column = df.columns[id_column]
