@@ -73,11 +73,13 @@ def table_check(
     subset = kwargs.get('subset', None)
     if (id_column == None) & (subset == None):
         drop_na = True
+    null_column_name = kwargs.get('null_column_name', 'null_values')
     if drop_na:
-        null_column_name = kwargs.get('null_column_name', 'null_values')
         result_df = drop_rows_with_value(
             result_df, column=null_column_name, value=True, drop_column=True, logger=logger
         )
+    else:
+        result_df.drop(columns=[null_column_name], inplace=True)
     return result_df 
 
 def save_tables(
