@@ -6,7 +6,7 @@ import numpy as np
 from Custom_Logger import *
 
 def load_and_describe_csv(
-        filename, path, subset=None, id_column=None, 
+        filename, path, subset=None, id_column=0, 
         logger=None, logging_level=logging.INFO, file_level=logging.DEBUG, **kwargs
     ):
     """
@@ -22,6 +22,10 @@ def load_and_describe_csv(
         'load_and_describe_csv', logger, level=logging_level, file_level=file_level
     )
     df = load_csv(filename, path, **kwargs)
+    logger.info(f'\n***Running `load_and_describe_csv`***\n\tfilename: {filename}; subset: {subset}; id_column: {id_column}; kwargs: {kwargs}')
+    messages_list.append(f'Dataframe shape: {df.shape}')
+    messages_list.append(f'DataFrame columns: {[col for col in df.columns]}')
+    messages_list.append(f'\tTime completed: {datetime.now()}')
     if type (id_column) == int:
         id_column = df.columns[id_column]
     if subset == None:
