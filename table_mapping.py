@@ -107,7 +107,7 @@ def save_tables(
             append_version=append_version
         )
     if review_filter_kwargs:
-        for_review = filter_df_all_conditions(result, **review_filter_kwargs)
+        for_review = filter_df_any_condition(result, **review_filter_kwargs)
         col_width = {col: 20 for col in for_review.columns}
         save_excel(
             for_review, filename=f'{table_name} for review', path=path, col_width=col_width, 
