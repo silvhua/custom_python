@@ -124,6 +124,8 @@ def save_tables(
         columns_to_drop = [columns_to_drop]
     merge_columns = result.columns[result.columns.str.contains('_merge')].tolist()
     columns_to_drop += merge_columns
+    if 'duplicate' in result.columns:
+        columns_to_drop += ['duplicate']
     result = result.drop(columns=columns_to_drop)
     if exceptions_filter:
         rows_to_remove = exceptions.index
