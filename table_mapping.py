@@ -101,7 +101,6 @@ def save_tables(
     """
     if exceptions_filter:
         exceptions = filter_df_all_conditions(result, exceptions_filter)
-        # col_width = {col: 20 for col in exceptions.columns}
         save_csv(
             exceptions, filename=f'{table_name} exceptions', path=path,  
             append_version=append_version
@@ -160,59 +159,69 @@ def merge_and_validate(
         nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False,
         logger=None
         ):
-    logger = create_function_logger('merge_and_validate', logger)
-    if nan_fill:
-        left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
-    indicator_root = '_merge' if indicator == True else indicator
-    indicator = indicator_root
-    merge_integer = 1
-    info_messages = []
-    debug_messages = []
-    while indicator in left_df.columns:
-        merge_integer +=1
-        indicator = f'{indicator}{merge_integer}'
-    info_messages.append(f'****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
-    common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]))
-    info_messages.append(f'Performing {how} merge: {left_df_name} on `{left_on}` and \n\t{right_df_name} on `{right_on}`.')
-    info_messages.append(f'`Using `{indicator}` as indicator column')
-    logger.info('\n'.join(info_messages))
-    debug_messages.append(f'\tLeft DF shape: {left_df.shape}\n\tRight DF shape: {right_df.shape}\n\tCommon columns: {common_columns}')
-    
-    merged_df = left_df.merge(
-        right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
-        left_on=left_on, right_on=right_on
-    )
-    merge_info_message = ''
-    merge_info_message += f'Shape after initial merge: {merged_df.shape}\n'
-    debug_messages.append(f'Columns after merge: {[column for column in merged_df.columns]}')
+    merged_df = pd.DataFrame()
+    try:
+        logger = create_function_logger('merge_and_validate', logger)
+        if nan_fill:
+            left_df[left_on] = left_df[left_on].replace({np.nan: nan_fill})
+        indicator_root = '_merge' if indicator == True else indicator
+        indicator = indicator_root
+        merge_integer = 1
+        info_messages = []
+        debug_messages = []
+        while indicator in left_df.columns:
+            merge_integer +=1
+            indicator = f'{indicator}{merge_integer}'
+        info_messages.append(f'****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
+        common_columns = list(set(left_df.columns.tolist()).intersection(
+            set(right_df.columns.tolist())) - set([left_on] if type(left_on)==str else left_on))
+        info_messages.append(f'Performing {how} merge: {left_df_name} on `{left_on}` and \n\t{right_df_name} on `{right_on}`.')
+        info_messages.append(f'`Using `{indicator}` as indicator column')
+        logger.info('\n'.join(info_messages))
+        debug_messages.append(f'\tLeft DF shape: {left_df.shape}\n\tRight DF shape: {right_df.shape}\n\tCommon columns: {common_columns}')
+        
+        merged_df = left_df.merge(
+            right_df, how=how, indicator=indicator, suffixes=(None, '_y'),
+            left_on=left_on, right_on=right_on
+        )
+        merge_info_message = ''
+        merge_info_message += f'Shape after initial merge: {merged_df.shape}\n'
+        debug_messages.append(f'Columns after merge: {[column for column in merged_df.columns]}')
 
-    merge_info_message += f"Merge indicator value counts: {merged_df[indicator].value_counts()}\n"
-    
-    merged_df[indicator] = merged_df[indicator].replace({
-        'left_only': left_df_name, 'right_only': right_df_name, 
-        'both': f'{left_df_name}, {right_df_name}'
-    })
-    
-    merge_info_message += f"\tSum: {merged_df[indicator].value_counts().sum()}\n"
-    
-    duplicate_rows = return_duplicate_rows(merged_df, logger=logger)
-    if drop_duplicates:
-        merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
-        merge_info_message += f'\tShape after dropping duplicates: {merged_df.shape}\n'
-    else:
-        merge_info_message += f'\tDrop duplicates = {str(drop_duplicates)}\n'
-    
-    for column in common_columns:
-        merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
-    if (right_on != left_on) & (right_on in common_columns):
-        merged_df[left_on] = merged_df[left_on].fillna(merged_df[right_on])
-    logger.debug('\n'.join(debug_messages))
-    logger.info(merge_info_message)
-    columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
-    if drop_indictor_column:
-        columns_to_drop.append(indicator)
-    
-    merged_df = merged_df.drop(columns=columns_to_drop)
+        merge_info_message += f"Merge indicator value counts: {merged_df[indicator].value_counts()}\n"
+        
+        merged_df[indicator] = merged_df[indicator].replace({
+            'left_only': left_df_name, 'right_only': right_df_name, 
+            'both': f'{left_df_name}, {right_df_name}'
+        })
+        
+        merge_info_message += f"\tSum: {merged_df[indicator].value_counts().sum()}\n"
+        
+        duplicate_rows = return_duplicate_rows(merged_df, logger=logger)
+        if drop_duplicates:
+            merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
+            merge_info_message += f'\tShape after dropping duplicates: {merged_df.shape}\n'
+        else:
+            merge_info_message += f'\tDrop duplicates = {str(drop_duplicates)}\n'
+        
+        for column in common_columns:
+            merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
+        if (right_on != left_on) & (right_on in common_columns):
+            merged_df[left_on] = merged_df[left_on].fillna(merged_df[right_on])
+        logger.debug('\n'.join(debug_messages))
+        logger.info(merge_info_message)
+        columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
+        if drop_indictor_column:
+            columns_to_drop.append(indicator)
+        
+        merged_df = merged_df.drop(columns=columns_to_drop)
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
     
     return merged_df
 
@@ -350,7 +359,7 @@ def merge_to_replace(
         logger.debug('\n'.join(debug_messages))
         info_messages.append(f'\tLeft DataFrame shape: {left_df.shape}')
         logger.info('\n'.join(info_messages))
-        duplicate_rows = return_duplicate_rows(left_df)
+        duplicate_rows = return_duplicate_rows(left_df, logger=logger)
     except Exception as error:
         exc_type, exc_obj, tb = sys.exc_info()
         f = tb.tb_frame
