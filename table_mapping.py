@@ -291,7 +291,7 @@ def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
         filename = f.f_code.co_filename
         message = f'An error occurred on line {lineno} in {filename}: {error}.'
         logger.error(message)
-    return concatenated_df
+    return concatenated_df.reset_index(drop=True)
 
 def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, renaming_dict={}, logger=None, **kwargs):
     melted_df = pd.DataFrame()
