@@ -273,10 +273,11 @@ def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
             if (len(renaming_dict) > 0) & (axis == 0):  
                 df = df.rename(columns=renaming_dict) 
             parsed_dfs_list.append(df)
-        different_columns = compare_iterables(
-            parsed_dfs_list[0].columns, parsed_dfs_list[1].columns, print_common=0,
-            print_difference=0, logger=logger
-            )    
+        if len(parsed_dfs_list) > 1:
+            different_columns = compare_iterables(
+                parsed_dfs_list[0].columns, parsed_dfs_list[1].columns, print_common=0,
+                print_difference=0, logger=logger
+                )    
         concatenated_df = pd.concat(parsed_dfs_list, axis=axis)  
         logger.info(f'\tShape after concatenation: {concatenated_df.shape}')
     except Exception as error:
