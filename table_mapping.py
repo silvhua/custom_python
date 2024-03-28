@@ -173,7 +173,7 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
 
 def merge_and_validate(
         left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
-        nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False,
+        nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False, id_column='RID',
         logger=None
         ):
     merged_df = pd.DataFrame()
@@ -222,7 +222,8 @@ def merge_and_validate(
             merge_info_message += f'\tDrop duplicates = {str(drop_duplicates)}\n'
         
         for column in common_columns:
-            merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
+            if column != id_column:
+                merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
         if (right_on != left_on) & (right_on in common_columns):
             merged_df[left_on] = merged_df[left_on].fillna(merged_df[right_on])
         logger.debug('\n'.join(debug_messages))
