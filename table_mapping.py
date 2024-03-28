@@ -89,9 +89,11 @@ def table_check(
     return result_df 
 
 def save_tables(
-    result, table_name, exceptions_filter={'null_values': [True]},
+    result, table_name, 
+    exceptions_filter={'null_values': [True]}, exceptions_any_filters=None,
     columns_to_drop=[], excel=False, append_version=False,
     path = r'C:\Users\silvh\Documents\Cascadia local', excel_filename='CYSIS Data Mapping local',
+    logger=None,
     **review_filter_kwargs
     ):
     """
@@ -99,8 +101,13 @@ def save_tables(
     Filter rows to be excluded (`exceptions_filter`) and save them separately.
     Filter rows to be reviewed by the client (`**review_filter_kwargs`) and save them separately as an Excel file.
     """
+    rows_to_remove = None
+    logger = create_function_logger('save_tables', logger, level=10)
+    logger.info(f'*****Running `save_tables`*****')
     if exceptions_filter:
-        exceptions = filter_df_all_conditions(result, exceptions_filter)
+        exceptions = filter_any_and_all(
+            result, all_filters=exceptions_filter, any_filters=exceptions_any_filters
+            )
         save_csv(
             exceptions, filename=f'{table_name} exceptions', path=path,  
             append_version=append_version
@@ -117,6 +124,13 @@ def save_tables(
     merge_columns = result.columns[result.columns.str.contains('_merge')].tolist()
     columns_to_drop += merge_columns
     result = result.drop(columns=columns_to_drop)
+    if exceptions_filter:
+        rows_to_remove = exceptions.index
+        result.loc[rows_to_remove, 'exception'] = True
+        result = drop_rows_with_value(
+            result, column='exception', value=True, drop_column=True,
+            logger=logger
+        )
     save_csv(
         result,
         filename = table_name,
