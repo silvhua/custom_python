@@ -166,11 +166,11 @@ def merge_and_validate(
     indicator_root = '_merge' if indicator == True else indicator
     indicator = indicator_root
     merge_integer = 1
+    info_messages = []
+    debug_messages = []
     while indicator in left_df.columns:
         merge_integer +=1
         indicator = f'{indicator}{merge_integer}'
-    info_messages = []
-    debug_messages = []
     info_messages.append(f'****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
     common_columns = list(set(left_df.columns.tolist()).intersection(set(right_df.columns.tolist())) - set([left_on]))
     info_messages.append(f'Performing {how} merge: {left_df_name} on `{left_on}` and \n\t{right_df_name} on `{right_on}`.')
@@ -204,6 +204,8 @@ def merge_and_validate(
     
     for column in common_columns:
         merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
+    if (right_on != left_on) & (right_on in common_columns):
+        merged_df[left_on] = merged_df[left_on].fillna(merged_df[right_on])
     logger.debug('\n'.join(debug_messages))
     logger.info(merge_info_message)
     columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
