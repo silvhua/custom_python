@@ -69,11 +69,12 @@ def table_check(
     result_df = check_for_nulls(
         result_df, **kwargs, logger=logger
     )
+    duplicate_column_name = 'table_check_duplicate' if 'duplicate' in result_df.columns else 'duplicate'
     result_df = get_duplicates(
-        result_df, logger=logger
+        result_df, logger=logger, duplicate_column_name=duplicate_column_name
     )
     result_df = drop_rows_with_value(
-        result_df, column='duplicate', value=True, drop_column=True, logger=logger
+        result_df, column=duplicate_column_name, value=True, drop_column=True, logger=logger
     )
     id_column = kwargs.get('id_column', None)
     subset = kwargs.get('subset', None)
