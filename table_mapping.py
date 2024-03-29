@@ -301,10 +301,11 @@ def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, 
         concatenated_df = concatenate_df(dfs_list, axis=0, renaming_dict=renaming_dict, logger=logger)    
         for column in date_columns:
             concatenated_df[column] = concatenated_df[column].apply(lambda x: remove_time_from_date_string(x))
-            melted_df = pd.melt(
+        melted_df = pd.melt(
             concatenated_df, 
             id_vars=id_vars+['source_table'], value_vars=value_vars, var_name=var_name, value_name=value_name, 
-            **kwargs)    
+            **kwargs
+        )    
         logger.info(f'\tShape after melting: {melted_df.shape}')
     except Exception as error:
         exc_type, exc_obj, tb = sys.exc_info()
