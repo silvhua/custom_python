@@ -471,6 +471,8 @@ def map_to_new_column(
 def remove_time_from_date_string(date_string, delimiter=' '):
     if type(date_string) == str:
         date = date_string.split(delimiter)[0] if delimiter in date_string else date_string
+    elif type(date_string) == pd.Series:
+        date = date_string.replace(rf'^(.*){delimiter}.*', r'\1', regex=True)
     else:
         date = None
     return date
