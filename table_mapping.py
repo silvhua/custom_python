@@ -735,6 +735,16 @@ def verify_email(series):
     return series
 
 def clean_text(text):
-    # Remove non-alphanumeric characters (except punctuation) and replace them with a space
+    """    
+    Remove non-alphanumeric characters (except punctuation) and replace them with a space
+    """
     cleaned_text = re.sub(r'[^a-zA-Z0-9\s' + re.escape(string.punctuation) + ']', ' ', text)
     return cleaned_text
+    
+def rename_columns_with_regex(df, renaming_dict):
+    """
+    Rename columns in a DataFrame based on a dictionary where the keys and values are regular expressions.
+    """
+    new_columns = pd.Series(df.columns).replace(renaming_dict, regex=True).values
+    df.columns = new_columns
+    return df
