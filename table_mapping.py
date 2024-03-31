@@ -390,7 +390,7 @@ def merge_to_replace(
     return left_df
 
 def one_row_per_id(
-    df, id_column='kIntakeID', sep='_'
+    df, id_column='kClientID', id_sort=None, sort_ascending=False, sep='_', logger=None
     ):
     """
     Reshape a DataFrame that has multiple rows for a given ID value so that every ID value only
@@ -398,17 +398,22 @@ def one_row_per_id(
     rows per ID in the original dataframe. 
     """
     reshaped_df, group_value_columns_dict = pd.DataFrame(), {}
-    print(f'\n***Reshaping DataFrame with `one_row_per_id`***\n')
     try:
+        logger = create_function_logger('one_row_per_id', logger)
+        info_messages = []
+        debug_messages = []
+        logger.info(f'\n***Reshaping DataFrame with `one_row_per_id`***\n')
         def number_rows_in_group(groupby):
+            if id_sort:
+                groupby = groupby.sort_values(id_sort, ascending=sort_ascending)
             groupby = groupby.reset_index(drop=True)
             return groupby
 
-        print(f'Initial shape: {df.shape}')
+        info_messages.append(f'Initial shape: {df.shape}')
         original_columns = df.columns.tolist()
         original_columns.remove(id_column)
         reshaped_df = pd.DataFrame()
-        print(f'Original columns without id_column: {original_columns}')
+        debug_messages.append(f'Original columns without id_column: {original_columns}')
         reshaped_df = df.groupby(id_column).apply(lambda x: number_rows_in_group(x))
         reshaped_df = reshaped_df.unstack()
         reshaped_df = reshaped_df.sort_index(axis=1, level=-1)
@@ -417,7 +422,7 @@ def one_row_per_id(
             new_columns.append(f'{column_tuple[0]}{sep}{column_tuple[1]}')
         reshaped_df.columns = new_columns
         n_groups = reshaped_df.columns.str.contains(original_columns[0]).sum()
-        print(f'Number of groups: {n_groups}')
+        info_messages.append(f'Number of groups: {n_groups}')
         final_columns = [id_column]
         group_value_columns_dict = {}
         # for group in range(1, n_groups + 1):
@@ -429,15 +434,15 @@ def one_row_per_id(
             group_value_columns_dict[group] = group_value_columns
         reshaped_df = reshaped_df.reset_index()
         reshaped_df = reshaped_df[final_columns]
-        print(f'Final shape: {reshaped_df.shape}')
-        print(f'final columns: {[column for column in reshaped_df.columns]}')    
+        info_messages.append(f'Final shape: {reshaped_df.shape}')
+        debug_messages.append(f'final columns: {[column for column in reshaped_df.columns]}')    
     except Exception as error:
         exc_type, exc_obj, tb = sys.exc_info()
         f = tb.tb_frame
         lineno = tb.tb_lineno
         filename = f.f_code.co_filename
         message = f'An error occurred on line {lineno} in {filename}: {error}.'
-        print(message)
+        logger.error(message)
     return reshaped_df, group_value_columns_dict
     
 def map_to_new_column(
