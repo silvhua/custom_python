@@ -580,14 +580,13 @@ def get_duplicates(
         - **kwargs are passed to the pandas `.duplicated` method.
     """
     logger = create_function_logger('get_duplicates', logger, level=logging_level)
-    logger.debug('**Creating column with duplicate indicator**')
+    logger.info(f'**Running `get_duplicates`: Creating `{duplicate_column_name}` column with duplicate indicator**')
     if subset == None:
         subset = df.columns.tolist() 
     if id_column != None:
         subset.remove(id_column)
     if duplicate_column_name in subset:
         subset.remove(duplicate_column_name)
-    print(f'Checking duplicates')
     df[duplicate_column_name] = df.duplicated(subset=subset, keep=keep, **kwargs)
     messages_list = []
     messages_list.append(f'Checking for duplicate rows based on these columns: {subset}')
