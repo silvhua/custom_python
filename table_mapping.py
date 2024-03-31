@@ -527,7 +527,8 @@ def get_dropdown_values(
     return df
 
 def to_iso8601(
-        series, from_tz=None, to_tz='UTC', iso=True, logger=None, logging_level=logging.DEBUG, 
+        series, from_tz='Canada/Eastern', to_tz='Canada/Eastern', iso=True, 
+        logger=None, logging_level=logging.DEBUG, 
         **kwargs
         ):
     """
