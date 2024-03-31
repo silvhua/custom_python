@@ -223,9 +223,11 @@ def merge_and_validate(
         
         for column in common_columns:
             if column != id_column:
+                debug_messages.append(f'Performing fillna on `{column}` column.')
                 merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
         if (right_on != left_on) & (right_on in common_columns):
-            merged_df[left_on] = merged_df[left_on].fillna(merged_df[right_on])
+            debug_messages.append(f'Performing fillna on `{left_on}` with `{right_on}_y` column.')
+            merged_df[left_on] = merged_df[left_on].fillna(merged_df[f'{right_on}_y'])
         logger.debug('\n'.join(debug_messages))
         logger.info(merge_info_message)
         columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
