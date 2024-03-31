@@ -756,3 +756,26 @@ def rename_columns_with_regex(df, renaming_dict):
     new_columns = pd.Series(df.columns).replace(renaming_dict, regex=True).values
     df.columns = new_columns
     return df
+
+def clean_strings_for_salesforce(series, logger=None, logging_level=logging.INFO):
+    """
+    Clean strings in a pandas series for SalesForce compatibility:
+    - Replace double quotes with single quotes.
+    - Replace leading hyphens with single quote for Excel viewing.
+
+    Args:
+        series (pandas.Series): The input series to clean.
+        logger (Optional[logging.Logger]): The logger to use for logging. Defaults to None.
+        logging_level (int): The logging level to use. Defaults to logging.INFO.
+
+    Returns:
+        pandas.Series: The cleaned series.
+    """
+    logger = create_function_logger('clean_strings_for_salesforce', logger)
+    logger.debug(f'***Running `clean_strings_for_salesforce` on series "{series.name}"***')
+    replacement_dict = {
+        r'^-': r"'-",
+        r'"': r"'" # replace single quotes with double for SalesForce compatibility
+    }
+    series = series.replace(replacement_dict, regex=True)
+    return series
