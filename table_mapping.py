@@ -466,13 +466,26 @@ def map_to_new_column(
     """
     final_mapping = {}
     logger = create_function_logger('map_to_new_column', logger)
+    messages = []
+    logger.info(f'***Running `map_to_new_column`: mapping {map_from_column} to {map_to_column} using the following mapping: {mapping}')
+    messages.append(f'dtype of map_from_column: {df[map_from_column].dtypes}')
     if normalize_casing:
         for key, value in mapping.items():
-            final_mapping[key.lower()] = value
+            final_mapping[key.lower() if type(key) == str else key] = value
     else:
         final_mapping = mapping
-    df[map_to_column] = df[map_from_column].str.lower().map(final_mapping)
-    logger.debug(f'Final mapping in `map_to_new_column`: {final_mapping}\nColumns after `map_to_new_column`: {df.columns}')
+    if df[map_from_column].dtypes == 'O':
+        try:
+            map_from_column_name = f'{map_from_column}_lowercase'
+            df[map_from_column_name] = df[map_from_column].str.lower()
+            map_from_column = map_from_column_name
+            messages.append(f'Dtype of column is object.')
+        except:
+            messages.append(f'Dtype of column is not object.')
+            pass
+    df[map_to_column] = df[map_from_column].map(final_mapping)
+    messages.append(f'Final mapping in `map_to_new_column`: {final_mapping}\nColumns after `map_to_new_column`: {df.columns}')
+    logger.debug('\n'.join(messages))
     return df
 
 def remove_time_from_date_string(date_string, delimiter=' '):
