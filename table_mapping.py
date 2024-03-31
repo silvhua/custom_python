@@ -497,12 +497,22 @@ def spreadsheet_to_dict(string):
     result = re.sub(r'\n', r', ', result)
     result = re.sub(r'\t', r': ', result)
     result = re.sub(r'([a-zA-Z0-9_]+)', r'"\1"', result)
-    result = "{" + result + "}"
-    print(f'result string: \n{result}')
-    result = json.loads(result)
+    # return result
+    try:
+        result = "{" + result + "}"
+        print(f'result string: \n{result}')
+        result = json.loads(result)
+    except:
+        result = result.strip('{}').split(', ')
+        new_dict = {}
+        for item in result:
+            key, value = item.split(': ')
+            cleaned_key = re.sub('"', '', key).strip()
+            cleaned_value = re.sub('"', '', value).strip()
+            new_dict[cleaned_key] = cleaned_value
+        result = new_dict
     print(f'Number of dictionary items: {len(result)}')
     return result
-
 def map_many_to_one(row, columns, new_column, mapping_dict):
     key = '__'.join([row[col] for col in columns])
     row[new_column] = mapping_dict.get(key, None)
