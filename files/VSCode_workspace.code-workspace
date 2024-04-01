@@ -1,29 +1,16 @@
 {
 	"folders": [
 		{
-			"path": "../../portfolio-projects"
-		},
-		{
+			"name": "custom_python",
 			"path": ".."
 		},
 		{
-			"name": "GHL-chat",
-			"path": "../../portfolio-projects/GHL-chat"
+			"name": "cascadia",
+			"path": "../../portfolio-projects/cascadia"
 		},
 		{
-			"name": "AI-content",
-			"path": "../../portfolio-projects/AI-content"
-		},
-		{
-			"name": "langchain",
-			"path": "../../portfolio-projects/langchain"
-		},
-		{
-			"path": "../../ginkgo-repos"
-		},
-		{
-			"name": "volunteer",
-			"path": "../../portfolio-projects/volunteer"
+			"name": "brainstation-admissions",
+			"path": "../../../BrainStation/brainstation-admissions"
 		}
 	],
 	"settings": {
