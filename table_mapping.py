@@ -226,8 +226,8 @@ def merge_and_validate(
                 if column != id_column:
                     debug_messages.append(f'Performing fillna on `{column}` column.')
                     merged_df[column] = merged_df[column].fillna(merged_df[f'{column}_y'])
-        if (right_on != left_on) & (right_on in common_columns):
-            debug_messages.append(f'Performing fillna on `{left_on}` with `{right_on}_y` column.')
+        if (right_on != left_on) & (right_on in common_columns) & (how != 'left'):
+            debug_messages.append(f'Okay, performing fillna on `{left_on}` with `{right_on}_y` column.')
             merged_df[left_on] = merged_df[left_on].fillna(merged_df[f'{right_on}_y'])
         logger.debug('\n'.join(debug_messages))
         logger.info(merge_info_message)
