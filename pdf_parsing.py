@@ -1,5 +1,6 @@
 from tabula import read_pdf
 import sys
+import re
 
 def parse_pdf_tolist(
     pdf_filenames, 

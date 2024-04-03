@@ -1,11 +1,11 @@
 import logging
 from datetime import datetime
-from silvhua import *
 
 class Custom_Logger:
     def __init__(
-            self, logger_name=__name__, level=logging.DEBUG, file_level=logging.WARNING,
-            propagate=False, log_file=None, log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files'
+            self, logger_name=__name__, level=logging.DEBUG, file_level=logging.DEBUG,
+            propagate=False, log_file=None, 
+            log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files'
             ):
         """
         Initialize the custom_logger with the specified parameters.
@@ -28,15 +28,16 @@ class Custom_Logger:
         self.logger.setLevel(file_level)
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s:\n%(message)s\n')
         handler_messages = ''
         console_handler = None
+        self.save = True if level == logging.DEBUG else False            
         if len(self.logger.handlers) > 0:
             handler_messages += f'Found existing handlers: {self.logger.handlers}. '
             for handler in self.logger.handlers:
                 if isinstance(handler, logging.StreamHandler):
                     console_handler = handler
-                    handler_messages += f'Found existing file handler: {console_handler}. '
+                    handler_messages += f'Found existing console handler: {console_handler}. '
                     break
         if console_handler == None:
             handler_messages += f'Creating new console handler. '
@@ -60,7 +61,7 @@ class Custom_Logger:
             if file_handler == None:
                 handler_messages += f'Creating new file handler. '
                 file_handler = logging.FileHandler(f'{log_path}/{log_file}')
-            file_handler.setLevel(level)
+            file_handler.setLevel(file_level)
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
             self.file_handler = file_handler
@@ -84,10 +85,11 @@ class Custom_Logger:
         """
         Return the log messages associated with this object.
         """
-
+        for message in self.log_messages:
+            print(message)
         return self.log_messages
     
-    def debug(self, message, save=True):
+    def debug(self, message):
         """
         - Logs a debug message and optionally saves it to the log file.
         - Parameters:
@@ -97,10 +99,10 @@ class Custom_Logger:
             - None
         """
         self.logger.debug(message)
-        if save:
+        if self.save:
             self.save_log_messages('debug', message)
 
-    def info(self, message, save=True):
+    def info(self, message):
         """
         Logs an informational message using the provided message. 
         Parameters:
@@ -108,10 +110,10 @@ class Custom_Logger:
             save (bool): A flag indicating whether to save the log message. Defaults to False.
         """
         self.logger.info(message)
-        if save:
+        if self.save:
             self.save_log_messages('info', message)
 
-    def warning(self, message, save=True):
+    def warning(self, message):
         """
         A method to log a warning message and optionally save it to a file.
 
@@ -119,10 +121,10 @@ class Custom_Logger:
         - save: A boolean indicating whether to save the warning message to a file.
         """
         self.logger.warning(message)
-        if save:
+        if self.save:
             self.save_log_messages('warning', message)
 
-    def error(self, message, save=True):
+    def error(self, message):
         """
         - A method to log an error message and optionally save it to the log file.
         - 
@@ -131,10 +133,10 @@ class Custom_Logger:
         - :return: None
         """
         self.logger.error(message)
-        if save:
+        if self.save:
             self.save_log_messages('error', message)
 
-    def critical(self, message, save=True):
+    def critical(self, message):
         """
         A function that logs a critical message and optionally saves it. 
 
@@ -143,10 +145,19 @@ class Custom_Logger:
             save (bool, optional): Whether to save the critical message. Defaults to False.
         """
         self.logger.critical(message)
-        if save:
+        if self.save:
             self.save_log_messages('critical', message)
+
+    def log(self, message):
+        self.logger.log(self.logger.level, message)
+        if self.save:
+            self.save_log_messages(str(self.logger.level), message)
+
+def convert_windows_path(path):
+    path = f'{path}/'.replace('\\','/')
+    return path
             
-def test_logger(logger, messages_dict, save=True):
+def test_logger(logger, messages_dict):
     """
     A function that logs messages at different levels using the provided logger.
     Parameters:
@@ -166,3 +177,33 @@ def test_logger(logger, messages_dict, save=True):
             logger.error(message, save=save)
         elif level == 'critical':
             logger.critical(message, save=save)
+
+def create_function_logger(
+    function_name, parent_logger, level=logging.INFO,
+    log_file=None, **kwargs
+    ):
+    """
+    Create a logger for a specific function.
+
+    Args:
+        function_name (str): The name of the function.
+        parent_logger (Logger): The logger of the parent function or module.
+            If None (default), a new logger will be created.
+        level (int, optional): The logging level (default is logging.INFO).
+        log_file (str, optional): The path to the log file (default is None).
+        **kwargs: Additional keyword arguments to be passed to Custom_Logger.
+
+    Returns:
+        Logger: The logger for the specific function.
+    """
+    if parent_logger:
+        propagate = True
+        function_logger = parent_logger
+    else:
+        function_logger_name = f'{function_name}'
+        propagate = False
+        function_logger = Custom_Logger(
+                logger_name=function_logger_name, level=level,
+                log_file=log_file, propagate=propagate, **kwargs
+                )
+    return function_logger

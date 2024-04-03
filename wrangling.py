@@ -6,6 +6,7 @@ from silvhua import *
 from datetime import datetime, timedelta
 import re
 import json
+from Custom_Logger import *
 
 def decode_json_string(json_str):
     decoded_dict = json.loads(json_str, object_hook=lambda d: {eval(k): v for k, v in d.items()})
@@ -40,7 +41,7 @@ def spreadsheet_to_tuple_dict(string, key_length=2):
     # print(f'Number of dictionary items: {len(result)}')
     return result
 
-def get_value_counts(df, columns, copy_paste=False):
+def get_value_counts(df, columns, copy_paste=False, logger=None):
     """
     Prints the unique values and their counts for each column in the given dataframe.
 
@@ -51,16 +52,20 @@ def get_value_counts(df, columns, copy_paste=False):
     Returns:
         Pandas Series object from `pd.value_counts()` 
     """
+    logger = create_function_logger('get_value_counts', logger)
     if type(columns) == str:
         columns = [columns]
+    print_data = []
     for column in columns:
-        print(f'Value counts for `{column}` column:')
+        print_data.append(f'Value counts for `{column}` column:')
 
         result = df[column].value_counts()
         if copy_paste:
-            result.reset_index().apply(lambda x: print(f'- {x[column]}: {int(x["count"])}'), axis=1)
-        print(f'\tNull values: {df[column].isnull().sum()}')
-        print(f'\tData type: {df[column].dtype}')
+            result.reset_index().apply(lambda x: print_data.append(f'- {x[column]}: {int(x["count"])}'), axis=1)
+        print_data.append(f'\tNull values: {df[column].isnull().sum()}')
+        print_data.append(f'\tData type: {df[column].dtype}')
+        print_data.append('\n')
+    logger.info('\n'.join(print_data))
     return result
 
 def explore_categorical(df, categorical_columns, show_numbers=True):
@@ -494,7 +499,7 @@ def filter_any_and_all_chain(
 
     return filtered_df
 
-def return_duplicate_rows(df, subset=None, keep=False, id_column=None):
+def return_duplicate_rows(df, subset=None, keep=False, id_column=None, logger=None, logging_level=logging.DEBUG):
     """
     Identify duplicate rows in a dataframe.
 
@@ -509,16 +514,22 @@ def return_duplicate_rows(df, subset=None, keep=False, id_column=None):
     Returns:
         - DataFrame with the duplicate rows.
     """
-    print(f'DataFrame shape: {df.shape}')
-    print(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
-    if (subset == None) & (id_column != None):
-            subset = df.columns.tolist() 
-            subset.remove(id_column)
+    logger = create_function_logger('return_duplicate_rows', logger, level=logging_level)
+    messages = []
+    messages.append(f'***Running `return_duplicate_rows`***')
+    messages.append(f'DataFrame shape: {df.shape}')
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column in subset:
+        subset.remove(id_column)
+    messages.append(f'Subset: {subset}')
     duplicate_index = df.duplicated(subset=subset, keep=keep)
     duplicate_rows = df.loc[duplicate_index].sort_values(by=subset if subset else df.columns[0])
     if id_column:
-        print(f'{id_column} values of duplicate rows: {sorted(list(set(duplicate_rows[id_column])))}')
-    print(f'\tReturning {keep if keep else "all"} duplicate rows.')
+        messages.append(f'{id_column} values of duplicate rows: {sorted(list(set(duplicate_rows[id_column])))}')
+    messages.append(f'\tReturning {keep if keep else "all"} duplicate rows.')
+    logger.debug('\n'.join(messages))
+    logger.info(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
     return duplicate_rows
 
 def remove_duplicates_by_lettercase(df, column='Reference'):
@@ -552,6 +563,67 @@ def remove_duplicates_by_lettercase(df, column='Reference'):
     
     print(f'Number of rows after removing duplicates: {len(df)}')
     
+    return df
+
+def get_duplicates(
+        df, subset=None, keep='first', id_column=None, duplicate_column_name='duplicate',
+        logger=None, logging_level=logging.INFO, **kwargs
+        ):
+    """
+    Add a column that indicates which rows are duplicate rows given the subset of columns.
+            
+    Parameters:
+        - subset (list or None): Subset of column names to check. If none, all columns will be used except for id_column.
+        - id_column (str): Name of the column to exclude from checking.
+        - logger: Custom_Logger instance. If None, new instance is created with the logging level
+            indicated by the `logging_level` parameter.
+        - **kwargs are passed to the pandas `.duplicated` method.
+    """
+    logger = create_function_logger('get_duplicates', logger, level=logging_level)
+    logger.info(f'**Running `get_duplicates`: Creating `{duplicate_column_name}` column with duplicate indicator**')
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column != None:
+        subset.remove(id_column)
+    if duplicate_column_name in subset:
+        subset.remove(duplicate_column_name)
+    df[duplicate_column_name] = df.duplicated(subset=subset, keep=keep, **kwargs)
+    messages_list = []
+    messages_list.append(f'Checking for duplicate rows based on these columns: {subset}')
+    logger.log('\n'.join(messages_list))
+    logger.info(f'\tNumber of duplicate rows `(keep={keep})`: {df[duplicate_column_name].sum()}')
+    return df
+
+def check_for_nulls(
+        df, subset=None, id_column=None, how='all', null_column_name='null_values',
+        logger=None, logging_level=logging.INFO
+        ):
+    """
+    Add a column that indicates which rows have null values for the subset of columns.
+            
+    Parameters:
+        - subset (list or None): Subset of column names to check. If none, all columns will be used except for id_column.
+        - id_column (str): Name of the column to exclude from checking.
+        - logger: Custom_Logger instance. If None, new instance is created with the logging level
+            indicated by the `logging_level` parameter.
+    """
+    logger = create_function_logger('check_for_nulls', logger, level=logging_level)
+    logger.debug('**Creating column with nulls indicator**')
+    if subset == None:
+        subset = df.columns.tolist() 
+    if id_column != None:
+        subset.remove(id_column)
+    if null_column_name in subset:
+        subset.remove(null_column_name)
+
+    messages_list = []
+    messages_list.append(f'Checking for null values in these columns: {subset}')
+    if how == 'all':
+        df[null_column_name] = df[subset].isnull().all(axis=1)
+    else:
+        df[null_column_name] = df[subset].isnull().any(axis=1)
+    messages_list.append(f'\tNumber of null records: {df[null_column_name].sum()}')
+    logger.log('\n'.join(messages_list))
     return df
 
 def convert_dtypes(
@@ -683,6 +755,7 @@ def convert_to_pascal_case(text):
     words = [w.title() for w in words]
     return ''.join(words)
 
+
 # convert dates from string to datetime objects
 def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
     """ 
@@ -714,7 +787,7 @@ def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
     print('\tTime completed:', datetime.now())
     return df
 
-def compare_iterables(iterable1, iterable2, print_common=False, print_difference=True):
+def compare_iterables(iterable1, iterable2, print_common=False, print_difference=True, logger=None, logging_level=logging.DEBUG):
     """
     Print the number of common values and unique values between two iterables (e.g. lists, series).
     
@@ -722,21 +795,35 @@ def compare_iterables(iterable1, iterable2, print_common=False, print_difference
         - different_values (list)
         - common_values (list)           
     """
+    logger = create_function_logger('compare_iterables', logger, level=logging_level)
     common_values = set(iterable1) & set(iterable2)
+    info_message = '***`compare_iterables`***: \n'
+    debug_message = ''
+
     if len(iterable1) > len(iterable2):
-        different_values = list(set(iterable1) - set(iterable2))
-        print(f'Proper subset = {set(iterable2) < set(iterable1)}')
+        larger_set = set(iterable1)
+        smaller_set = set(iterable2)
     else:
-        different_values = list(set(iterable2) - set(iterable1))
-        print(f'Proper subset = {set(iterable1) < set(iterable2)}')
-    print('Unique values in iterable 1:',len(set(iterable1)))
-    print('Unique values in iterable 2:',len(set(iterable2)))
-    print('Number of common values between iterables 1 and 2:',len(common_values))
-    print('Number of different values between iterables 1 and 2:',len(different_values))
-    if print_common == True:
-        print('Values in common:',common_values)
-    if print_difference == True:
-        print('Different values:',different_values)
+        larger_set = set(iterable2)
+        smaller_set = set(iterable1)
+    different_values = list(larger_set - smaller_set)
+    debug_message += f'Proper subset = {smaller_set < larger_set} \n'
+    opposite_subtraction = list(smaller_set - larger_set)
+    debug_message = f'\tOpposite set subtraction ({len(opposite_subtraction)} values): {opposite_subtraction}\n'
+    debug_message += f'Unique values in iterable 1: {len(set(iterable1))}\n'
+    debug_message += f'Unique values in iterable 2: {len(set(iterable2))}\n'
+    info_message += f'Number of common values between iterables 1 and 2: {len(common_values)}\n'
+    info_message += f'Number of different values between iterables 1 and 2: {len(different_values)}\n'
+    if (logger.console_handler.level <=10) | (print_common == True):
+        info_message += f'Values in common: {common_values} \n'
+    else:
+        debug_message +=  f'Values in common: {common_values} \n'
+    if (logger.console_handler.level <=10) | (print_difference == True):
+        info_message += f'Different values: {different_values} \n'
+    else:
+        debug_message += f'Different values: {different_values} \n'
+    logger.info(info_message)
+    logger.debug(debug_message)
     return different_values, common_values
 
 def find_unique_df_ids(df1, df1_column, df2, df2_column, **kwargs):
@@ -752,36 +839,46 @@ def find_unique_df_ids(df1, df1_column, df2, df2_column, **kwargs):
     )
     return different_ids, common_ids
 
-def compare_df_columns(df1, df1_column, df2, df2_column,print_common=False,print_difference=True):
+def compare_df_columns(
+        df1, df1_column, df2, df2_column,print_common=False,print_difference=True, logger=None, logging_level=logging.DEBUG
+        ):
     """
     Print the number of common values and unique values between two dataframe columns.
     Return the unique rows of the dataframe with more records.
     
     """
-    df1_values = df1[df1_column].unique()
-    df2_values = df2[df2_column].unique()
+    logger = create_function_logger('compare_iterables', logger, level=logging_level)
+    df1_values = df1[df1_column].values
+    df2_values = df2[df2_column].values
     different_values, common_values = compare_iterables(
         df1[df1_column].values, df2[df2_column], 
-        print_common=print_common, print_difference=print_difference
+        print_common=print_common, print_difference=print_difference,
+        logger=logger, logging_level=logging_level
     )
-    if len(df1_values) > len(df2_values):
-        parent_df = df1
-        parent_df_column = df1_column
+    if df1.equals(df2):
+        logger.info(f'Returning rows in DataFrame where {df1_column} != {df2_column}')
+        return df1[df1[df1_column] != df1[df2_column]].dropna(subset=[df1_column, df2_column], how='all')
     else:
-        parent_df = df2
-        parent_df_column = df2_column
-    if print_common == True:
-        print('Values in common:', common_values)
-    if print_difference == True:
-        print('Different values:', different_values)
-    return parent_df[parent_df[parent_df_column].isin(different_values)]
+        logger.info(f'Returning different rows of the larger DataFrame.')
+        if len(df1_values) > len(df2_values):
+            parent_df = df1
+            parent_df_column = df1_column
+        else:
+            parent_df = df2
+            parent_df_column = df2_column
+        return parent_df[parent_df[parent_df_column].isin(different_values)]
+
     
-def drop_na(df, subset=None, **kwargs):
+def drop_na(df, subset=None, logger=None, logging_level=logging.INFO, **kwargs):
+    logger = create_function_logger('drop_na', logger, level=logging_level)
+    messages = []
     before_length = len(df)
-    print(f'Shape before dropping nulls: {df.shape}')
-    df = df.dropna(subset=subset, how='all')
-    print(f'\tShape after dropping nulls: {df.shape}')
-    print(f'\t{before_length - len(df)} rows dropped')
+    messages.append(f'***Running `drop_na` on subset {subset}***')
+    messages.append(f'Shape before dropping nulls: {df.shape}')
+    df = df.dropna(subset=subset, how='all', **kwargs)
+    messages.append(f'\tShape after dropping nulls: {df.shape}')
+    messages.append(f'\t{before_length - len(df)} rows dropped')
+    logger.info('\n'.join(messages))
     return df
 
 # function that prints null values

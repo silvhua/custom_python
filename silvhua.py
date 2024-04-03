@@ -20,22 +20,9 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
-def load_and_describe_csv(filename, path, **kwargs):
-    """
-    Load a CSV as a dataframe and list the dataframe's columns and data types.
-
-    Parameters:
-    - filename (str)
-    - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
-    - kwargs: Additional arguments to pass to pd.read_csv
-    """
-    df = load_csv(filename, path, **kwargs)
-    print(df.dtypes)
-    return df
-
 def save_excel(
     df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, 
-    col_width=None, freeze_at='B2'
+    col_width=None, freeze_at='B2', overwrite=False
     ):
     """
     Export dataframe to Excel.
@@ -50,6 +37,7 @@ def save_excel(
     """
     sheet_name = sheet_name if sheet_name else filename
     if check_sheet_existence(filename, path, sheet_name=sheet_name) == False:
+    # if (check_sheet_existence(filename, path, sheet_name=sheet_name) == False) | (overwrite == True):
         if path:
             path = convert_windows_path(path)
         if append_version:
