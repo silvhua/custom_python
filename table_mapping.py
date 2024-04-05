@@ -806,3 +806,33 @@ def clean_strings_for_salesforce(series, logger=None, logging_level=logging.INFO
     }
     series = series.replace(replacement_dict, regex=True)
     return series
+
+def collapse_by_id(df, groupby, id_column, subset=None, drop_duplicates=True,logger=None):
+    """
+    Groupby id_column(s) and fillna.
+    """
+    logger = create_function_logger('collapse_by_id', logger)
+    logger.info(f'***Running `collapse_by_id` with groupby `{groupby}` and id_column `{id_column}`***')
+    filled_df = df.copy()
+    filled_df = filled_df.groupby(groupby).apply(
+        lambda x: x.fillna(method='ffill').apply(
+        lambda x: x.fillna(method='bfill'))
+        ).reset_index(drop=True)
+    
+    filled_df = get_duplicates(filled_df, id_column=id_column, subset=subset, logger=logger)
+    if drop_duplicates:
+        filled_df = drop_rows_with_value(
+            filled_df, column='duplicate', value=True, drop_column=True, logger=logger
+        )
+    return filled_df
+
+def deduplicate(df,  logger=None, **kwargs):
+    logger = create_function_logger('deduplicate', logger)
+    logger.info(f'***Running `deduplicate`***') 
+    df = get_duplicates(
+        df, **kwargs
+    )
+    df = drop_rows_with_value(
+        df, column='duplicate', value=True, drop_column=True, logger=logger
+    )
+    return df
