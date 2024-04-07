@@ -153,7 +153,7 @@ def save_tables(
 def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
     logger=None
     ):
-    logger = create_function_logger('merge_and_validate', logger)
+    logger = create_function_logger(f'concat_columns_{__name__}', logger)
     try:
         df[columns] = df[columns].replace({np.nan: ''}).replace({-1: ''}).astype(str)
         df[new_column] = df[columns[0]]
