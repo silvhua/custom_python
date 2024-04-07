@@ -168,7 +168,7 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
         lineno = tb.tb_lineno
         filename = f.f_code.co_filename
         message = f'An error occurred on line {lineno} in {filename}: {error}.'
-        print(message)
+        logger.error(message)
     return df
 
 def merge_and_validate(
