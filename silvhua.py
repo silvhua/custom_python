@@ -308,7 +308,7 @@ def save_output(df, filename=None, description=None, append_version=True, iterat
             print('\tUnable to save CSV')
 
 
-def save_to_json(obj, filename=None, description='output_dictionary', append_version=False,
+def save_to_json(obj, filename=None, append_version=False,
     path=r'C:\Users\silvh\OneDrive\lighthouse\Ginkgo coding\content-summarization\output\json'
     ):
     """
@@ -319,11 +319,8 @@ def save_to_json(obj, filename=None, description='output_dictionary', append_ver
     - path (raw string): Use the format r'<path>'. If None, file is saved in same directory as script.
     - append_version (bool): If true, append date and time to end of filename.
     """
-    if description:
-        filename = f'{description}_{datetime.now().strftime("%Y-%m-%d_%H%M")}'
-        append_version = False
-    elif filename == None:
-        filename = f'{datetime.now().strftime("%Y-%m-%d_%H%M")}_outputs'
+    if filename == None:
+        filename = f'outputs_{datetime.now().strftime("%Y-%m-%d_%H%M")}'
         append_version = False
     if path:
         path = f'{path}/'.replace('\\','/')
