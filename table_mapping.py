@@ -556,12 +556,21 @@ def spreadsheet_to_tuple_dict(string, key_length=2):
     
     print(f'key regex capture groups: {key_regex_capture_groups}')
     result = re.sub(key_regex, rf'{key_regex_capture_groups}: "\{key_length+1}"', result).rstrip(',\n')
-    result = "\n{" + result + "}\n"
+    result = "{" + result + "}"
 
-    # print(f'result string: \n{result}')
-    result = json.loads(result)
-    # print(f'Number of dictionary items: {len(result)}')
-    return result
+    try:
+        new_dict = json.loads(result)
+    except:
+        result_list = result.strip('{}').split(',')
+        new_dict = {}
+        for item in result_list:
+            print(f'Item: {item}')
+            key, value = item.split(': ')
+            cleaned_key = re.sub('"', '', key).strip()
+            cleaned_value = re.sub('"', '', value).strip()
+            new_dict[cleaned_key] = cleaned_value
+    print(f'Number of dictionary items: {len(new_dict)}')
+    return new_dict
 
 def get_dropdown_values(
         df, dropdown_columns, 
