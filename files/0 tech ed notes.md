@@ -556,6 +556,42 @@ for (let crewMember in spaceship.crew) {
 ```
 Our `for...in` will iterate through each element of the `spaceship.crew` object. In each iteration, the variable `crewMember` is set to one of `spaceship.crew`'s keys, enabling us to log a list of crew members’ role and name.
 
+## Getters
+Getters are methods that get and return the internal properties of an object. 
+```JavaScript
+const person = {
+  _firstName: 'John',
+  _lastName: 'Doe',
+  get fullName() {
+    if (this._firstName && this._lastName){
+      return `${this._firstName} ${this._lastName}`;
+    } else {
+      return 'Missing a first name or a last name.';
+    }
+  }
+}
+
+// To call the getter method: 
+person.fullName; // 'John Doe'
+```
+## Setters
+```JavaScript
+const person = {
+  _age: 37,
+  set age(newAge){
+    if (typeof newAge === 'number'){
+      this._age = newAge;
+    } else {
+      console.log('You must assign a number to age');
+    }
+  }
+};
+
+// To call the setter method:
+person.age = 40;
+console.log(person._age); // Logs: 40
+person.age = '40'; // Logs: You must assign a number to age
+```
 # DataCamp ETL in Python
 
 ```python
