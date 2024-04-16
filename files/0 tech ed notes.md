@@ -454,6 +454,9 @@ Function/Method | Description
 `.forEach()` | Performs a callback function on each element and returns `undefined`
 `.map()` | Same as `.forEach()` but returns a new array.
 `.filter()` | returns an array of elements after filtering out certain elements from the original array. 
+`.findIndex()` | return the index of the first element that evaluates to true in the callback function.
+`array.reduce((accumulator, currentValue, index, array) => {...}, initialValue)` | returns a single value after iterating through the elements of an array, thereby reducing the array. [documentation](https://www.codecademy.com/resources/docs/javascript/arrays/reduce?page_ref=catalog)
+`.some(callback_function)` | returns `true` if at least one element in the array passes a test.
 
 ### Syntax options
 
@@ -476,6 +479,82 @@ function printGrocery(element){
  
 groceries.forEach(printGrocery);
 ```
+`.forEach()`
+```javascript
+const numbers = [1, 2, 4, 10];
+
+const summedNums = numbers.reduce((accumulator, currentValue) => {
+  return accumulator + currentValue
+}, 100)  // <- Second argument for .reduce()
+
+console.log(summedNums); // Output: 117
+```
+## Methods
+
+We can include methods in our object literals by creating ordinary, colon-separated key-value pairs. The key serves as our method’s name, while the value is an anonymous function expression.
+```javascript
+const alienShip = {
+  invade: function () { 
+    console.log('Hello! We have come to dominate your planet. Instead of Earth, it shall be called New Xaculon.')
+  }
+};
+```
+With the new method syntax introduced in ES6 we can omit the colon and the function keyword.
+```javascript
+const alienShip = {
+  invade () { 
+    console.log('Hello! We have come to dominate your planet. Instead of Earth, it shall be called New Xaculon.')
+  }
+};
+```
+Object methods are invoked by appending the object’s name with the dot operator followed by the method name and parentheses:
+```javascript
+alienShip.invade(); // Prints 'Hello! We have come to dominate your planet. Instead of Earth, it shall be called New Xaculon.'
+```
+Methods can be added to an object the same way as adding properties.
+```javascript
+const alienShip = {
+  retreat () {
+    console.log(retreatMessage)
+  }
+}
+alienShip.takeOff = function () {
+  console.log('Spim... Borp... Glix... Blastoff!')
+}
+```
+
+## Looping through objects
+```JavaScript
+let spaceship = {
+  crew: {
+    captain: { 
+      name: 'Lily', 
+      degree: 'Computer Engineering', 
+      cheerTeam() { console.log('You got this!') } 
+    },
+    'chief officer': { 
+      name: 'Dan', 
+      degree: 'Aerospace Engineering', 
+      agree() { console.log('I agree, captain!') } 
+    },
+    medic: { 
+      name: 'Clementine', 
+      degree: 'Physics', 
+      announce() { console.log(`Jets on!`) } },
+    translator: {
+      name: 'Shauna', 
+      degree: 'Conservation Science', 
+      powerFuel() { console.log('The tank is full!') } 
+    }
+  }
+}; 
+
+// for...in
+for (let crewMember in spaceship.crew) {
+  console.log(`${crewMember}: ${spaceship.crew[crewMember].name}`);
+}
+```
+Our `for...in` will iterate through each element of the `spaceship.crew` object. In each iteration, the variable `crewMember` is set to one of `spaceship.crew`'s keys, enabling us to log a list of crew members’ role and name.
 
 # DataCamp ETL in Python
 
