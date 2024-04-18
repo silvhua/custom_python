@@ -592,6 +592,66 @@ person.age = 40;
 console.log(person._age); // Logs: 40
 person.age = '40'; // Logs: You must assign a number to age
 ```
+## Factory functions
+```JavaScript
+const monsterFactory = (name, age, energySource, catchPhrase) => {
+  return { 
+    name: name,
+    age: age, 
+    energySource: energySource,
+    scare() {
+      console.log(catchPhrase);
+    } 
+  }
+};
+```
+
+### Property value short hand
+
+```JavaScript
+const monsterFactory = (name, age) => {
+  return { 
+    name: name,
+    age: age
+  }
+};
+```
+Equivalent:
+```JavaScript
+const monsterFactory = (name, age) => {
+  return { 
+    name,
+    age 
+  }
+};
+```
+### Desctructured Assignment
+Useful when creating a new variable that is a property of an object.
+```JavaScript
+const vampire = {
+  name: 'Dracula',
+  residence: 'Transylvania',
+  preferences: {
+    day: 'stay inside',
+    night: 'satisfy appetite'
+  }
+};
+
+const residence = vampire.residence; 
+console.log(residence); // Prints 'Transylvania' 
+
+// Equivalent short hand:
+const { residence } = vampire; 
+console.log(residence); // Prints 'Transylvania'
+
+// Extracting a nested property:
+const { day } = vampire.preferences; 
+console.log(day); // Prints 'stay inside'
+```
+
+## Built-in Object Methods
+[MDN’s object instance documentation](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object#Methods)
+
 # DataCamp ETL in Python
 
 ```python
