@@ -1734,3 +1734,13 @@ Output from `sam logs --tail --stack-name sam-app`:
 ```
 
 ## [Look at module 7 on Managing Permissions](https://catalog.workshops.aws/complete-aws-sam/en-US/module-7-permissions)
+
+# Django
+Task | Command | Notes
+--- | --- | ---
+Intialize a project | `django-admin startproject mysite` | Creates a new folder `mysite` in the current directory.  
+Start the Django development server. | `python manage.py runserver` | By default, the runserver command starts the development server on the internal IP at port 8000. If you want to change the server’s port, pass it as a command-line argument. e.g. `python manage.py runserver 8080`
+Create a new app | `python manage.py startapp app_name` | Generates the basic directory structure of an app in a directory called `app_name`.
+Create the required tables in the database. | `python manage.py migrate`
+Tell Django that you've made changes to your models and that you'd like changes to be stored as a migration. | `python manage.py makemigrations polls`
+See the SQL that migration would run based on the file creted by the `makemigration` command | `python manage.py sqlmigrate polls 0001` | After this step, run `python manage.py migrate` again to apply the migration (e.g. generate new tables)
