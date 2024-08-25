@@ -1,6 +1,6 @@
 conda create -n env_name && ^
 conda activate env_name && ^
-@REM conda install -y pip && ^
+conda install -y pip && ^
 @REM conda install -y openai && ^
 @REM conda install -y sqlalchemy && ^
 @REM pip install -y psycopg2 && ^

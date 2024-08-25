@@ -1,0 +1,44 @@
+{
+	"folders": [
+		{
+			"name": "script-templates",
+			"path": "../../../BrainStation/script-templates"
+		},
+		{
+			"name": "brainstation-material",
+			"path": "../../../BrainStation/brainstation-material"
+		},
+		{
+			"name": "tutorials",
+			"path": "../../../BrainStation/tutorials"
+		},
+		{
+			"name": "brainstation-projects",
+			"path": "../../../BrainStation/brainstation-projects"
+		},
+		{
+			"name": "notion-private",
+			"path": "../../portfolio-projects/notion-private"
+		},
+		{
+			"path": "../../../../Documents/capstone"
+		}
+	],
+	"settings": {
+		"python.analysis.extraPaths": [
+			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
+			"C:/Users/silvh/OneDrive/lighthouse/Ginkgo coding/content-summarization/src",
+			"C:/Users/silvh/OneDrive/lighthouse/portfolio-projects/cascadia/src"
+		],
+		"editor.wordWrap": "on",
+		"notebook.output.textLineLimit": 50,
+		"liveServer.settings.multiRootWorkspaceName": "brainstation-projects",
+		"editor.formatOnType": true,
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.tabSize": 2,
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": []
+	}
+}

@@ -3,14 +3,6 @@
 		{
 			"name": "custom_python",
 			"path": ".."
-		},
-		{
-			"name": "cascadia",
-			"path": "../../portfolio-projects/cascadia"
-		},
-		{
-			"name": "brainstation-admissions",
-			"path": "../../../BrainStation/brainstation-admissions"
 		}
 	],
 	"settings": {
@@ -21,5 +13,6 @@
 		],
 		"editor.wordWrap": "off",
 		"notebook.output.textLineLimit": 50,
+		"liveServer.settings.multiRootWorkspaceName": "brainstation-material",
 	}
 }

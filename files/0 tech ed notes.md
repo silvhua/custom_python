@@ -1,3 +1,15 @@
+# Node & nvm
+[Node.js on WSL](https://learn.microsoft.com/en-us/windows/dev-environment/javascript/nodejs-on-wsl#install-nvm-nodejs-and-npm)
+
+Command | Description | Notes
+--- | ---- | ---
+`node --version` | Verify that Node.js is installed and the current default version
+`nvm ls` | List the versions of node currently installed
+`nvm use node` | switch to the Current version
+`nvm use --lts` | switch to the LTS version.
+`nvm use v8.2.1` | Switch to that version
+`nvm ls-remote` | List all versions of Node available. 
+
 # [Git Workflow](https://data.compass.lighthouselabs.ca/days/w01d1/activities/149)
 
 Terminal commands (steps in bold are required each time to update a file)
@@ -242,21 +254,21 @@ Description | `SELECT ...` | Example
 Shift time series 1 row down | `lag(column_to_adjust) OVER (ORDER BY ordering_column)` | `lag(date) OVER (ORDER BY date)`
 Shift time series 1 row up | `lead(column_to_adjust) OVER (ORDER BY ordering_column)`
 
-Example: Calculate time between events
+| Example: Calculate time between events
 ```sql
 SELECT date,
     date - lag(date) OVER (ORDER BY date) AS gap
   FROM sales;
 ```
 
-Example: Calculate average time between events
+| Example: Calculate average time between events
 ```sql
 SELECT avg(gap)
     FROM (SELECT date - lag(date) OVER (ORDER BY date) AS gap
       FROM sales) AS gaps;
 ```
 
-Example: Calculate change in a time series
+| Example: Calculate change in a time series
 ```sql
 SELECT date,
   amount,
@@ -880,7 +892,7 @@ def save_new_raw_data():
                 reader = csv.DictReader(csv_file)
 
                 row = next(reader)  # Get first row from reader
-                print("[Extract] First row example:", row)
+                print("[Extract] First row | example:", row)
 
                 # Open the CSV file in write mode
                 with open(
@@ -1744,3 +1756,19 @@ Create a new app | `python manage.py startapp app_name` | Generates the basic di
 Create the required tables in the database. | `python manage.py migrate`
 Tell Django that you've made changes to your models and that you'd like changes to be stored as a migration. | `python manage.py makemigrations polls`
 See the SQL that migration would run based on the file creted by the `makemigration` command | `python manage.py sqlmigrate polls 0001` | After this step, run `python manage.py migrate` again to apply the migration (e.g. generate new tables)
+Create admin user | `python manage.py createsuperuser`
+
+# Codecademy: Learn C#
+
+Command | Description | Notes
+--- | ---- | ---
+`dotnet run` | Run interactive code
+`Console.WriteLine("Hello world")` | Print to console
+`Console.ReadLine()` | Capture text that a user types into the console.
+`Math.Abs()` | find the absolute value of a number. | Example: Math.Abs(-5) returns 5.
+`Math.Sqrt()` | find the square root of a number. | Example: Math.Sqrt(16) returns 4.
+`Math.Floor()` | round the given double or decimal down to the nearest whole number. | Example: Math.Floor(8.65) returns 8.
+`Math.Min()` | returns the smaller of two numbers. | Example: Math.Min(39, 12) returns 12.
+`Math.Pow()`
+`Math.Max()`
+`Math.Ceiling()`

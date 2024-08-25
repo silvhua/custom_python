@@ -1,13 +1,14 @@
 {
 	"folders": [
 		{
-			"path": "../../../../../../../../home/silvhua/repositories"
+			"path": "../../../../../../../../home/silvhua/brainstation"
 		},
 		{
-			"path": "../../../../../../../../home/silvhua/custom_python"
+			"path": "../../../BrainStation/script-templates"
 		},
 		{
-			"path": "../../../BrainStation/brainstation-material"
+			"name": "silvia-hua-brainflix-server",
+			"path": "../../../../../../../../home/silvhua/brainstation/08-brainflix-server/silvia-hua-brainflix-server"
 		}
 	],
 	"settings": {

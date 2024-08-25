@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../portfolio-projects/binary-tree"
+		},
+		{
+			"path": "../../../datajam/datajam-site"
+		},
+		{
+			"path": "../../../datajam/datajam-test"
+		}
+	],
+	"settings": {
+		"python.analysis.extraPaths": [
+			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
+			"C:/Users/silvh/OneDrive/lighthouse/portfolio-projects/binary-tree/src"
+		]
+	}
+}
