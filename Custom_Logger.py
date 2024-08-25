@@ -160,7 +160,7 @@ def convert_windows_path(path):
     path = f'{path}/'.replace('\\','/')
     return path
             
-def test_logger(logger, messages_dict):
+def test_logger(logger, messages_dict, save):
     """
     A function that logs messages at different levels using the provided logger.
     Parameters:
