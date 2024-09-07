@@ -1760,9 +1760,14 @@ Create admin user | `python manage.py createsuperuser`
 
 # Codecademy: Learn C#
 
-Command | Description | Notes
+Terminal Command | Description | Notes
 --- | ---- | ---
 `dotnet run` | Run interactive code
+`dotnet new console -n ProjectName` |
+`dotnet --list-sdks` | List available SDKs
+
+Function | Description | Notes
+--- | ---- | ---
 `Console.WriteLine("Hello world")` | Print to console
 `Console.ReadLine()` | Capture text that a user types into the console.
 `Math.Abs()` | find the absolute value of a number. | Example: Math.Abs(-5) returns 5.
@@ -1772,3 +1777,27 @@ Command | Description | Notes
 `Math.Pow()`
 `Math.Max()`
 `Math.Ceiling()`
+
+```C#
+int id = 100
+
+// We can use an expression with a string interpolation.
+string multipliedNumber = $"The multiplied ID is {id * 10}.";
+
+Console.WriteLine(multipliedNumber);
+```
+
+## Building arrays
+```csharp
+int[] plantHeights;
+
+// define and initialize an array at the same time
+int[] plantHeights = { 3, 4, 6 };
+
+// `new` signifies instantiation of a new array
+int[] plantHeights = new int[] { 3, 4, 6 };
+
+// declare an array and then initialize it later
+int[] plantHeights;
+plantHeights = new int[] { 3, 4, 6 };   
+```

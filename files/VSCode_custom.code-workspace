@@ -11,12 +11,16 @@
 		},
 		{
 			"path": "../../../datajam/datajam-test"
+		},
+		{
+			"path": "../../portfolio-projects/learning"
 		}
 	],
 	"settings": {
 		"python.analysis.extraPaths": [
 			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
 			"C:/Users/silvh/OneDrive/lighthouse/portfolio-projects/binary-tree/src"
-		]
+		],
+		"editor.detectIndentation": true
 	}
 }
