@@ -1787,7 +1787,7 @@ string multipliedNumber = $"The multiplied ID is {id * 10}.";
 Console.WriteLine(multipliedNumber);
 ```
 
-## Building arrays
+## Arrays
 ```csharp
 int[] plantHeights;
 
@@ -1800,4 +1800,68 @@ int[] plantHeights = new int[] { 3, 4, 6 };
 // declare an array and then initialize it later
 int[] plantHeights;
 plantHeights = new int[] { 3, 4, 6 };   
+
+//  initialize an array that has a length of 3 without specifying what those values are
+// plantHeights will be equal to [0, 0, 0]
+int[] plantHeights = new int[3]; 
 ```
+
+### Array methods
+Command | Description | Notes
+--- | ---- | ---
+`Array.Sort(array)` | Done in place.
+`Array.IndexOf(array, element)` | Find the index of an element in the array | If the value appears more than once in an array, it returns only the index of the first occurrence within the specified range. If it does not find the value at all, it returns `-1`.
+ `Array.Reverse(array)` | Returns the array with the original elements in reverse order. | Done in place.
+
+## Loops
+### `do...while`
+This loop will execute the code block once, before checking if the condition is true, then it will repeat the loop as long as the condition is true.
+
+```csharp
+do
+{
+  statement;
+} while (condition);
+```
+### `foreach`
+
+```csharp
+// pseudocode
+foreach (type element in sequence)
+{
+  statement;
+}
+
+// example
+string[] melody = { "a", "b", "c", "c", "b" };
+foreach (string note in melody)
+{
+  Console.WriteLine(note);
+}
+```
+
+### Jump statements
+* Jump statements include `break`, `continue`, `return`
+
+## Lists
+* Basic construction uses parentheses ( ) and no values.
+* Object initialization uses curly braces { } and the actual values go in-between.
+```csharp
+// To use lists, we’ll need to add this to the top of our file
+using System.Collections.Generic;
+
+// We create a list using the new keyword. We specify the element type inside angle brackets: < >. In this example, the list is named citiesList and it holds instances of the type string
+// Basic construction
+List<string> citiesList = new List<string>();
+citiesList.Add("Delhi");
+citiesList.Add("Los Angeles");
+
+// Create the same list using object initialization
+List<string> citiesList2 = new List<string> { "Delhi", "Los Angeles" };
+```
+
+### Methods
+
+Method | Description | Notes
+--- | ---- | ---
+`.Add(element) | Add element
