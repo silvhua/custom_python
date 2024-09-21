@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"uri": "vscode-remote://wsl+ubuntu/mnt/c/Users/silvh/OneDrive/lighthouse/custom_python"
+		},
+		{
+			"uri": "vscode-remote://wsl+ubuntu/home/silvhua/repositories/user-data-etl"
+		}
+	],
+	"remoteAuthority": "wsl+Ubuntu"
+}

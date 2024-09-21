@@ -7,7 +7,7 @@ Command | Description | Notes
 `nvm ls` | List the versions of node currently installed
 `nvm use node` | switch to the Current version
 `nvm use --lts` | switch to the LTS version.
-`nvm use v8.2.1` | Switch to that version
+`nvm use v14.21.3` | Switch to that version
 `nvm ls-remote` | List all versions of Node available. 
 
 # [Git Workflow](https://data.compass.lighthouselabs.ca/days/w01d1/activities/149)
@@ -1862,6 +1862,37 @@ List<string> citiesList2 = new List<string> { "Delhi", "Los Angeles" };
 
 ### Methods
 
-Method | Description | Notes
+Method | Description | Example
 --- | ---- | ---
-`.Add(element) | Add element
+`.Add(element)` | Add element |
+`.Remove(element)` | Returns `true` if the item has been removed, or `false` otherwise.
+`.Count` | Find the number of elements in the list
+`.Contains(element)` | Check if an element exists in the list
+`.Clear()` | Remove all elements from a list.
+`AddRange(arrayOrList)` | Adds the values to the end of the list | `places.AddRange(new string[] { "fifth", "sixth" });`
+`InsertRange(index, arrayOrList)` | Adds the values at the index. | `places.InsertRange(2, new string[] { "third", "fourth"});`
+`RemoveRange(index, nElementsToRemove)` | the first `int` is the index at which to begin removing, and the second `int` is the number of elements to remove. 
+`GetRange(index, nElements)` | Get a slice of the list.
+
+## Strings
+
+Command | Description | Notes
+--- | ---- | ---
+`.IndexOf(char)` | Find the index of a character in a string.
+`.Substring(startIndex, length)` | Get a substring.
+`.ToLower()` | Convert to lower case.
+
+## Methods
+`out` allows a function to set the value of a variable.
+
+```csharp
+int number;
+bool success = Int32.TryParse("10602", out number); 
+// `number` is 10602 and success is true
+int number2;
+bool success2 = Int32.TryParse(" !!! ", out number2);
+// `number2` is 0 and success2 is false
+
+// For a shortcut, we can declare the int variable within the method call:
+bool success = Int32.TryParse("10602", out int number);
+```
