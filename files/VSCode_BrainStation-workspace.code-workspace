@@ -17,11 +17,7 @@
 			"path": "../../../BrainStation/brainstation-projects"
 		},
 		{
-			"name": "notion-private",
-			"path": "../../portfolio-projects/notion-private"
-		},
-		{
-			"path": "../../../Documents/capstone"
+			"path": "../../../../Documents/capstone"
 		}
 	],
 	"settings": {
