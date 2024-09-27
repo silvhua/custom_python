@@ -215,7 +215,7 @@ def savepickle(model,filename, ext='sav', path=None,append_version=False):
     if path:
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
-        filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
+        filename+= f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     full_path = path+filename+'.'+ext if ext else path+filename
     with open (full_path, 'wb') as fh:
         pickle.dump(model, fh)
@@ -254,7 +254,7 @@ def joblib_save(model,filename,path=None,append_version=False):
     if path:
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
-        filename+=datetime.now().strftime('%Y-%m-%d_%H%M')
+        filename+=f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     with open (path+filename, 'wb') as fh:
         joblib.dump(model, fh)
     print('File saved: ',path+filename)
