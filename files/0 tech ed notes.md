@@ -1896,3 +1896,32 @@ bool success2 = Int32.TryParse(" !!! ", out number2);
 // For a shortcut, we can declare the int variable within the method call:
 bool success = Int32.TryParse("10602", out int number);
 ```
+## Classes
+A constructor looks like a method but lacks a return type and has the same name as its class.
+```csharp
+class Polygon
+{
+  public int sides;
+
+  public Polygon(int sides)
+  {
+    this.sides = sides;
+  }
+}
+```
+
+### Overloading constructors
+Use `: this()` to refer to another constructor in the same class. This is useful when the second constructor has additional functionality:
+```csharp
+public Book(string title, string author)
+{
+  this.title = title;
+  this.author = author;
+}
+
+public Book(string title) : this(title, "Unknown")
+{
+  Console.WriteLine("Author not specified. Value defaulted to 'Unknown'.");
+}
+```
+Here, the second constructor calls the first and prints additional information to the console.
