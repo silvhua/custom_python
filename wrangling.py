@@ -263,8 +263,9 @@ def filter_df_all_conditions(df, filters, view_columns=None, verbose=False, show
     if show_indices:
         print(f'Results where ALL conditions are met:')
         print(f'\tDataFrame indices: {filtered_rows}')
+        print(f'\tDataFrame shape: ({len(filtered_rows)}, {filtered_df.shape[1]})')
     filtered_df = df.loc[filtered_rows][view_columns] if view_columns != None else df.loc[filtered_rows]
-    print(f'\tDataFrame shape: {filtered_df.shape}')
+    
     return filtered_df
 
 def filter_any_and_all(df, any_filters, all_filters, view_columns=None, verbose=False):
