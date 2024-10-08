@@ -1769,6 +1769,7 @@ Terminal Command | Description | Notes
 Function | Description | Notes
 --- | ---- | ---
 `Console.WriteLine("Hello world")` | Print to console
+`Console.Write("Message to user")` | Prompt the user.
 `Console.ReadLine()` | Capture text that a user types into the console.
 `Math.Abs()` | find the absolute value of a number. | Example: Math.Abs(-5) returns 5.
 `Math.Sqrt()` | find the square root of a number. | Example: Math.Sqrt(16) returns 4.
@@ -1778,6 +1779,12 @@ Function | Description | Notes
 `Math.Max()`
 `Math.Ceiling()`
 
+```csharp
+Console.Write("Please provide your input");
+string input = Console.ReadLine(); // capture the text typed into the console.
+```
+
+## String interpolation
 ```C#
 int id = 100
 
@@ -1812,6 +1819,17 @@ Command | Description | Notes
 `Array.Sort(array)` | Done in place.
 `Array.IndexOf(array, element)` | Find the index of an element in the array | If the value appears more than once in an array, it returns only the index of the first occurrence within the specified range. If it does not find the value at all, it returns `-1`.
  `Array.Reverse(array)` | Returns the array with the original elements in reverse order. | Done in place.
+
+Check if an element exists in an array:
+```csharp
+int[] numbers = { 1, 2, 3, 4, 5 };
+int valueToCheck = 3;
+
+bool exists = Array.Exists(numbers, element => element == valueToCheck);
+
+Console.WriteLine(exists);  // Output: True
+
+```
 
 ## Loops
 ### `do...while`
@@ -1881,6 +1899,7 @@ Command | Description | Notes
 `.IndexOf(char)` | Find the index of a character in a string.
 `.Substring(startIndex, length)` | Get a substring.
 `.ToLower()` | Convert to lower case.
+`.ToUpper()`
 
 ## Methods
 `out` allows a function to set the value of a variable.
@@ -1925,3 +1944,466 @@ public Book(string title) : this(title, "Unknown")
 }
 ```
 Here, the second constructor calls the first and prints additional information to the console.
+
+## Encapsulation
+
+Code | Description | Notes
+--- | ---- | ---
+`public` | Any class can access a public member.
+`private` | A private member can only be accessed by code within the same class. | C# encourages encapsulation by defaulting all class members to `private`.
+`protected` | A protected member can be accessed by the current class and any class that inherits from it.
+
+* Access modifiers apply to all class members, including fields and methods.
+
+### Properties
+
+A property controls access to a field, allowing us to validate values before they are set. A property consists of two methods:
+
+* a `get()` method, or getter, called when the property is accessed
+* a `set()` method, or setter, called when the property is assigned a value
+  * The `set()` method uses the keyword value, representing the value assigned to the property. 
+* Note that the get and set method definitions do NOT include a pair of parentheses following the method name.
+* It’s common to name a property with the title-cased version of its field’s name
+
+```csharp
+private int area;
+public int Area
+{
+  get { return area; }
+  set 
+  { 
+    if (value < 0) { area = 0; }
+    else { area = value; }
+  }
+}
+
+Shape s = new Shape();
+s.Area = -1; // set() is called
+Console.WriteLine(s.Area); // get() is called -- Prints 0
+// s.area = 2; // would throw error CS0122, as area is not accessible here
+```
+
+Auto-implemented property
+
+This:
+```csharp
+private string size;
+public string Size
+{
+  get { return size; }
+  set { size = value; }
+}
+```
+Can be re-written as:
+```csharp
+public string Size
+{ get; set; }
+
+```
+The field is automatically created in the background with an auto-implemented property.
+
+If we want programs to be able to get the value, but not set it, we can do one of the following:
+1. Omit the `set()` method.
+```csharp
+public string Area
+{
+  get { return area; }
+}
+```
+2. Make the `set()` method private.
+```csharp
+public int Area
+{
+  get { return area; }
+  private set { area = value; }  
+}
+
+
+public static int ForestsCreated 
+  { get; private set; }
+```
+### Static Fields and Properties
+* Static members are members that are associated with the class itself. 
+* They are defined using the `static` keyword, which should follow the access modifier if one is present.
+
+### Static constructors
+* We can use a static constructor to handle setup for a class that only needs to be run once before the class is used. 
+* Typically, we use static constructors to set values for static fields and properties.
+
+### Static classes
+* A static class cannot be instantiated and may only contain static members, so we should only create one if we are making a utility or library, like `Math` or `Console`.
+
+## Inheritance
+A subclass inherits, or “extends”, a superclass using the colon syntax:
+```csharp
+class Vehicle
+{
+}
+
+class Sedan : Vehicle
+{
+}
+// Sedan will inherit all the functionality of the `Vehicle` class.
+```
+### base
+We can refer to a superclass inside a subclass with the `base` keyword.
+
+There’s a special syntax for calling the superclass constructor:
+
+```csharpclass Sedan : Vehicle
+{
+  public Sedan (double speed) : base(speed)
+  {
+  }
+}
+
+```
+The preceding code shows a `Sedan` that inherits from `Vehicle`. The Sedan constructor calls the `Vehicle` constructor with one argument, `speed`. This works as long as `Vehicl`e has a constructor with one parameter of type `double`.
+
+Without an explicit call to `base()`, any subclass constructor will implicitly call the default parameterless constructor for its superclass. For example, this code implicitly calls `Vehicle()`:
+```csharp
+class Sedan : Vehicle
+{
+  // Implicitly calls base(), aka Vehicle()
+  public Sedan (double speed)
+  {
+  }
+}
+// The preceding code is equivalent to this:
+{
+  public Sedan (double speed) : base()
+  {
+  }
+}
+```
+This code will only work if the constructor `Vehicle()` exists. If it doesn’t, then an error will be thrown.
+
+## Polymorphism
+* A virtual method is a method in the base class that can be overridden in derived classes. 
+* The `virtual` keyword is used to allow derived classes to provide specific implementations of this method.
+* The `override` keyword is used to indicate that a method in a derived class is intended to replace a method in the base class.
+
+```csharp
+{
+  class Animal
+  {
+    public virtual void MakeSound()
+    {
+      Console.WriteLine("Animal makes a sound.");
+    }
+  }
+
+  class Dog : Animal
+  {
+    public override void MakeSound()
+    {
+      Console.WriteLine("Dog barks.");
+    }
+  }
+
+  // Define the Cat class here
+  class Cat : Animal
+  {
+    public override void MakeSound()
+    {
+      Console.WriteLine("Cat meows.");
+    }
+  }
+}
+```
+
+### Upcasting objects
+In some cases, we may want to create an instance of our base class with access to the overridden methods of a derived class. This is where we would use upcasting.
+
+Basic syntax:
+```csharp
+BaseClass upcastInstance = derivedInstance;
+```
+
+Example:
+```csharp
+class Animal {
+  public void Walk() {
+    Console.WriteLine("Animal walks.");
+  } 
+  
+  public virtual void MakeSound() {
+    Console.WriteLine("Animal makes noise.");
+  } 
+}
+
+class Dog : Animal {
+  public void Sleep() {
+    Console.WriteLine("Dog sleeps.");
+  } 
+  
+  public override void MakeSound() {
+    Console.WriteLine("Dog barks.");
+  } 
+}
+
+class Program {
+  static void Main(string[] args) {
+    // Create a Dog object
+    Dog myDog = new Dog();
+
+    // Upcast the Dog object to an Animal reference
+    Animal myAnimal = myDog;
+
+    myAnimal.MakeSound(); // Output: Dog barks.
+    myAnimal.Walk(); // Output: Animal walks.
+    myAnimal.Sleep(); // Output: ERROR
+  }
+}
+```
+An instance that has been upcast to a base class instance, will have access to the following:
+* The derived class’s overridden methods
+* The base class’s non-virtual methods
+It is important to note that any method in the derived class that does not override a method in the base class, will not be accessible from an upcast instance.
+
+### Downcasting objects
+
+Downcasting in C# refers to converting an upcast instance to a derived one. This process allows us to access the derived class members that are unavailable in the base class.
+
+Downcasting is an explicit operation and requires extra syntax:
+```csharp
+BaseClass upcastInstance = new DerivedClass() 
+DerivedClass downcastInstance = (DerviedClass)upcastInstance;
+```
+This gives the downcastInstance access to both the `BaseClass` and the `DerivedClass` methods.
+
+Example:
+```csharp
+class Animal {
+  public void Walk() {
+    Console.WriteLine("Animal walks.");
+  } 
+  
+  public virtual void MakeSound() {
+    Console.WriteLine("Animal makes noise.");
+  } 
+}
+
+class Dog : Animal {
+  public void Sleep() {
+    Console.WriteLine("Dog sleeps.");
+  } 
+  
+  public override void MakeSound() {
+    Console.WriteLine("Dog barks.");
+  } 
+}
+
+class Program {
+  static void Main(string[] args) {
+    // Create an upcast Animal object
+    Animal myAnimal = new Dog();
+
+    // Downcast the myAnimal object
+    Dog myDog = (Dog)myAnimal;
+
+    myDog.MakeSound(); // Output: Dog barks.
+    myDog.Walk(); // Output: Animal walks.
+    myDog.Sleep(); // Output: Dog sleeps.
+  }
+}
+```
+### Using `is` Operators
+The is operator results to `true` if an object can be upcast or downcast to a specified type and `false` if it can not. This can be a useful check before performing these casting operations.
+
+### Using `as` Operators
+The `as` operator attempts to cast an object to a given type, returning `null` if the cast fails. This is useful for safely trying to downcast an object to a more derived type without risking an exception.
+
+```csharp
+class Program
+{
+  static void Main(string[] args)
+  {
+    // Create an Animal reference pointing to a Dog object
+    Animal myAnimal = new Dog();
+
+    // Use the 'as' operator to attempt to cast the Animal reference to a Dog
+    Dog myDog = myAnimal as Dog;
+    
+    if (myDog != null)
+    {
+      myDog.Fetch();
+    }
+
+    // Use the 'as' operator to attempt to cast the Animal reference to a Cat
+    Cat myCat = myAnimal as Cat;
+    
+    if (myCat == null)
+    {
+      Console.WriteLine("Downcasting failed using 'as' operator.");
+    }
+  }
+}
+```
+### Abstract Classes
+an abstract class provides a blueprint of what derived classes need to implement. This is done through the use of implemented and unimplemented methods.
+
+```csharp
+abstract class Animal
+{
+  // Abstract Method
+  public abstract void MakeSound();
+
+  // Virtual Method
+  public virtual void Move()
+  {
+    Console.WriteLine("Animal moves.");
+  }
+
+  // Non-Virtual Method
+  public void Sleep()
+  {
+    Console.WriteLine("Animal sleeps.");
+  }
+}
+
+class Dog : Animal
+{
+  public override void MakeSound()
+  {
+    Console.WriteLine("Dog barks.");
+  }
+
+  public override void Move()
+  {
+    Console.WriteLine("Dog runs.");
+  }
+}
+
+class Cat : Animal
+{
+  public override void MakeSound()
+  {
+    Console.WriteLine("Cat meows.");
+  }
+}
+
+```
+Looking at the above derived classes we can see that both `Dog` and `Cat` classes implement the `MakeSound()` method using the `override` keyword. This is because it was labeled `abstract` in the Animal class, so it is the job of the derived classes to implement.
+
+Abstract classes fulfill the practice of Polymorphism by defining necessary behaviors without implementing them. They pass the task of implementation on to the more specific derived classes.
+
+## Interfaces
+* The interface is a set of properties, methods, and other members. They are declared with a signature, but their behaviors are not defined. 
+* A class implements an interface if it defines those properties, methods, and other members.
+* We can add members, like properties and methods, to the interface
+```csharp
+{
+  interface IAutomobile
+  {
+    string LicensePlate { get; }
+    double Speed { get; }
+    int Wheels { get; }
+    void Honk();
+  }
+}
+class Sedan : IAutomobile
+{
+  public string LicensePlate
+  { get; }
+  
+  // And so on...
+}
+```
+
+A class in C# can even implement multiple interfaces by separating the interface names with a comma:
+```csharp
+class Cat : IQuadruped, IFeline
+{  
+  // member implementation for both IQuadruped and IFeline
+}
+```
+* While inheritance allows one class to pass members along to a subclass, an interface is like a contract, specifying members that a class is obligated to implement.
+* Note that when inheriting and implementing an interface, the superclass must be specified first, followed by any interfaces the class will implement, separated by commas.
+
+## Reference Fundamentals
+* Classes are reference types. That means that when we create a new instance of a class and store it in a variable, the variable is a reference to the object.
+  * When we compare reference types with `==`, the C# compiler performs a referential comparison, which means it checks if two variables refer to the same memory location
+* Value-type variables, e.g. `int num = 6`, hold the actual data.
+  * Every “primitive” data type is a value type
+
+### References of Different Types
+* An object can be referenced using the name of any type in its inheritance hierarchy or of any interface it implements.
+
+Example:
+```csharp
+class Encyclopedia: Book, IFlippable {
+    //...
+}
+
+Encyclopedia enc = new Encyclopedia();
+IFlippable fEnc = enc;
+Book bEnc = enc;
+```
+A reference only has access to members of the type it is defined as. 
+* `fEnc` can only access members in the `IFlippable` interface, and `bEnc` can only access members in the `Book` superclass.
+
+## The Object Class
+Method | Description | Notes
+--- | ---- | ---
+`.Equals(Object)` |  returns `true` if the current instance and the argument are equal | Uses value equality for value types and referential equality for reference types | Can be overridden because it is virtual
+`GetType()` | returns the type of the object
+`ToString()` | returns a string describing the object | Can be overridden because it is virtual
+
+## String
+Code | Description | Notes
+--- | ---- | ---
+`String.IsNullOrEmpty(string)` | check for null OR empty string
+`.Contains(substring)` | will return `true` if the substring occurs within the string object the method is called on
+`.Replace(target, replacement)` | Replace a occurrences of the target substring with another substring
+
+## LINQ
+Use this import to use `LINQ`:
+```csharp
+using System.Linq;
+```
+* Every LINQ query returns either a single value or an object of type `IEnumerable<T>`
+  * Number of elements is returned with `.Count()`.
+* Since the single value type and/or the parameter type `T` is not always known, it’s common to store a query’s returned value in a variable of type `var`.
+  * `var` is just an implicitly typed variable — we let the C# compiler determine the actual type for us.
+* Technically, LINQ can be used with any type that supports `foreach` loops, e.g. `List`
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LearnLinq
+{
+  class Program
+  {
+    static void Main()
+    {
+      string[] heroes = { "Zoe", "Liam", "Taryn", "Dorian", "Everett", "Marlena" };
+
+      // Query syntax
+      var queryResult = from x in heroes
+                        where x.Contains("a")
+                        select $"{x} contains an 'a'";
+      
+      // Method syntax
+      var methodResult = heroes
+        .Where(x => x.Contains("a"))
+        .Select(x => $"{x} contains an 'a'");
+     
+      // Printing...
+      Console.WriteLine("queryResult:");
+      foreach (string s in queryResult)
+      {
+        Console.WriteLine(s);
+      }
+      
+      Console.WriteLine("\nmethodResult:");
+      foreach (string s in methodResult)
+      {
+        Console.WriteLine(s);
+      }
+    }
+  }
+}
+```
