@@ -20,6 +20,25 @@ def append_timestamp(string):
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M")
     return f'{string}_{timestamp}' 
 
+def save_image(image, filename, path, ext="png", append_timestamp=False):
+    """
+    Save an image to a specified path with an optional timestamp appended to the filename.
+    
+    Parameters:
+    filename (str): The name of the file to save.
+    path (str): The directory path where the file will be saved.
+    append_timestamp (bool): If True, append a timestamp to the filename.
+    """
+    if path:
+        path = convert_windows_path(path)
+    if append_timestamp:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{os.path.splitext(filename)[0]}_{timestamp}{os.path.splitext(filename)[1]}"
+    
+    full_path = os.path.join(path, filename)
+    image.save(full_path)
+    print(f"Image saved to {full_path}")
+
 def save_excel(
     df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, 
     col_width=None, freeze_at='B2', overwrite=False
