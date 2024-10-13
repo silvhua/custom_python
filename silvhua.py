@@ -32,8 +32,8 @@ def save_image(image, filename, path, ext="png", append_timestamp=False):
     if path:
         path = convert_windows_path(path)
     if append_timestamp:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{os.path.splitext(filename)[0]}_{timestamp}{os.path.splitext(filename)[1]}"
+        filename = append_timestamp(filename)
+    filename = f'{filename}.{ext}'
     
     full_path = os.path.join(path, filename)
     image.save(full_path)
