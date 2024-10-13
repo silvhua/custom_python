@@ -7,10 +7,13 @@
 			"path": "../../../datajam/datajam-site"
 		},
 		{
-			"path": "../../../datajam/datajam-test"
+			"path": "../../portfolio-projects/learning"
 		},
 		{
-			"path": "../../portfolio-projects/learning"
+			"path": "../../../../../../Documents/projects"
+		},
+		{
+			"path": "../../../datajam/expense-classifier"
 		}
 	],
 	"settings": {

@@ -7,3 +7,4 @@ __pycache__
 personal
 files/logger_files
 log_file*
+.DS_Store
