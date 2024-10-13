@@ -96,7 +96,7 @@ def check_sheet_existence(filename, path, sheet_name):
     return False
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
-def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=None, sep=',', **kwargs):
+def load_csv(filename,path,column1_as_index=False,truncate=None, usecols=None, sep=',', **kwargs):
     """
     Load a csv file as a dataframe using specified file path copied from windows file explorer.
     Back slashes in file path will be converted to forward slashes.
@@ -108,7 +108,7 @@ def load_csv(filename,filepath,column1_as_index=False,truncate=None, usecols=Non
 
     Returns: dataframe object.
     """
-    filename = f'{filepath}/'.replace('\\','/')+filename
+    filename = f'{path}/'.replace('\\','/')+filename
     df = pd.read_csv(filename, usecols=usecols, sep=sep, **kwargs)
     if column1_as_index==True:
         df.set_index(df.columns[0], inplace=True)
