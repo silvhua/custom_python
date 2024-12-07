@@ -8,3 +8,4 @@ personal
 files/logger_files
 log_file*
 .DS_Store
+files/shell_scripts/conda_env_var*
