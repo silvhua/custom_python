@@ -300,6 +300,7 @@ Action | Script
 Starting an image interactively with a custom start command | `docker run -it image_name bash` <br>or <br>`docker run -it <image> <shell-command>`
 Build an image without caching | `docker build --no-cache -t image_name .`
 Clear builder cache | `docker builder prune -a -f`
+Remove containers | `docker container prune -f`
 Remove unused images, containers, etc. | `Docker system prune -f`
 
 

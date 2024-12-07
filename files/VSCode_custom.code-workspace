@@ -1,19 +1,23 @@
 {
 	"folders": [
 		{
+			"name": "custom_python",
 			"path": ".."
 		},
 		{
-			"path": "../../../datajam/datajam-site"
-		},
-		{
+			"name": "learning",
 			"path": "../../portfolio-projects/learning"
 		},
 		{
-			"path": "../../../../../../Documents/projects"
+			"name": "datajam-test",
+			"path": "../../../datajam/datajam-test"
 		},
 		{
-			"path": "../../../datajam/expense-classifier"
+			"name": "expense-classifier-backend",
+			"path": "../../../datajam/expense-classifier-backend"
+		},
+		{
+			"path": "../../portfolio-projects/notion-private"
 		}
 	],
 	"settings": {
@@ -21,6 +25,7 @@
 			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
 			"C:/Users/silvh/OneDrive/lighthouse/portfolio-projects/binary-tree/src"
 		],
-		"editor.detectIndentation": true
+		"editor.detectIndentation": true,
+		"editor.tabSize": 2
 	}
 }

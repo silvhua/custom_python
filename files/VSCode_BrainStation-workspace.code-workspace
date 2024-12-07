@@ -5,19 +5,10 @@
 			"path": "../../../BrainStation/script-templates"
 		},
 		{
-			"name": "brainstation-material",
-			"path": "../../../BrainStation/brainstation-material"
-		},
-		{
-			"name": "tutorials",
-			"path": "../../../BrainStation/tutorials"
-		},
-		{
-			"name": "brainstation-projects",
-			"path": "../../../BrainStation/brainstation-projects"
-		},
-		{
 			"path": "../../../../../../Documents/capstone"
+		},
+		{
+			"path": "../../../../../../Documents/expense-classifier-frontend"
 		}
 	],
 	"settings": {
