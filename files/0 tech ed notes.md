@@ -2421,4 +2421,22 @@ removes a package from the current list of installed packages. | `poetry remove 
 
 Poetry automatically creates a virtual environment for the project:
 macOS: `~/Library/Caches/pypoetry`
-Windows: `C:\Users\<username>\AppData\Local\pypoetry\Cache`
+Windows: `C:\Users\<username>\AppData\Local\pypoetry\Cache`# Dotnet commands
+
+Description | Terminal command | Notes
+--- | ---- | ---
+Add NuGet package | `dotnet add package <package name>` | 
+Build and run a Blazor app | `dotnet watch` | 
+
+## Blazor
+
+Method/directive | Description | Notes
+--- | ---- | ---
+`OnInitializedAsync()` | Blazor component base class method. When used in a component, this event fires when the component's initialization is complete and it has received initial parameters but before the page is rendered and displayed to the user. | A good place to call the registered data service (i.e. an instance of a class that will get data from the database) and obtain data.
+`@page <path>` | Specify the webpage's path relative to the root page | e.g. `@page "/"` for home page.
+`@code{ }` | Contains lines of c# code within a component.
+`@if { } else if { } else { }` | | Commonly used to display different UI depending on if the data is available yet or not.
+`@switch { }` | Works similar to c# `switch` statement |
+`@foreach (var item in items) { }`
+`@while`
+`@do while`
