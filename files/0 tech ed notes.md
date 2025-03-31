@@ -3226,7 +3226,7 @@ Description | Terminal command | Notes
 Add NuGet package | `dotnet add package <package name>` | 
 Build and run a Blazor app | `dotnet watch` | 
 
-## Blazor
+# Blazor
 
 Method/directive | Description | Notes
 --- | ---- | ---
@@ -3238,3 +3238,118 @@ Method/directive | Description | Notes
 `@foreach (var item in items) { }`
 `@while`
 `@do while`
+
+## Blazor components
+
+`Pizza.razor` component 
+```csharp
+<h2>New Pizza: @PizzaName</h2>
+
+<p>@PizzaDescription</p>
+
+@code {
+    [Parameter]
+    public string PizzaName { get; set; }
+    
+    [Parameter]
+    public string PizzaDescription { get; set; } = "The best pizza you've ever tasted."
+}
+```
+
+You can also use custom classes in your project as component parameters. Consider this class that describes a topping:
+```csharp
+public class PizzaTopping
+{
+    public string Name { get; set; }
+    public string Ingredients { get; set; }
+}
+```
+You can use that as a component parameter in the same way as a parameter value to access individual properties of the class by using dot syntax:
+
+```csharp
+// `PizzaTopping.razor`
+<h2>New Topping: @Topping.Name</h2>
+
+<p>Ingredients: @Topping.Ingredients</p>
+
+@code {
+    [Parameter]
+    public PizzaTopping Topping { get; set; }
+}
+```
+In the parent component, you set parameter values by using attributes of the child component's tags. You set simple components directly. With a parameter based on a custom class, you use inline C# code to create a new instance of that class and set its values:
+
+```csharp
+@page "/pizzas-toppings"
+
+<h1>Our Latest Pizzas and Topping</h1>
+
+<Pizza PizzaName="Hawaiian" PizzaDescription="The one with pineapple" />
+
+<PizzaTopping Topping="@(new PizzaTopping() { Name = "Chilli Sauce", Ingredients = "Three kinds of chilli." })" />
+```
+
+### Cascading parameters
+When you set the value of a cascading parameter in a component, its value is automatically available to all descendant components to any depth.
+
+In the parent component, using the <CascadingValue> tag specifies the information that will cascade to all descendants. Any component that's rendered within that tag is able to access the value.
+```csharp
+@page "/specialoffers"
+
+<h1>Special Offers</h1>
+
+<CascadingValue Name="DealName" Value="Throwback Thursday">
+    <!-- Any descendant component rendered here will be able to access the cascading value. -->
+</CascadingValue>
+```
+
+In the descendant components, you can access the cascading value by using component members and decorating them with the `[CascadingParameter]` attribute.
+```csharp
+<h2>Deal: @DealName</h2>
+
+@code {
+    [CascadingParameter(Name="DealName")]
+    private string DealName { get; set; }
+}
+```
+In the preceding example, the `Name` attribute in the parent identifies the cascading value, which is matched with the `Name` value in the `[CascadingParameter]` attribute. You can optionally omit these names, in which case the attributes are matched by type. Omitting the name works well when you have only one parameter of that type. If you want to cascade two different string values, you must use parameter names to avoid any ambiguity.
+
+## Share information by using AppState
+You create a class that defines the properties you want to store, and register it as a scoped service. In any component where you want to set or use the AppState values, you inject the service, and then you can access its properties. Unlike component parameters and cascading parameters, values in AppState are available to all components in the application, even components that aren't children of the component that stored the value.
+
+As an example, consider this class that stores a value about sales:
+```csharp
+public class PizzaSalesState
+{
+    public int PizzasSoldToday { get; set; }
+}
+```
+You would add the class as a scoped service in the Program.cs file:
+```csharp
+...
+// Add services to the container
+builder.Services.AddRazorPages();
+builder.Services.AddServerSideBlazor();
+
+// Add the AppState class
+builder.Services.AddScoped<PizzaSalesState>();
+...
+```
+Now, in any component where you want to set or retrieve AppState values, you can inject the class, and then access properties:
+```csharp
+@page "/"
+@inject PizzaSalesState SalesState
+
+<h1>Welcome to Blazing Pizzas</h1>
+
+<p>Today, we've sold this many pizzas: @SalesState.PizzasSoldToday</p>
+
+<button @onclick="IncrementSales">Buy a Pizza</button>
+
+@code {
+    private void IncrementSales()
+    {
+        SalesState.PizzasSoldToday++;
+    }
+}
+```
