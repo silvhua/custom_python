@@ -1,16 +1,16 @@
 {
 	"folders": [
-		{
-			"name": "script-templates",
-			"path": "../../../BrainStation/script-templates"
-		},
-		{
-			"path": "../../../../../../Documents/capstone"
-		},
-		{
-			"path": "../../../../../../Documents/expense-classifier-frontend"
-		}
-	],
+    {
+      "name": "script-templates",
+      "path": "../../../BrainStation/script-templates"
+    },
+    {
+      "path": "../../../../../../Documents/expense-classifier-frontend"
+    },
+    {
+      "path": "../../../../../../Documents/movement-snack"
+    }
+  ],
 	"settings": {
 		"python.analysis.extraPaths": [
 			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
@@ -22,7 +22,10 @@
 		"liveServer.settings.multiRootWorkspaceName": "brainstation-projects",
 		"editor.formatOnType": true,
 		"editor.defaultFormatter": "esbenp.prettier-vscode",
-		"editor.tabSize": 2,
+    "editor.tabSize": 2,
+    "[javascriptreact]": {
+      "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
 	},
 	"launch": {
 		"version": "0.2.0",

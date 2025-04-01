@@ -24,9 +24,8 @@ class Custom_Logger:
         Documentation: https://docs.python.org/3/howto/logging.html#handlers
         
         """
-        # self.logger = logging.getLogger(logger_name if logger_name else __name__)
         self.logger = logging.getLogger(logger_name)
-        self.logger.setLevel(file_level)
+        self.logger.setLevel(level)
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s:\n%(message)s\n')

@@ -2408,3 +2408,17 @@ namespace LearnLinq
   }
 }
 ```
+# Poetry for Python dependency management
+
+Description | Command | Notes
+--- | ---- | ---
+Add a dependency | `poetry add <dependency>` | It will automatically find a suitable version constraint and install the package and sub-dependencies. Dependency version is added to `pyproject.toml`. [Documentation](https://python-poetry.org/docs/cli/#add)
+Activate the virtual environment | `poetry shell` | Navigate to the project folder.
+Deactivate the virtual environment | `exit`
+To run your script | `poetry run python your_script.py` | 
+Install dependencies | `poetry install` | Not required if using `poetry add` for dependencies.
+removes a package from the current list of installed packages. | `poetry remove <dependency>`
+
+Poetry automatically creates a virtual environment for the project:
+macOS: `~/Library/Caches/pypoetry`
+Windows: `C:\Users\<username>\AppData\Local\pypoetry\Cache`
