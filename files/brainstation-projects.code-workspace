@@ -1,8 +1,11 @@
 {
 	"folders": [
-		{
-			"path": "../../../BrainStation/brainstation-projects"
-		}
-	],
+        {
+            "path": "../../../BrainStation/brainstation-projects"
+        },
+        {
+            "path": "../../../../../../Documents/movement-snack"
+        }
+    ],
 	"settings": {}
 }

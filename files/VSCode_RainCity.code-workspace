@@ -1,7 +1,10 @@
 {
 	"folders": [
         {
-            "path": "../../../../../../Documents/projects/selenium-learning"
+            "path": "../../../../../../Documents/projects/BlazingPizza"
+        },
+        {
+            "path": ".."
         }
     ]
 }
