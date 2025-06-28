@@ -2649,3 +2649,63 @@ In the descendant components, you can access the cascading value by using compon
 ```
 In the preceding example, the `Name` attribute in the parent identifies the cascading value, which is matched with the `Name` value in the `[CascadingParameter]` attribute. You can optionally omit these names, in which case the attributes are matched by type. Omitting the name works well when you have only one parameter of that type. If you want to cascade two different string values, you must use parameter names to avoid any ambiguity.
 
+## JavaScript interoperability with Blazor
+
+The IJSRuntime interface exposes the `InvokeAsync` and `InvokeVoidAsync` methods to invoke JavaScript code. 
+* Use `InvokeAsync<TValue>` to call a JavaScript function that returns a value. Otherwise, call `InvokeVoidAsync`.
+
+* JS interop is available only when a SignalR connection is established between the Blazor Server app and the browser. You can't make interop calls until rendering is complete. 
+    * To detect whether rendering is finished, use the `OnAfterRender` or `OnAfterRenderAsync` event in your Blazor code.
+
+### Use an ElementReference object to update the DOM
+* If your JavaScript code modifies elements of the DOM, the Blazor copy of the DOM might no longer match the current state. This situation can cause unexpected behavior and possibly introduce security risks. 
+* The simplest way to handle this situation is to create a placeholder element in the Blazor component, usually an empty `<div @ref="placeHolder"></div>` element. Blazor code interprets this code as a blank space, and the Blazor render tree doesn't attempt to track its contents. You can freely add JavaScript code elements to this <div>, and Blazor doesn't attempt to change it.
+* Blazor app code defines a field of type `ElementReference` to hold the reference to the `<div>` element. The `@ref` attribute on the `<div>` element sets the value of the field. The `ElementReference` object then passes to a JavaScript function, which can use the reference to add content to the `<div>` element.
+
+### Call .NET code from JavaScript
+JavaScript code can run a .NET method your Blazor code defines by using the `DotNet` utility class, part of the JS interop library.
+* This class exposes the `invokeMethod` and `invokeMethodAsync` helper functions.
+* You must tag the .NET method being called with the JSInvokableAttribute. The method must be public, and any parameters must be JSON-serializable. Also, for an asynchronous method, the return type must be `void`, a `Task,` or a generic `Task<T>` object where `T` is a JSON-serializable type.
+* To call a static method, you provide the name of the .NET assembly that contains the class, an identifier for the method, and any parameters the method accepts as arguments to the `invokeMethod` or `invokeMethodAsync` functions. 
+    * By default, the method identifier is the same as the name of the method, but you can specify a different value by using the `JSInvokable` attribute.
+* To run an instance method, JavaScript requires an object reference that points to the instance. JS interop provides the generic `DotNetObjectReference` type you can use to create an object reference in .NET code. The code must make this object reference available to JavaScript.
+    * The JavaScript code can then call `invokeMethodAsync` with the name of the .NET method and any parameters the method requires. 
+    * To avoid memory leaks, the .NET code should dispose of the object reference when it's no longer needed.
+
+## the Blazor component lifecycle
+Source: [Understand the Blazor component lifecycle](https://learn.microsoft.com/en-us/training/modules/blazor-build-rich-interactive-components/4-improve-app-interactivity-lifecycle-events)
+
+Order | Lifecycle method| Description
+--- | --- | --- 
+1 | Component created | The component is instantiated.
+2 | SetParametersAsync | Sets parameters from the component's parent in the render tree.
+3 | OnInitialized / OnInitializedAsync | Occurs when the component is ready to start.
+4 | OnParametersSet / OnParametersSetAsync | Occurs when the component has received parameters and properties are assigned.
+5 | OnAfterRender / OnAfterRenderAsync | Occurs after the component renders.
+6 | Dispose / DisposeAsync | If the component implements either IDisposable or IAsyncDisposable, the appropriate disposable occurs as part of destroying the component.
+
+* Parameter-based properties are attributed with either `[ParameterAttribute]` or `[CascadingParameterAttribute]`
+
+### The OnInitialized and OnInitializedAsync methods
+* If the `render-mode` property of the application is set to `Server`, the `OnInitialized` and `OnInitializedAsync` methods run only once for a component instance, even if component parameters change.
+* If the `render-mode` property is set to `ServerPrerendered`, the `OnInitialized` and `OnInitializedAsync` methods run twice: once during the prerender phase that generates the static page output, and again when the server establishes a SignalR connection with the browser. 
+    * You might do expensive initialization tasks in these methods, such as retrieving data from a web service that you use to set the Blazor component state. In this case, cache the state information during the first execution and reuse the saved state during the second execution.
+* Any dependencies the Blazor component uses are injected after the instance is created but before the OnInitialized or OnInitializedAsync methods run.
+* During the prerender phase, code in a Blazor Server component can't perform actions that require a connection to the browser, such as calling JavaScript code. You should place logic that depends on a connection with the browser in the OnAfterRender or OnAfterRenderAsync methods.
+
+### The `OnAfterRender` and `OnAfterRenderAsync` methods
+
+The following list details the order of method invocations including and following StateHasChanged:
+1. StateHasChanged: Marks the component as needing to rerender.
+2. ShouldRender: Returns a flag indicating whether the component should render.
+    * By default, all state changes trigger a render operation, but you can override the ShouldRender method and define your decision-making logic
+3. BuildRenderTree: Renders the component.
+    * If the component needs to render, you can use the BuildRenderTree method to generate a model that can update the version of the DOM the browser uses to display the UI. You can use the default method implementation that the ComponentBase class provides, or you can override it with custom logic if you have specific requirements.
+
+Next, the component view is rendered and the UI is updated. Finally, the component runs the `OnAfterRender` and `OnAfterRenderAsync` methods. 
+
+The `OnAfterRender` and `OnAfterRenderAsync` methods take a boolean parameter called firstRender. This parameter is true the first time the methods are run, but false thereafter. 
+* The first render occurs when the connection with the browser is fully active and all functionality is available.
+
+### Handle exceptions in lifecycle methods
+If a lifecycle method for a Blazor component fails, it closes the SignalR connection to the browser, which in turn causes the Blazor app to stop functioning. To prevent this outcome, make sure you're prepared to handle exceptions as part of the logic for the lifecycle methods.
