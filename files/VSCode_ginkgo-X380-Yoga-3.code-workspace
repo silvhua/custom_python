@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "../../ginkgo-repos"
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"python.analysis.extraPaths": [
+			"C:/Users/silvh/OneDrive/lighthouse/custom_python",
+			"C:/Users/silvh/OneDrive/lighthouse/ginkgo-repos/algorithm-audit/src",
+			"/Users/silvh/Library/CloudStorage/OneDrive-Personal/lighthouse/custom_python"
+		],
+	}
+}
