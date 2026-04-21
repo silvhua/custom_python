@@ -519,7 +519,7 @@ def remove_duplicates_by_lettercase(df, column='Reference'):
     print(f'Number of rows before removing duplicates: {len(df)}')
     
     # Remove excess white space characters
-    df[column] = df[column].str.replace('\s+', ' ', regex=True)
+    df[column] = df[column].str.replace(r'\s+', ' ', regex=True)
     
     # Create a new column with lowercased strings
     df['lowercase_column'] = df[column].str.lower()
@@ -660,6 +660,9 @@ def eda(df):
     print(f'Dataframe data types:\n{df.dtypes}')
     categorical_columns = df.select_dtypes(include=['object']).columns
     for column in categorical_columns:
+        if isinstance(df[column].iloc[0], list):
+            print(f'Column `{column}` contains lists, skipping unique value count.')
+            continue
         print(f'Unique values in {column} (n={df[column].nunique()}):')
         print(f'\t{[value for value in df[column].sort_values().unique()]}')
 

@@ -174,9 +174,10 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
 
 def merge_and_validate(
         left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
-        nan_fill=None, left_df_name='left', right_df_name='right', drop_indictor_column=False, id_column='RID',
+        nan_fill=None, left_df_name='left', right_df_name='right', drop_indicator_column=False, id_column='RID',
         fill_common_columns=False,
-        logger=None
+        logger=None,
+        warn_if_left_only=True
         ):
     merged_df = pd.DataFrame()
     try:
@@ -209,14 +210,15 @@ def merge_and_validate(
 
         merge_info_message += f"Merge indicator value counts: {merged_df[indicator].value_counts()}\n"
         
+        if isinstance(merged_df[indicator].dtype, pd.CategoricalDtype):
+            new_cats = [left_df_name, right_df_name, f'{left_df_name}, {right_df_name}']
+            merged_df[indicator] = merged_df[indicator].cat.add_categories([cat for cat in new_cats if cat not in merged_df[indicator].cat.categories])
         merged_df[indicator] = merged_df[indicator].replace({
             'left_only': left_df_name, 'right_only': right_df_name, 
             'both': f'{left_df_name}, {right_df_name}'
         })
         
         merge_info_message += f"\tSum: {merged_df[indicator].value_counts().sum()}\n"
-        
-        duplicate_rows = return_duplicate_rows(merged_df, logger=logger)
         if drop_duplicates:
             merged_df = merged_df.drop_duplicates(subset=[left_on, right_on], keep='first')
             merge_info_message += f'\tShape after dropping duplicates: {merged_df.shape}\n'
@@ -232,8 +234,10 @@ def merge_and_validate(
             merged_df[left_on] = merged_df[left_on].fillna(merged_df[f'{right_on}_y'])
         logger.debug('\n'.join(debug_messages))
         logger.info(merge_info_message)
+        if warn_if_left_only and (merged_df[indicator] == left_df_name).any():
+            logger.warning(f"Some rows in {left_df_name} did not find a match in {right_df_name}.")
         columns_to_drop = [column for column in merged_df.columns if column.endswith('_y')]
-        if drop_indictor_column:
+        if drop_indicator_column:
             columns_to_drop.append(indicator)
         
         merged_df = merged_df.drop(columns=columns_to_drop)
@@ -322,7 +326,7 @@ def melt_dfs(dfs_list, id_vars, value_vars, var_name, value_name, date_columns, 
 
 def merge_to_replace(
         left_df, right_df, left_on, right_index_column, value_column, nan_fill=None, 
-        left_df_name='left', right_df_name='right', drop_indictor_column=False, logger=None
+        left_df_name='left', right_df_name='right', drop_indicator_column=False, logger=None
         ):
     logger = create_function_logger('merge_to_replace', logger)
     if nan_fill:
@@ -376,7 +380,7 @@ def merge_to_replace(
         if column_to_fill in value_column:
             left_df[column_to_fill] = left_df[column_to_fill].fillna(left_df[value_column])
         columns_to_drop = [value_column]
-        if drop_indictor_column:
+        if drop_indicator_column:
             columns_to_drop.append(indicator)
         left_df = left_df.drop(columns=columns_to_drop)
         debug_messages.append(f'After `merge_to_replace`: \n\tColumns: {[col for col in left_df.columns]}')

@@ -147,7 +147,7 @@ def save_csv(df,filename,path=None,append_version=False, index=False):
     Parameters:
     - df: Dataframe variable name.
     - filename: Root of the filename.
-    - filepath (raw string): Use the format r'<path>'. If None, file is saved in same director.
+    - filepath (raw string): Use the format r'<path>'. If None, file is saved in same directory.
     - append_version (bool): If true, append date and time to end of filename.
     - index (bool): If true, save index.
     """
