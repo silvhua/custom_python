@@ -179,6 +179,29 @@ def merge_and_validate(
         logger=None,
         warn_if_left_only=True
         ):
+    """
+    Merges two DataFrames and provides detailed logging and validation of the merge results.
+    
+    Parameters:
+        - left_df (pd.DataFrame): The left DataFrame to merge.
+        - right_df (pd.DataFrame): The right DataFrame to merge.
+        - left_on (str or list): Column(s) from the left DataFrame to merge on.
+        - right_on (str or list): Column(s) from the right DataFrame to merge on.
+        - how (str): Type of merge to perform ('left', 'right', 'outer', 'inner'). Default is 'outer'.
+        - indicator (bool or str): If True, adds a column to the output DataFrame called '_merge' with information on the source of each row. If a string is provided, it will be used as the column name. Default is True.
+        - drop_duplicates (bool): If True, drops duplicate rows based on the merge keys after merging. Default is False.
+        - nan_fill (scalar): If provided, fills NaN values in the merge key columns of the left DataFrame with this value before merging. Default is None.
+        - left_df_name (str): Name to use for the left DataFrame in logs. Default is 'left'.
+        - right_df_name (str): Name to use for the right DataFrame in logs. Default is 'right'.
+        - drop_indicator_column (bool): If True, drops the merge indicator column after merging. Default is False.
+        - id_column (str): Column name to exclude from common columns when filling NaN values. Default is 'RID'.
+        - fill_common_columns (bool): If True, fills NaN values in common columns (except the id_column) with values from the corresponding '_y' columns after merging. Default is False.
+        - logger (logging.Logger): Optional logger to use for logging messages. If None, a default logger will be created. Default is None.
+        - warn_if_left_only (bool): If True, logs a warning if there are any rows in the merged DataFrame that are only present in the left DataFrame. Default is True.
+    
+    Returns:
+        - merged_df (pd.DataFrame): The resulting merged DataFrame after performing the merge and any specified post-processing steps.
+    """
     merged_df = pd.DataFrame()
     try:
         logger = create_function_logger('merge_and_validate', logger)
