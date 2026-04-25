@@ -181,7 +181,7 @@ def test_logger(logger, messages_dict, save):
             logger.critical(message, save=save)
 
 def create_function_logger(
-    function_name, parent_logger, level=logging.INFO,
+    function_name, parent_logger=None, level=logging.INFO,
     log_file=None, **kwargs
     ):
     """

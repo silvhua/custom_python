@@ -173,12 +173,16 @@ def concat_columns(df, columns, new_column, sep='; ', drop_columns=False,
     return df
 
 def merge_and_validate(
-        left_df, right_df, left_on, right_on, how='outer', indicator=True, drop_duplicates=False,
-        nan_fill=None, left_df_name='left', right_df_name='right', drop_indicator_column=False, id_column='RID',
-        fill_common_columns=False,
-        logger=None,
-        warn_if_left_only=True
-        ):
+    left_df, right_df, left_on, right_on, 
+    how='outer', indicator=True, 
+    drop_duplicates=False,
+    nan_fill=None, 
+    left_df_name='left', right_df_name='right', 
+    drop_indicator_column=False, 
+    id_column='Employee Employee Id',
+    fill_common_columns=False,
+    logger=None, warn_if_left_only=True
+    ):
     """
     Merges two DataFrames and provides detailed logging and validation of the merge results.
     
@@ -214,7 +218,7 @@ def merge_and_validate(
         debug_messages = []
         while indicator in left_df.columns:
             merge_integer +=1
-            indicator = f'{indicator}{merge_integer}'
+            indicator = f'{indicator_root}{merge_integer}'
         info_messages.append(f'****`merge_and_validate`****: Total rows: {left_df.shape[0] + right_df.shape[0]}')
         common_columns = list(set(left_df.columns.tolist()).intersection(
             set(right_df.columns.tolist())) - set([left_on] if type(left_on)==str else left_on))

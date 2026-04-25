@@ -8,6 +8,7 @@ except:
     pass
 from datetime import datetime
 import os
+from Custom_Logger import create_function_logger
 
 def convert_windows_path(path):
     path = f'{path}/'.replace('\\','/')
@@ -115,7 +116,7 @@ def check_sheet_existence(filename, path, sheet_name):
     return False
 
 # 2022-10-27 17:02 Update the sampling function to avoid loading entire dataframe.
-def load_csv(filename,path,column1_as_index=False,truncate=None, usecols=None, sep=',', **kwargs):
+def load_csv(filename,path,column1_as_index=False,truncate=None, usecols=None, sep=',', logger=None, **kwargs):
     """
     Load a csv file as a dataframe using specified file path copied from windows file explorer.
     Back slashes in file path will be converted to forward slashes.
@@ -124,24 +125,29 @@ def load_csv(filename,path,column1_as_index=False,truncate=None, usecols=None, s
     - filename (string).
     - colum1_as_index (bool): If true, take the first column as the index. 
         Useful when importing CSV files from previously exported dataframes.
+    - logger (Custom_Logger, optional): Logger instance for logging messages. If None, a default logger will be created.
 
     Returns: dataframe object.
     """
+    logger = create_function_logger('load_csv', logger)
+    message = f'Loading file: `{filename}` from path: {path}'
     filename = f'{path}/'.replace('\\','/')+filename
     df = pd.read_csv(filename, usecols=usecols, sep=sep, **kwargs)
     if column1_as_index==True:
         df.set_index(df.columns[0], inplace=True)
         df.index.name = None
-    print('Dataframe shape: ',df.shape)
-    print('DataFrame columns:', [col for col in df.columns])
-    print('\tTime completed:', datetime.now())
+    message += (
+        f'DataFrame shape: {df.shape}\n'
+        f'DataFrame columns: {[col for col in df.columns]}'
+    )
+    logger.info(message)
 
     if truncate:
         return df.sample(n=truncate,random_state=0)
     else:
         return df
 
-def save_csv(df,filename,path=None,append_version=False, index=False):
+def save_csv(df,filename,path=None,append_version=False, index=False, logger=None):
     """
     Export dataframe to CSV.
     Parameters:
@@ -150,14 +156,15 @@ def save_csv(df,filename,path=None,append_version=False, index=False):
     - filepath (raw string): Use the format r'<path>'. If None, file is saved in same directory.
     - append_version (bool): If true, append date and time to end of filename.
     - index (bool): If true, save index.
+    - logger (Custom_Logger, optional): Logger instance for logging messages. If None, a default logger will be created.
     """
+    logger = create_function_logger('save_csv', logger)
     if path:
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
         filename+=f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
     df.to_csv(path+filename+'.csv', index=index)
-    print('File saved: ',path+filename+'.csv')
-    print('\tTime completed:', datetime.now())
+    logger.info(f'File saved: {path+filename}.csv')
 
 def save_text(text, filename, path=None, append_version=False, ext='txt'):
     """
