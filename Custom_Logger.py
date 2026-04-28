@@ -80,7 +80,7 @@ class Custom_Logger:
 
         """
         log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Adjusted format for microseconds
-        log_message = f"{log_time} - {self.logger.name} - {level.upper()} - {message}"
+        log_message = f"{log_time} - {self.logger.name} - {level.upper()}\n\n{message}"
         self.log_messages.append(log_message)
 
     def get_log_messages(self):
