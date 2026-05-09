@@ -180,7 +180,7 @@ def merge_and_validate(
     left_df_name='left', right_df_name='right', 
     drop_indicator_column=False, 
     id_column='Employee Employee Id',
-    fill_common_columns=False,
+    fill_common_columns=True,
     logger=None, warn_if_left_only=True
     ):
     """
@@ -696,12 +696,15 @@ def columns_to_function(
     - logging_level (int): The logging level to use.
     - drop (bool): Whether to drop the original columns after creating the new ones.
     - **kwargs: Additional keyword arguments to pass to the function.
+        - If using `verify_regex` as the function, also pass the following kwargs:
+            - regex (str): The regular expression pattern to verify against the column values. To verify email addresses, simply pass `regex='email'`.
+            - tag (str): The tag to append to invalid values. Default is 'invalid'.
 
     Returns:
     - pandas.DataFrame: A new DataFrame with the new columns.
 
     """
-    def validate_regex(row):
+    def get_invalid_values(row):
         if row.str.contains('\[invalid\]').any():
             row = row.replace({None: ''})
             invalid_values = ', '.join(row[row.str.contains(f'{kwargs["tag"]}')].values)
@@ -724,15 +727,16 @@ def columns_to_function(
         # Determine if the passed `regex` kwarg is a regex ; regex_name is 'email' if `regex='email'`
         regex_special_chars = r'^$.*+?{}[]\|()' 
         regex_name = 'regex' if any(char in regex_special_chars for char in kwargs["regex"]) else kwargs["regex"] 
-        df[f'invalid_{regex_name}'] = df[new_columns].apply(lambda x: validate_regex(x), axis=1)
+        df[f'invalid_{regex_name}'] = df[new_columns].apply(lambda x: get_invalid_values(x), axis=1)
         
-        # Replace invalid values with None
+        # Replace tag values with None
+        tag = kwargs.get("tag", "invalid")
         df[new_columns] = df[new_columns].fillna('').replace({np.nan: ''}).replace({
-            rf'.* \[{kwargs["tag"]}\]': None
+            rf'.* \[{tag}\]': None
         }, regex=True)
         if df[f'invalid_{regex_name}'].notna().any():
             df[f'invalid_{regex_name}'] = df[f'invalid_{regex_name}'].replace({
-                rf' \[{kwargs["tag"]}\]': r''}, regex=True)
+                rf' \[{tag}\]': r''}, regex=True)
         else:
             debug_messages.append(f'No invalid {regex_name} values found in the DataFrame.')
         df[new_columns] = df[new_columns].replace({'': None})
@@ -906,3 +910,107 @@ def deduplicate(df,  logger=None, **kwargs):
         df, column='duplicate', value=True, drop_column=True, logger=logger
     )
     return df
+
+def consolidate_columns(
+        df, columns, extract='unique', column=None, 
+        logger=None, logging_level=logging.INFO
+    ):
+    """
+    Consolidate multiple columns by counting non-null values and extracting values.
+    
+    Parameters:
+        - df (pd.DataFrame): The DataFrame to operate on.
+        - columns (list): List of column names to consolidate.
+        - extract (str): Either 'concat' to concatenate all non-null values with commas,
+                        or 'unique' to only show unique non-null values.
+        - column (str): Base name for the output columns. If None, uses the first column name.
+        - logger (logging.Logger): Optional logger to use for logging messages.
+        - logging_level (int): The logging level to use.
+    
+    Returns:
+        - pd.DataFrame: The DataFrame with new columns f"{column} count" and f"extracted {column}".
+    
+    Examples:
+        >>> df = pd.DataFrame({
+        ...     'email1': ['a@x.com', 'b@x.com', None],
+        ...     'email2': ['c@x.com', None, None],
+        ...     'email3': [None, 'd@x.com', 'e@x.com']
+        ... })
+        >>> 
+        >>> # Concatenate all non-null values
+        >>> result = consolidate_columns(df, ['email1', 'email2', 'email3'], extract='concat', column='email')
+        >>> # Creates 'email count' column with [2, 2, 1]
+        >>> # Creates 'extracted email' column with ['a@x.com, c@x.com', 'b@x.com, d@x.com', 'e@x.com']
+        >>> 
+        >>> # Extract unique non-null values
+        >>> result = consolidate_columns(df, ['email1', 'email2', 'email3'], extract='unique', column='email')
+        >>> # Creates 'email count' column with [2, 2, 1]
+        >>> # Creates 'extracted email' column with ['a@x.com', 'b@x.com', None]
+    """
+    logger = create_function_logger('consolidate_columns', logger, level=logging_level)
+
+    def consolidate_country_values(row):
+        """
+        If the row contains multiple country codes, return 'CAN' if any of them is 'CAN', otherwise concatenate unique non-null values. If there are no non-null values, return None.
+        """
+        non_null_values = row.dropna().astype(str).unique()
+        if len(non_null_values) > 0:
+            if 'CAN' in non_null_values and len(non_null_values) > 1:
+                df.loc[row.name, f'unique {column} count'] = 1
+                return 'CAN'
+            else:
+                return ', '.join(non_null_values)
+        else:
+            return None
+    
+    try:
+        # Use first column name as base if not provided
+        if column is None:
+            column = columns[0]
+        
+        debug_messages = []
+        info_messages = []
+        logger.info(f'Consolidating columns: {columns}\n\tExtract mode: {extract}\n\tOutput column base name: {column}')
+        
+        # Count non-null values across specified columns
+        df[f'{column} count'] = df[columns].notna().sum(axis=1)
+        df[f'unique {column} count'] = df[columns].nunique(axis=1)
+        
+        # Extract values based on the extract parameter
+        if extract == 'concat':
+            # Concatenate all non-null values with comma separation
+            df[f'extracted {column}'] = df[columns].apply(
+                lambda row: ', '.join(row.dropna().astype(str)) if row.notna().any() else None,
+                axis=1
+            )
+            debug_messages.append(f'Concatenated non-null values into "extracted {column}"')
+        elif extract == 'unique':
+            # Extract unique non-null values
+            if column.lower() != 'country':
+                df[f'extracted {column}'] = df[columns].apply(
+                    lambda row: ', '.join(row.dropna().astype(str).unique()) if row.notna().any() else None,
+                    axis=1
+                )
+            else:
+                df[f'extracted {column}'] = df[columns].apply(consolidate_country_values, axis=1)
+            debug_messages.append(f'Extracted unique non-null values into "extracted {column}"')
+        else:
+            raise ValueError(f'Invalid extract parameter: {extract}. Must be "concat" or "unique"')
+        
+        debug_messages.append(f'Created columns: "{column} count", "unique {column} count" and "extracted {column}"')
+        
+        info_messages.append(f'Value counts:\n\t{df[f"unique {column} count"].value_counts(dropna=False).sort_index().to_string().replace("\n", "\n\t")}')
+        info_messages.append(f'\n\t{df[f"{column} count"].value_counts(dropna=False).sort_index().to_string().replace("\n", "\n\t")}')
+        
+        logger.debug('\n'.join(debug_messages))
+        logger.info('\n'.join(info_messages))
+        
+        return df
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
+        raise

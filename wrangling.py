@@ -492,6 +492,8 @@ def return_duplicate_rows(df, subset=None, keep=False, id_column=None, logger=No
     messages.append(f'DataFrame shape: {df.shape}')
     if subset == None:
         subset = df.columns.tolist() 
+    elif isinstance(subset, str):
+        subset = [subset]
     if id_column in subset:
         subset.remove(id_column)
     messages.append(f'Subset: {subset}')
@@ -729,37 +731,47 @@ def convert_to_pascal_case(text):
     words = text.split()
     words = [w.title() for w in words]
     return ''.join(words)
+    return df
 
-
-# convert dates from string to datetime objects
-def date_columns(df,date_column='fl_date',format='%Y-%m-%d'):
+def parse_date_column(
+        df, date_column,
+        format='%Y-%m-%d', 
+        parse_attributes=False,
+        logger=None, 
+        logging_level=logging.INFO
+        ):
     """ 
     Take the dates in a dateframes to create new columns:
         _date_standard: Datetime data 
         _year
         _month
-    Parmaters:
+    Parameters:
     - df: Dataframe.
     - date_column: Name of the column containing the date strings.
-    - Format: Original date format in the dateframe. Default: '%d.%m.%Y'
+    - format: Original date format in the dateframe. Default: '%d.%m.%Y'
+    - parse_attributes: If True, creates additional columns for year and month.
+    - logger: Logger object for logging messages.
+    - logging_level: Logging level for the logger.
     
     Make sure to do the following import: 
     from datetime import datetime
     """
-
+    logger = create_function_logger('date_columns', logger, level=logging_level)
     date_column=str(date_column)
     
     # df[str(date_column+'_year')] = pd.to_datetime(df[date_column],
     #     format='%d.%m.%Y')
     date = pd.to_datetime(df[date_column],
         format=format)
-    # df.get(str(date_column+'_standard'),date)
-    # df.get(str(date_column+'_year'),date.dt.year)
-    # df.get(str(date_column+'_month'),date.dt.month)
-    df[str(date_column+'_standard')] = date
-    df[str(date_column+'_year')] = date.dt.year
-    df[str(date_column+'_month')] = date.dt.month
-    print('\tTime completed:', datetime.now())
+    
+    if parse_attributes:
+        logger.debug(f'Parsing date attributes for column `{date_column}`...')
+        df[str(date_column+'_standard')] = date
+        df[str(date_column+'_year')] = date.dt.year
+        df[str(date_column+'_month')] = date.dt.month
+    else:
+        df[date_column] = date
+    logger.debug(f'\tTime completed: {datetime.now()}')
     return df
 
 def compare_iterables(iterable1, iterable2, print_common=False, print_difference=True, logger=None, logging_level=logging.DEBUG):
