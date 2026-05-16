@@ -34,7 +34,8 @@ def load_and_describe_csv(
     if id_column != None:
         subset.remove(id_column)
     duplicate_rows = return_duplicate_rows(
-        df, subset=subset, id_column=id_column, logger=logger, logging_level=logging_level
+        df, subset=subset, id_column=id_column, logger=logger, logging_level=logging_level,
+        duplicate_column_name='load_csv_duplicate'
         )
     messages_list.append(f'\tNumber of null records: {df[subset].isnull().all(axis=1).sum()}')
     logger.debug('\n'.join(messages_list))

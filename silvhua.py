@@ -41,8 +41,8 @@ def save_image(image, filename, path, ext="png", append_timestamp=False):
     print(f"Image saved to {full_path}")
 
 def save_excel(
-    df, filename, path=None, sheet_name=None, append_version=False, index=False, wrapping=True, 
-    col_width=None, freeze_at='B2', overwrite=False
+    df, filename, path=None, sheet_name=None, append_version=False, wrapping=True, 
+    col_width=None, freeze_at='B2', logger=None, logging_level=logging.INFO
     ):
     """
     Export dataframe to Excel.
@@ -51,11 +51,14 @@ def save_excel(
     - filename: Root of the filename.
     - path (raw string): Use the format r'<path>'. If None, file is saved in the same directory.
     - append_version (bool): If true, append date and time to end of filename.
-    - index (bool): If true, save index.
     - wrapping (bool): If true, enable text wrapping in Excel.
     - col_width (dict): Dictionary specifying column widths. Keys are column indices, values are column widths.
+    - freeze_at (str): Excel cell reference to freeze panes at (e.g., 'B2' to freeze the first row and column).
+    - logger (Custom_Logger, optional): Logger instance for logging messages. If None, a default logger will be created.
     """
-    sheet_name = sheet_name if sheet_name else filename
+    messages_list = []
+    logger = create_function_logger('save_excel', logger, logging_level)
+    sheet_name = sheet_name if sheet_name else datetime.now().strftime("%Y-%m-%d_%H%M")
     if check_sheet_existence(filename, path, sheet_name=sheet_name) == False:
     # if (check_sheet_existence(filename, path, sheet_name=sheet_name) == False) | (overwrite == True):
         if path:
@@ -94,11 +97,12 @@ def save_excel(
             # Save the workbook
             workbook.save(filepath)
 
-        print('File saved:', path + filename + '.xlsx')
-        print('Time completed:', datetime.now())
+        messages_list.append(f'File saved: {path + filename + ".xlsx"}')
+        messages_list.append(f'Time completed: {datetime.now()}')
+        logger.log('\n'.join(messages_list))
     else:
         pass
-    return df
+    return filepath
 
 def check_sheet_existence(filename, path, sheet_name):
     if path:
@@ -163,8 +167,10 @@ def save_csv(df,filename,path=None,append_version=False, index=False, logger=Non
         path = f'{path}/'.replace('\\','/')
     if append_version == True:
         filename+=f"_{datetime.now().strftime('%Y-%m-%d_%H%M')}"
-    df.to_csv(path+filename+'.csv', index=index)
-    logger.info(f'File saved: {path+filename}.csv')
+    filepath = path+filename+'.csv'
+    df.to_csv(filepath, index=index)
+    logger.info(f'File saved: {filepath}')
+    return filepath
 
 def save_text(text, filename, path=None, append_version=False, ext='txt'):
     """

@@ -471,7 +471,10 @@ def filter_any_and_all_chain(
 
     return filtered_df
 
-def return_duplicate_rows(df, subset=None, keep=False, id_column=None, logger=None, logging_level=logging.DEBUG):
+def return_duplicate_rows(
+        df, subset=None, keep=False, id_column=None, logger=None, logging_level=logging.DEBUG, 
+        duplicate_column_name='duplicate', preserve_order=True, **kwargs
+        ):
     """
     Identify duplicate rows in a dataframe.
 
@@ -483,6 +486,8 @@ def return_duplicate_rows(df, subset=None, keep=False, id_column=None, logger=No
             first : Mark duplicates as True except for the first occurrence.
             last : Mark duplicates as True except for the last occurrence.
             False : Mark all duplicates as True.
+        - preserve_order (bool): If True, preserve the original order from the input DataFrame.
+            If False, sort by subset columns. Default True.
     Returns:
         - DataFrame with the duplicate rows.
     """
@@ -497,13 +502,21 @@ def return_duplicate_rows(df, subset=None, keep=False, id_column=None, logger=No
     if id_column in subset:
         subset.remove(id_column)
     messages.append(f'Subset: {subset}')
-    duplicate_index = df.duplicated(subset=subset, keep=keep)
-    duplicate_rows = df.loc[duplicate_index].sort_values(by=subset if subset else df.columns[0])
+    # Mark all duplicates in the original dataframe so that duplicate rows can be easily spotted during stakeholder review later
+    df[duplicate_column_name] = df.duplicated(subset=subset, keep=False, **kwargs)
+    # Get the duplicate rows based on the specified subset and keep parameters
+    duplicate_index = df.duplicated(subset=subset, keep=keep, **kwargs)
+    duplicate_rows = df.loc[duplicate_index]
+    
+    # Sort only if preserve_order is False
+    if not preserve_order:
+        duplicate_rows = duplicate_rows.sort_values(by=subset if subset else df.columns[0])
+    
     if id_column:
         messages.append(f'{id_column} values of duplicate rows: {sorted(list(set(duplicate_rows[id_column])))}')
     messages.append(f'\tReturning {keep if keep else "all"} duplicate rows.')
     logger.debug('\n'.join(messages))
-    logger.info(f'Number of duplicate rows: {df.duplicated(subset=subset, keep="first").sum()}')
+    logger.info(f'Number of duplicate rows (`{duplicate_column_name}` column): {df.duplicated(subset=subset, keep="first").sum()}')
     return duplicate_rows
 
 def remove_duplicates_by_lettercase(df, column='Reference'):
