@@ -199,7 +199,7 @@ def merge_and_validate(
         - left_df_name (str): Name to use for the left DataFrame in logs. Default is 'left'.
         - right_df_name (str): Name to use for the right DataFrame in logs. Default is 'right'.
         - drop_indicator_column (bool): If True, drops the merge indicator column after merging. Default is False.
-        - id_column (str): Column name to exclude from common columns when filling NaN values. Default is 'RID'.
+        - id_column (str): Column name to exclude from common columns when filling NaN values.
         - fill_common_columns (bool): If True, fills NaN values in common columns (except the id_column) with values from the corresponding '_y' columns after merging. Default is False.
         - logger (logging.Logger): Optional logger to use for logging messages. If None, a default logger will be created. Default is None.
         - warn_if_left_only (bool): If True, logs a warning if there are any rows in the merged DataFrame that are only present in the left DataFrame. Default is True.
@@ -278,6 +278,192 @@ def merge_and_validate(
         logger.error(message)
     
     return merged_df
+
+def find_rows_matching_regex(df, columns, regex=r'\(|\)|\"', logger=None):
+    """
+    Filter a DataFrame to find rows where values in specified columns match a given regex pattern.
+    
+    Parameters:
+        - df (pd.DataFrame): The DataFrame to filter.
+        - columns (str, list, or 'all'): Column(s) to search for the regex pattern.
+            - If a string (other than 'all'), searches in that single column.
+            - If a list of strings, searches in those columns.
+            - If 'all', searches across all columns in the DataFrame.
+        - regex (str): The regular expression pattern to match.
+        - logger (logging.Logger): Optional logger to use for logging messages. If None, a default logger will be created. Default is None.
+    
+    Returns:
+        - pd.DataFrame: A filtered DataFrame containing only rows where at least one of the 
+          specified columns matches the regex pattern.
+    
+    Examples:
+        # Find rows with parentheses in specific columns
+        pattern = r'(\(|\)|\")'
+        result = find_rows_matching_regex(df, ['First Name', 'Last Name'], pattern)
+        
+        # Find rows with quotes in a single column
+        pattern = r'(\")'
+        result = find_rows_matching_regex(df, 'Employee Name', pattern)
+        
+        # Search all columns for a pattern
+        pattern = r'\d{3}-\d{4}'
+        result = find_rows_matching_regex(df, 'all', pattern)
+    """
+    logger = create_function_logger('find_rows_matching_regex', logger)
+    
+    original_row_count = len(df)
+    
+    # Handle 'all' columns case
+    if columns == 'all':
+        columns = df.columns.tolist()
+    # Convert single column string to list
+    elif isinstance(columns, str):
+        columns = [columns]
+    
+    # Initialize filter as False for allow rows. We'll use OR logic to combine filters across columns.
+    combined_filter = pd.Series([False] * len(df), index=df.index)
+    
+    # Apply regex search across specified columns
+    for column in columns:
+        if column in df.columns:
+            # Use str.contains with regex=True, handling NaN values
+            column_filter = df[column].astype(str).str.contains(regex, regex=True, na=False)
+            combined_filter = combined_filter | column_filter # Once a given row becomes True due to the OR logic, it stays True when iterating on the remaining columns.
+        else:
+            raise ValueError(f"Column '{column}' not found in DataFrame. Available columns: {df.columns.tolist()}")
+    
+    filtered_df = df[combined_filter]
+    filtered_row_count = len(filtered_df)
+    message = (
+        f'Filtering with regex pattern: {regex}\n'
+        f'Columns searched: {columns}\n'
+        f'Original row count: {original_row_count}\n'
+        f'Filtered row count: {filtered_row_count}'
+    )
+    
+    logger.info(message)
+    
+    return filtered_df
+
+def map_strings(series, mapping_dict, remove_unmapped=True, use_regex=False, logger=None):
+    """
+    Map values in a pandas Series to new values using a mapping dictionary.
+    
+    Parameters:
+        - series (pd.Series): The Series containing string values to map.
+        - mapping_dict (dict): Dictionary mapping original values (or regex patterns) to new values.
+        - remove_unmapped (bool): If True, unmapped values become NaN. If False, unmapped values are preserved. Default is True.
+        - use_regex (bool): If True, mapping_dict keys are treated as regex patterns. If False, exact matching is used. Default is False.
+        - logger (logging.Logger): Optional logger to use for logging messages. If None, a default logger will be created. Default is None.
+    
+    Returns:
+        - pd.Series: The Series with mapped values.
+    
+    Examples:
+        s = pd.Series(['apple', 'banana', 'cherry'])
+        mapping = {'apple': 'red', 'banana': 'yellow'}
+        
+        # Remove unmapped values (default behavior)
+        result = map_strings(s, mapping)
+        # Returns: ['red', 'yellow', NaN]
+        
+        # Preserve unmapped values
+        result = map_strings(s, mapping, remove_unmapped=False)
+        # Returns: ['red', 'yellow', 'cherry']
+        
+        # Use regex patterns
+        s2 = pd.Series(['apple123', 'banana456', 'cherry'])
+        regex_mapping = {r'apple\d+': 'red fruit', r'banana\d+': 'yellow fruit'}
+        result = map_strings(s2, regex_mapping, use_regex=True, remove_unmapped=False)
+        # Returns: ['red fruit', 'yellow fruit', 'cherry']
+
+        country_mapping = {
+            r'(?i)\bCanad.+': 'CAN', # Replaces any string containing 'Canad' (case-insensitive) with 'CAN'
+        }
+    """
+    logger = create_function_logger('map_strings', logger)
+    
+    try:
+        log_parts = []
+        warning_parts = []
+        log_parts.append(
+            f'Values before mapping:\n{series.value_counts(dropna=False).to_string().replace("\n", "\n\t")}\n'
+        )
+        if use_regex:
+            # Use regex-based replacement
+            mapped_series = series.astype(str).copy()
+            # Track which values were changed by any pattern
+            changed_mask = pd.Series([False] * len(series), index=series.index)
+            
+            # Apply each regex pattern sequentially
+            for pattern, replacement in mapping_dict.items():
+                # Find matches for this pattern
+                pattern_matches = mapped_series.str.contains(pattern, regex=True, na=False)
+                # Apply replacement
+                mapped_series = mapped_series.str.replace(pattern, replacement, regex=True)
+                # Update changed mask
+                changed_mask = changed_mask | pattern_matches
+            
+            # Identify values that were never matched by any pattern
+            unmapped_mask = ~changed_mask & series.notna()
+            unmapped_values = series[unmapped_mask]
+            
+            # If remove_unmapped is True, set unmatched values to NaN
+            if remove_unmapped:
+                mapped_series[unmapped_mask] = np.nan
+                if unmapped_mask.sum() > 0:
+                    log_parts.append(f'Action: Removed {unmapped_mask.sum()} unmapped values (set to NaN)')
+            else:
+                if unmapped_mask.sum() > 0:
+                    log_parts.append(f'Action: Preserved {unmapped_mask.sum()} unmapped values')
+                
+        else:
+            # Use exact matching with .map()
+            mapped_series = series.map(mapping_dict)
+            
+            # Identify unmapped values (those that became NaN after mapping)
+            unmapped_mask = mapped_series.isna() & series.notna()
+            unmapped_values = series[unmapped_mask]
+            
+            # If remove_unmapped is False, preserve original values for unmapped entries
+            if not remove_unmapped:
+                mapped_series = mapped_series.fillna(series)
+                if unmapped_mask.sum() > 0:
+                    log_parts.append(f'Action: Preserved {unmapped_mask.sum()} unmapped values')
+                # If any unmapped values are tuples, convert them to joined strings for better logging
+                if unmapped_values.apply(lambda x: isinstance(x, tuple)).any():
+                    unmapped_values = unmapped_values.apply(
+                        lambda x: f"({', '.join(str(v) for v in x if pd.notna(v))})" if isinstance(x, tuple) else x
+                    )
+        
+        # Add final value counts
+        log_parts.append(f'\nValues after mapping:\n{mapped_series.value_counts(dropna=False).to_string().replace("\n", "\n\t")}')
+            
+        # Build log message for unmapped values
+        if len(unmapped_values) > 0:
+            unmapped_counts = unmapped_values.value_counts()
+            warning_parts.append(
+                f'\nUnmapped values: {len(unmapped_values)} total ({len(unmapped_counts)} unique)\n'
+                f'{unmapped_counts.to_string().replace("\n", "\n\t")}'
+            )
+        else:
+            log_parts.append('All values successfully mapped')
+        
+        # Single log message at the end
+        logger.info('\n'.join(log_parts))
+        if warning_parts:
+            logger.warning('\n'.join(warning_parts))
+        
+        return mapped_series
+        
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
+        raise
 
 def concatenate_df(dfs_list, axis=0, renaming_dict={}, logger=None):
     """
@@ -706,7 +892,7 @@ def columns_to_function(
 
     """
     def get_invalid_values(row):
-        if row.str.contains('\[invalid\]').any():
+        if row.str.contains(r'\[invalid\]').any():
             row = row.replace({None: ''})
             invalid_values = ', '.join(row[row.str.contains(f'{kwargs["tag"]}')].values)
             return invalid_values
@@ -786,6 +972,28 @@ def verify_regex(series, regex='email', tag='invalid', logger=None, logging_leve
     if len(log_messages) > 0:
         logger.debug('\n'.join(log_messages))
     return series
+
+def array_to_string(series, logger=None, logging_level=logging.DEBUG, separator=', ', **kwargs):
+    """
+    Convert pandas string array to a single string.
+    
+    Parameters:
+    - series: pandas Series containing string arrays
+    - separator: string to join array elements (default: ', ')
+    """
+    def convert_value(val):
+        if pd.isna(val):
+            return None
+        # If it's already a string, return as-is
+        if isinstance(val, str):
+            return val
+        # If it's an array-like object, join elements
+        try:
+            return separator.join(str(item) for item in val)
+        except:
+            return str(val)
+    
+    return series.apply(convert_value)
 
 def lookup_value(id, df, id_column, value_column):
     result = []
