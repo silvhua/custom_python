@@ -7,7 +7,8 @@ from Custom_Logger import *
 import string
 
 def load_and_describe_csv(
-        filename, path, subset=None, id_column=0, 
+        filename, path, subset=None, id_column=0,
+        remove_duplicates=False, 
         logger=None, logging_level=logging.INFO, file_level=logging.DEBUG, **kwargs
     ):
     """
@@ -19,6 +20,7 @@ def load_and_describe_csv(
     - kwargs: Additional arguments to pass to pd.read_csv
     """
     messages_list = []
+    info_messages_list = []
     logger = create_function_logger(
         'load_and_describe_csv', logger, level=logging_level, file_level=file_level
     )
@@ -35,11 +37,17 @@ def load_and_describe_csv(
         subset.remove(id_column)
     duplicate_rows = return_duplicate_rows(
         df, subset=subset, id_column=id_column, logger=logger, logging_level=logging_level,
-        duplicate_column_name='load_csv_duplicate'
+        duplicate_column_name='true_duplicate'
         )
+    if len(duplicate_rows) > 0 and remove_duplicates == True:
+        info_messages_list.append(f'Found {duplicate_rows["true_duplicate"].sum()} duplicate records based on subset columns: {subset}. Removing duplicates and keeping the first occurrence.')
+        df = df.drop_duplicates(keep='first')
+        info_messages_list.append(f'Shape after removing duplicates: {df.shape}')
     messages_list.append(f'\tNumber of null records: {df[subset].isnull().all(axis=1).sum()}')
     logger.debug('\n'.join(messages_list))
     logger.debug(df.dtypes)
+    if len(info_messages_list) > 0:
+        logger.info('\n'.join(info_messages_list))
     return df
 
 def drop_rows_with_value(
@@ -345,44 +353,11 @@ def find_rows_matching_regex(df, columns, regex=r'\(|\)|\"', logger=None):
     
     return filtered_df
 
-def map_strings(series, mapping_dict, remove_unmapped=True, use_regex=False, logger=None):
+def _map_strings_series_legacy(series, mapping_dict, remove_unmapped=True, use_regex=False, logger=None):
     """
-    Map values in a pandas Series to new values using a mapping dictionary.
-    
-    Parameters:
-        - series (pd.Series): The Series containing string values to map.
-        - mapping_dict (dict): Dictionary mapping original values (or regex patterns) to new values.
-        - remove_unmapped (bool): If True, unmapped values become NaN. If False, unmapped values are preserved. Default is True.
-        - use_regex (bool): If True, mapping_dict keys are treated as regex patterns. If False, exact matching is used. Default is False.
-        - logger (logging.Logger): Optional logger to use for logging messages. If None, a default logger will be created. Default is None.
-    
-    Returns:
-        - pd.Series: The Series with mapped values.
-    
-    Examples:
-        s = pd.Series(['apple', 'banana', 'cherry'])
-        mapping = {'apple': 'red', 'banana': 'yellow'}
-        
-        # Remove unmapped values (default behavior)
-        result = map_strings(s, mapping)
-        # Returns: ['red', 'yellow', NaN]
-        
-        # Preserve unmapped values
-        result = map_strings(s, mapping, remove_unmapped=False)
-        # Returns: ['red', 'yellow', 'cherry']
-        
-        # Use regex patterns
-        s2 = pd.Series(['apple123', 'banana456', 'cherry'])
-        regex_mapping = {r'apple\d+': 'red fruit', r'banana\d+': 'yellow fruit'}
-        result = map_strings(s2, regex_mapping, use_regex=True, remove_unmapped=False)
-        # Returns: ['red fruit', 'yellow fruit', 'cherry']
-
-        country_mapping = {
-            r'(?i)\bCanad.+': 'CAN', # Replaces any string containing 'Canad' (case-insensitive) with 'CAN'
-        }
+    Legacy implementation: Map values in a pandas Series to new values using a mapping dictionary.
+    This function maintains backward compatibility with older scripts.
     """
-    logger = create_function_logger('map_strings', logger)
-    
     try:
         log_parts = []
         warning_parts = []
@@ -430,18 +405,20 @@ def map_strings(series, mapping_dict, remove_unmapped=True, use_regex=False, log
                 mapped_series = mapped_series.fillna(series)
                 if unmapped_mask.sum() > 0:
                     log_parts.append(f'Action: Preserved {unmapped_mask.sum()} unmapped values')
-                # If any unmapped values are tuples, convert them to joined strings for better logging
-                if unmapped_values.apply(lambda x: isinstance(x, tuple)).any():
-                    unmapped_values = unmapped_values.apply(
-                        lambda x: f"({', '.join(str(v) for v in x if pd.notna(v))})" if isinstance(x, tuple) else x
-                    )
         
         # Add final value counts
         log_parts.append(f'\nValues after mapping:\n{mapped_series.value_counts(dropna=False).to_string().replace("\n", "\n\t")}')
             
         # Build log message for unmapped values
         if len(unmapped_values) > 0:
-            unmapped_counts = unmapped_values.value_counts()
+            # For display purposes, convert tuples to strings
+            display_unmapped = unmapped_values.copy()
+            if display_unmapped.apply(lambda x: isinstance(x, tuple)).any():
+                display_unmapped = display_unmapped.apply(
+                    lambda x: f"({', '.join(str(v) for v in x if pd.notna(v))})" if isinstance(x, tuple) else x
+                )
+            
+            unmapped_counts = display_unmapped.value_counts()
             warning_parts.append(
                 f'\nUnmapped values: {len(unmapped_values)} total ({len(unmapped_counts)} unique)\n'
                 f'{unmapped_counts.to_string().replace("\n", "\n\t")}'
@@ -455,6 +432,176 @@ def map_strings(series, mapping_dict, remove_unmapped=True, use_regex=False, log
             logger.warning('\n'.join(warning_parts))
         
         return mapped_series
+        
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
+        raise
+
+def map_strings(
+        df, source_column=None, mapping_dict=None, new_column=None, remove_unmapped=True, use_regex=False, 
+        series=None,
+        logger=None
+        ):
+    """
+    Map values in a DataFrame column to new values using a mapping dictionary.
+    
+    BACKWARD COMPATIBILITY: Also supports legacy Series-based API:
+        map_strings(series, mapping_dict, remove_unmapped=True, use_regex=False, logger=None)
+    
+    Parameters:
+        - df (pd.DataFrame or pd.Series): The DataFrame containing the column to map, or a Series (legacy usage).
+        - source_column (str): The name of the column containing values to map. Not used in legacy Series mode.
+        - new_column (str): The name of the column to store mapped values. Not used in legacy Series mode.
+        - mapping_dict (dict): Dictionary mapping original values (or regex patterns) to new values.
+        - remove_unmapped (bool): If True, unmapped values become NaN in new_column. If False, unmapped values are preserved. Default is True.
+        - use_regex (bool): If True, mapping_dict keys are treated as regex patterns. If False, exact matching is used. Default is False.
+        - logger (logging.Logger): Optional logger to use for logging messages. If None, a default logger will be created. Default is None.
+    
+    Returns:
+        - pd.DataFrame: The DataFrame with new columns added (DataFrame mode):
+            - new_column: The mapped values
+            - f'unmapped {source_column}': Original values for unmapped entries, NaN for mapped entries
+        - pd.Series: The Series with mapped values (legacy Series mode)
+    
+    Examples:
+        # New DataFrame API
+        df = pd.DataFrame({'country': ['apple', 'banana', 'cherry']})
+        mapping = {'apple': 'red', 'banana': 'yellow'}
+        
+        # Remove unmapped values (default behavior)
+        result = map_strings(df, 'country', mapping, 'mapped_country')
+        # Creates 'mapped_country' column with ['red', 'yellow', NaN]
+        # Creates 'unmapped country' column with [NaN, NaN, 'cherry']
+        
+        # Preserve unmapped values
+        result = map_strings(df, 'country', mapping, 'mapped_country', remove_unmapped=False)
+        # Creates 'mapped_country' column with ['red', 'yellow', 'cherry']
+        # Creates 'unmapped country' column with [NaN, NaN, 'cherry']
+        
+        # Use regex patterns
+        df2 = pd.DataFrame({'code': ['apple123', 'banana456', 'cherry']})
+        regex_mapping = {r'apple\d+': 'red fruit', r'banana\d+': 'yellow fruit'}
+        result = map_strings(df2, 'code', regex_mapping, 'mapped_code', use_regex=True, remove_unmapped=False)
+        # Creates 'mapped_code' column with ['red fruit', 'yellow fruit', 'cherry']
+        # Creates 'unmapped code' column with [NaN, NaN, 'cherry']
+        
+        # Legacy Series API (backward compatible)
+        s = pd.Series(['apple', 'banana', 'cherry'])
+        result = map_strings(s, mapping)  # Returns mapped Series
+        
+        country_mapping = {
+            r'(?i)\bCanad.+': 'CAN', # Replaces any string containing 'Canad' (case-insensitive) with 'CAN'
+        }
+    """
+    # Detect legacy Series-based API usage
+    # Old API: map_strings(series, mapping_dict, remove_unmapped=True, use_regex=False, logger=None)
+    # If first arg is a Series and second arg is a dict, it's the old API
+    if isinstance(df, pd.Series) and isinstance(source_column, dict):
+        series = df
+        legacy_mapping_dict = source_column
+        legacy_remove_unmapped = new_column if isinstance(new_column, bool) else True
+        legacy_use_regex = mapping_dict if isinstance(mapping_dict, bool) else False
+        legacy_logger = remove_unmapped if not isinstance(remove_unmapped, bool) else logger
+        
+        legacy_logger = create_function_logger('map_strings', legacy_logger)
+        return _map_strings_series_legacy(series, legacy_mapping_dict, legacy_remove_unmapped, legacy_use_regex, legacy_logger)
+    
+    # New DataFrame API
+    logger = create_function_logger('map_strings', logger)
+    
+    try:
+        series = df[source_column]
+        if new_column is None:
+            new_column = f'mapped {source_column}'
+        log_parts = []
+        warning_parts = []
+        log_parts.append(
+            f'Mapping column "{source_column}" to "{new_column}"\n'
+            f'Values before mapping:\n{series.value_counts(dropna=False).to_string().replace("\n", "\n\t")}\n'
+        )
+        
+        if use_regex:
+            # Use regex-based replacement
+            mapped_series = series.astype(str).copy()
+            # Track which values were changed by any pattern
+            changed_mask = pd.Series([False] * len(series), index=series.index)
+            
+            # Apply each regex pattern sequentially
+            for pattern, replacement in mapping_dict.items():
+                # Find matches for this pattern
+                pattern_matches = mapped_series.str.contains(pattern, regex=True, na=False)
+                # Apply replacement
+                mapped_series = mapped_series.str.replace(pattern, replacement, regex=True)
+                # Update changed mask
+                changed_mask = changed_mask | pattern_matches
+            
+            # Identify values that were never matched by any pattern
+            unmapped_mask = ~changed_mask & series.notna()
+            unmapped_values = series[unmapped_mask]
+            
+            # Create unmapped column - original values for unmapped, NaN for mapped
+            df[f'unmapped {source_column}'] = series.where(unmapped_mask, np.nan)
+            
+            # If remove_unmapped is True, set unmatched values to NaN
+            if remove_unmapped:
+                mapped_series[unmapped_mask] = np.nan
+                if unmapped_mask.sum() > 0:
+                    log_parts.append(f'Action: Removed {unmapped_mask.sum()} unmapped values (set to NaN)')
+            else:
+                if unmapped_mask.sum() > 0:
+                    log_parts.append(f'Action: Preserved {unmapped_mask.sum()} unmapped values')
+                
+        else:
+            # Use exact matching with .map()
+            mapped_series = series.map(mapping_dict)
+            
+            # Identify unmapped values (those that became NaN after mapping)
+            unmapped_mask = mapped_series.isna() & series.notna()
+            unmapped_values = series[unmapped_mask]
+            
+            # Create unmapped column - original values for unmapped, NaN for mapped
+            df[f'unmapped {source_column}'] = series.where(unmapped_mask, np.nan)
+            
+            # If remove_unmapped is False, preserve original values for unmapped entries
+            if not remove_unmapped:
+                mapped_series = mapped_series.fillna(series)
+                if unmapped_mask.sum() > 0:
+                    log_parts.append(f'Action: Preserved {unmapped_mask.sum()} unmapped values')
+        
+        # Store the mapped series in the new column
+        df[new_column] = mapped_series
+        
+        # Add final value counts
+        log_parts.append(f'\nValues after mapping:\n{df[new_column].value_counts(dropna=False).to_string().replace("\n", "\n\t")}')
+            
+        # Build log message for unmapped values
+        if len(unmapped_values) > 0:
+            # For display purposes, convert tuples to strings
+            display_unmapped = unmapped_values.copy()
+            if display_unmapped.apply(lambda x: isinstance(x, tuple)).any():
+                display_unmapped = display_unmapped.apply(
+                    lambda x: f"({', '.join(str(v) for v in x if pd.notna(v))})" if isinstance(x, tuple) else x
+                )
+            
+            unmapped_counts = display_unmapped.value_counts()
+            warning_parts.append(
+                f'\nUnmapped values: {len(unmapped_values)} total ({len(unmapped_counts)} unique)\n'
+                f'{unmapped_counts.to_string().replace("\n", "\n\t")}'
+            )
+        else:
+            log_parts.append('All values successfully mapped')
+        
+        # Single log message at the end
+        logger.info('\n'.join(log_parts))
+        if warning_parts:
+            logger.warning('\n'.join(warning_parts))
+        
+        return df
         
     except Exception as error:
         exc_type, exc_obj, tb = sys.exc_info()
@@ -1215,6 +1362,140 @@ def consolidate_columns(
         logger.info('\n'.join(info_messages))
         
         return df
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
+        raise
+
+def aggregate_latest_consecutive_group_for_group(df, initial_groupby, new_column,**kwargs):
+    """
+    Helper function to apply `aggregate_latest_consecutive_group` after grouping a DataFrame.
+
+    Parameters:
+    - df (pd.DataFrame): The input DataFrame.
+    - initial_groupby (str or list): The column(s) to group by before applying the aggregation function.
+    - kwargs: Additional keyword arguments to pass to `aggregate_latest_consecutive_group`.
+
+    Example:
+        df = aggregate_latest_consecutive_group_for_group(
+        df=df,
+        initial_groupby='Employee Number',
+        groupby_column='Employment Status Name',
+        agg_func='min', 
+        columns='Employee Employment Status Effective Start',
+    )
+    """
+    # Use apply() to get the result for each employee, then map it back
+    aggregated_df = df.groupby(initial_groupby).apply(
+        lambda group: aggregate_latest_consecutive_group(
+            df=group, 
+            **kwargs
+        )
+    )
+    # Map the result back to the DataFrame
+    df[new_column] = df['Employee Number'].map(aggregated_df)
+    return df
+
+def aggregate_latest_consecutive_group(
+        df, groupby_column, agg_func='last', columns=None,
+        logger=None
+        ):
+    """
+    Aggregate values in a DataFrame based on the latest consecutive occurrences of a specified column.
+
+    Parameters:
+    - df (pd.DataFrame): The input DataFrame.
+    - groupby_column (str): The column to identify consecutive values.
+    - agg_func (str or function): The aggregation function to apply to other columns. Default is 'last'.
+    - columns (list, optional): The columns to apply the aggregation function to. Default is None, which means all columns except the specified column.
+    - logger (logging.Logger, optional): Logger for logging messages. Default is None.
+
+    Returns:
+    pd.DataFrame: The aggregated DataFrame.
+
+    Example:
+
+    >>> df = pd.DataFrame({
+    ...     'group': ['A', 'A', 'B', 'B', 'A', 'A', 'A'],
+    ...     'value': [1, 2, 3, 4, 5, 6, 7]
+    ... })
+    >>> aggregate_latest_consecutive_group(df, 'group', agg_func='sum')
+        18
+
+    """
+    logger = create_function_logger(f'aggregate_latest_consecutive_group_{__name__}', logger)
+    try:
+        aggregated_df = aggregate_by_consecutive_values(
+            df=df, 
+            groupby_column=groupby_column,
+            columns=columns, 
+            agg_func=agg_func, 
+            logger=logger
+            )
+        # Get the latest consecutive group (last row)
+        if len(aggregated_df) > 0:
+            return aggregated_df.iloc[-1][columns] if columns else aggregated_df.iloc[-1]
+        return pd.Series()
+    except Exception as error:
+        exc_type, exc_obj, tb = sys.exc_info()
+        f = tb.tb_frame
+        lineno = tb.tb_lineno
+        filename = f.f_code.co_filename
+        message = f'An error occurred on line {lineno} in {filename}: {error}.'
+        logger.error(message)
+        raise
+
+def aggregate_by_consecutive_values(
+        df, groupby_column, 
+        agg_func='min', 
+        columns=None,
+        logger=None
+        ):
+    """
+
+    Aggregate values in a DataFrame based on consecutive occurrences of a specified column.
+
+    Parameters:
+    - df (pd.DataFrame): The input DataFrame.
+    - groupby_column (str): The column to identify consecutive values.
+    - agg_func (str or function): The aggregation function to apply to other columns. Default is 'min'.
+    - columns (list, optional): The columns to apply the aggregation function to. Default is None, which means all columns except the specified column.
+    - logger (logging.Logger, optional): Logger for logging messages. Default is None.
+
+    Returns:
+    pd.DataFrame: The aggregated DataFrame.
+
+    Example:
+
+    >>> df = pd.DataFrame({
+    ...     'group': ['A', 'A', 'B', 'B', 'A', 'A', 'A'],
+    ...     'value': [1, 2, 3, 4, 5, 6, 7]
+    ... })
+    >>> aggregate_by_consecutive_values(df, 'group', agg_func='sum')
+        group  value
+    0     A      3
+    1     B      7
+    2     A     18
+
+    """
+    logger = create_function_logger(f'aggregate_by_consecutive_values_{__name__}', logger)
+    try:
+        if columns is None:
+            columns = df.columns.difference([groupby_column]).tolist()
+        elif isinstance(columns, str):
+            columns = [columns]
+        # Create a temporary column to identify consecutive groups. The `_group` values will be 1, 2, 3, etc. for each consecutive group of the same value in `groupby_column`.
+        df['_group'] = (df[groupby_column] != df[groupby_column].shift()).cumsum()
+        aggregated_df = df.groupby('_group').agg({
+            groupby_column: 'first', 
+            **{col: agg_func for col in columns}
+            }).reset_index(drop=True)
+        df.drop(columns=['_group'], inplace=True)
+        return aggregated_df
     except Exception as error:
         exc_type, exc_obj, tb = sys.exc_info()
         f = tb.tb_frame
