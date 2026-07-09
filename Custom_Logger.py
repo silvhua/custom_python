@@ -1,12 +1,14 @@
 import logging
 from datetime import datetime, timezone, timedelta
 import time
+from zoneinfo import ZoneInfo
 
 class Custom_Logger:
     def __init__(
             self, logger_name=__name__, level=logging.DEBUG, file_level=logging.DEBUG,
             propagate=False, log_file=None, localtime=True,
-            log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files'
+            log_path=r'C:\Users\silvh\OneDrive\lighthouse\custom_python\files\logger_files',
+            tz='Canada/Pacific'
             ):
         """
         Initialize the custom_logger with the specified parameters.
@@ -16,7 +18,9 @@ class Custom_Logger:
             - level (int): The logging level (default is logging.DEBUG).
             - propagate (bool): Whether the logs should be propagated to parent loggers (default is False).
             - log_file (str): The name of the log file (default is None).
-            - log_path (str): The path to store log files ]
+            - localtime (bool): Whether to use local time for timestamps (default is True). Only used if tz is None.
+            - log_path (str): The path to store log files
+            - tz (string): Timezone string for timestamps (default is None, uses localtime or UTC based on localtime param)
 
         Returns:
             None
@@ -28,9 +32,19 @@ class Custom_Logger:
         self.logger.setLevel(level)
         self.logger.propagate = propagate
         self.log_messages = []  # New attribute to store log messages
+        self.tz = ZoneInfo(tz) if tz else None  # Store timezone for use in save_log_messages
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s:\n%(message)s\n')
-        if localtime:
+        
+        # Set up timezone-aware converter
+        if tz:
+            def custom_time_converter(timestamp, tz=self.tz):
+                dt = datetime.fromtimestamp(timestamp, tz=timezone.utc)
+                return dt.astimezone(self.tz).timetuple()
+            formatter.converter = custom_time_converter
+        elif localtime:
             formatter.converter = time.localtime  # Use local time
+        else:
+            formatter.converter = time.gmtime  # Use UTC
         handler_messages = ''
         console_handler = None
         self.save = True if level == logging.DEBUG else False            
@@ -79,7 +93,10 @@ class Custom_Logger:
         - message (str): The message to be logged
 
         """
-        log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Adjusted format for microseconds
+        if self.tz:
+            log_time = datetime.now(self.tz).strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]
+        else:
+            log_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3]  # Adjusted format for microseconds
         log_message = f"{log_time} - {self.logger.name} - {level.upper()}\n\n{message}"
         self.log_messages.append(log_message)
 
