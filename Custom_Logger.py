@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
+import os
 import time
 from zoneinfo import ZoneInfo
 
@@ -17,7 +18,7 @@ class Custom_Logger:
             - logger_name (str): The name of the logger (default is 'custom_logger').
             - level (int): The logging level (default is logging.DEBUG).
             - propagate (bool): Whether the logs should be propagated to parent loggers (default is False).
-            - log_file (str): The name of the log file (default is None).
+            - log_file (str): The name of the log file (default is None). If None, then the file handler will not be created.
             - localtime (bool): Whether to use local time for timestamps (default is True). Only used if tz is None.
             - log_path (str): The path to store log files
             - tz (string): Timezone string for timestamps (default is None, uses localtime or UTC based on localtime param)
@@ -66,6 +67,12 @@ class Custom_Logger:
         self.console_handler = console_handler
 
         if log_file:
+            if log_path is None:
+                log_path = os.path.join("/lakehouse/default/Files", "logs")
+            else:
+                log_path = convert_windows_path(log_path)
+            if log_path is not None:
+                os.makedirs(log_path, exist_ok=True)
             file_handler = None
             log_path = convert_windows_path(log_path)
         

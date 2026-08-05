@@ -362,8 +362,8 @@ def _map_strings_series_legacy(series, mapping_dict, remove_unmapped=True, use_r
         log_parts = []
         warning_parts = []
         log_parts.append(
-            f'Values before mapping:\n{series.value_counts(dropna=False).to_string().replace("\n", "\n\t")}\n'
-        )
+            f'Values before mapping:\n{series.value_counts(dropna=False).to_string().replace(chr(10), chr(10) + chr(9))}\n'
+        ) # Replace newline characters with newline + tab for better formatting in logs
         if use_regex:
             # Use regex-based replacement
             mapped_series = series.astype(str).copy()
@@ -407,7 +407,7 @@ def _map_strings_series_legacy(series, mapping_dict, remove_unmapped=True, use_r
                     log_parts.append(f'Action: Preserved {unmapped_mask.sum()} unmapped values')
         
         # Add final value counts
-        log_parts.append(f'\nValues after mapping:\n{mapped_series.value_counts(dropna=False).to_string().replace("\n", "\n\t")}')
+        log_parts.append(f'\nValues after mapping:\n{mapped_series.value_counts(dropna=False).to_string().replace(chr(10), chr(10) + chr(9))}') # Replace newline characters with newline + tab for better formatting in logs
             
         # Build log message for unmapped values
         if len(unmapped_values) > 0:
@@ -421,8 +421,8 @@ def _map_strings_series_legacy(series, mapping_dict, remove_unmapped=True, use_r
             unmapped_counts = display_unmapped.value_counts()
             warning_parts.append(
                 f'\nUnmapped values: {len(unmapped_values)} total ({len(unmapped_counts)} unique)\n'
-                f'{unmapped_counts.to_string().replace("\n", "\n\t")}'
-            )
+                f'{unmapped_counts.to_string().replace(chr(10), chr(10) + chr(9))}'
+            ) # Replace newline characters with newline + tab for better formatting in logs
         else:
             log_parts.append('All values successfully mapped')
         
@@ -522,8 +522,8 @@ def map_strings(
         warning_parts = []
         log_parts.append(
             f'Mapping column "{source_column}" to "{new_column}"\n'
-            f'Values before mapping:\n{series.value_counts(dropna=False).to_string().replace("\n", "\n\t")}\n'
-        )
+            f'Values before mapping:\n{series.value_counts(dropna=False).to_string().replace(chr(10), chr(10) + chr(9))}\n'
+        ) # Replace newline characters with newline + tab for better formatting in logs
         
         if use_regex:
             # Use regex-based replacement
@@ -577,7 +577,7 @@ def map_strings(
         df[new_column] = mapped_series
         
         # Add final value counts
-        log_parts.append(f'\nValues after mapping:\n{df[new_column].value_counts(dropna=False).to_string().replace("\n", "\n\t")}')
+        log_parts.append(f'\nValues after mapping:\n{df[new_column].value_counts(dropna=False).to_string().replace(chr(10), chr(10) + chr(9))}') # Replace newline characters with newline + tab for better formatting in logs
             
         # Build log message for unmapped values
         if len(unmapped_values) > 0:
@@ -591,8 +591,8 @@ def map_strings(
             unmapped_counts = display_unmapped.value_counts()
             warning_parts.append(
                 f'\nUnmapped values: {len(unmapped_values)} total ({len(unmapped_counts)} unique)\n'
-                f'{unmapped_counts.to_string().replace("\n", "\n\t")}'
-            )
+                f'{unmapped_counts.to_string().replace(chr(10), chr(10) + chr(9))}'
+            ) # Replace newline characters with newline + tab for better formatting in logs
         else:
             log_parts.append('All values successfully mapped')
         
@@ -1355,8 +1355,8 @@ def consolidate_columns(
         
         debug_messages.append(f'Created columns: "{column} count", "unique {column} count" and "extracted {column}"')
         
-        info_messages.append(f'Value counts:\n\t{df[f"unique {column} count"].value_counts(dropna=False).sort_index().to_string().replace("\n", "\n\t")}')
-        info_messages.append(f'\n\t{df[f"{column} count"].value_counts(dropna=False).sort_index().to_string().replace("\n", "\n\t")}')
+        info_messages.append(f'Value counts:\n\t{df[f"unique {column} count"].value_counts(dropna=False).sort_index().to_string().replace(chr(10), chr(10) + chr(9))}')
+        info_messages.append(f'\n\t{df[f"{column} count"].value_counts(dropna=False).sort_index().to_string().replace(chr(10), chr(10) + chr(9))}') # Replace newline characters with newline + tab for better formatting in logs
         
         logger.debug('\n'.join(debug_messages))
         logger.info('\n'.join(info_messages))
