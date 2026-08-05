@@ -8,6 +8,10 @@
         },
         {
             "path": "../../ginkgo-repos/exercise-library"
+        },
+        {
+            "name": "GinkgoServer",
+            "path": "../../ginkgo-repos/GinkgoServer"
         }
     ],
 	"settings": {

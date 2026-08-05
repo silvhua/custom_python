@@ -13,10 +13,6 @@
 			"path": "../../../datajam/datajam-test"
 		},
 		{
-			"name": "expense-classifier-backend",
-			"path": "../../../datajam/expense-classifier-backend"
-		},
-		{
 			"path": "../../portfolio-projects/notion-private"
 		}
 	],
